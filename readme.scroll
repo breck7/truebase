@@ -9,15 +9,22 @@ startColumns 2
 * TrueBase is a new kind of database designed from the ground up for trust.
 
 ? Why TrueBase?
-* We live in an age of ads, paywalls, trackers, licenses, proprietary formats, complex language, patents—a wasteland of toxic information. TrueBase is the _only_ product in the market that makes _no compromises_ when it comes to truth. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
+* We live in an age of ads, paywalls, trackers, licenses, proprietary formats, complex language, patents—a wasteland of toxic information. TrueBase is the _only product_ in the market that makes _no compromises_ when it comes to truth. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
+
+? What are the features?
+- Data is stored in plain text
+- Zero syntax
+- Every word is error checked
+- Version control handled by git
+- One notation for data, schema, querying, and visualization
+- Entire schema and data can be pivoted in a single commit
+- Everything is public domain
 
 ? What are some example TrueBases?
 * PLDB
  https://pldb.com
 * CancerDB
  https://cancerdb.com
-* LeafDB
- http://leafdb.org
 
 ? How do I get started?
 * Documentation is still sparse, but you can try the sample TrueBase:

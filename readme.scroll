@@ -18,7 +18,7 @@ startColumns 4
 
 * So your data, your query language, your schemas, your display language are all in the same simple plain-text notation: Tree Notation. Of course, there's also a lot of Javascript glue.
 
-? Why is there so little documentation?
+? Is there a Rationale for current release schedule/date ?
 * For large databases, TrueBase requires fast computers and fast SSD hard drives. TrueBue was not possible before the Apple M1s, which came out in December 2020. So TrueBase is just getting started. The growth rate is very good.
 
 ? What are some example TrueBases?

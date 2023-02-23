@@ -29,13 +29,20 @@ code
  ./PlanetsDB.js
 
 ? How does TrueBase work?
-* In TrueBase, your data is stored in plain text files. TrueBase data is stored in Tree Notation, so it is all signal—no noise-making it the most minimal—a timeless solution. You will never regret putting your data in a TrueBase.
-* A growing ecosystem of tooling makes it easy to augment your data and run integrity checks, ensuring your data is true. You store your data in Tree Notation in plain text files, and use the Grammar Language (a Tree Language) for schemas, which also enforces correctness. You use Git for version control. You then can query the data using TQL (also a Tree Language). You can display your data using Scroll (also a Tree Language)
+* In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand!
+* You put your data in Tree Notation form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible, making it timeless. No matter what format you need your data in the future it will be perfectly preserved in the simplest form possible. You will never regret putting your data in a TrueBase.
  https://treenotation.org Tree Notation
+* A growing ecosystem of tooling makes it easy to augment your TrueBase with data from Large Language Models, web crawlers, and APIs, and run integrity checks, steadily making your TrueBase truer and truer.
+* You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like web Autocomplete and syntax highlighting.
  https://jtree.treenotation.org/langs/grammar Grammar
+* You can query your TrueBuse using TQL (also a Tree Language).
  https://truebase.pub/tql TQL
+* You can display your data using Scroll (also a Tree Language).
  https://scroll.pub Scroll
-* So your data, your query language, your schemas, your display language are all in the same simple plain-text notation: Tree Notation^js. Currently the last mile code is written in Javascript, so TrueBase can run on any device supporting modern Javascript.
+* So there are many pieces to the TrueBase system, but really just one thing to learn: Tree Notation. Your data, your query language, your schemas, your display language are all in these simple plain text Tree Languages.
+
+? On what systems does TrueBase run?
+* TrueBase runs on Tree Languages, and currently the last mile code is written in Javascript. Therefore TrueBase can run on any device supporting modern Javascript.
 
 ? Is TrueBase public domain?
 * Yes. TrueBase is public domain and is designed for public domain databases.
@@ -45,3 +52,5 @@ code
  https://breckyunits.com/building-a-treebase-with-6.5-million-files.html early unsuccessful attempts
 
 permalink index.html
+
+import footer.scroll

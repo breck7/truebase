@@ -2,3 +2,4 @@
 node_modules/
 package-lock.json
 ignore/
+.DS_Store

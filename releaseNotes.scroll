@@ -1,0 +1,10 @@
+import header.scroll
+title Release Notes
+startColumns 4
+
+* Here's a list of the notable changes in TrueBase.
+
+# 1.2.0 2023-2-23
+- 🎉 Moved `tql` from `jtree` to this repo
+
+import footer.scroll

@@ -3,19 +3,21 @@ title TrueBase
 
 # Information you can trust
 
+image logo.png
+
 startColumns 2
 
 ? What is TrueBase?
 * TrueBase is a new kind of database designed from the ground up for trust.
 
 ? Why TrueBase?
-* We live in an age of ads, paywalls, trackers, licenses, proprietary formats, complex language, patents—a wasteland of toxic information. TrueBase is the _only product_ in the market that makes _no compromises_ when it comes to truth. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
+* We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, unnecessarily complex languages, patents—an information wasteland. TrueBase is the _only database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
 
 ? What are the features?
 - Data is stored in plain text
 - Zero syntax
 - Every word is error checked
-- Version control handled by git
+- Version control and blockchain handled by git
 - One notation for data, schema, querying, and visualization
 - Entire schema and data can be pivoted in a single commit
 - Everything is public domain
@@ -35,14 +37,17 @@ code
  npm install .
  ./PlanetsDB.js
 
-? How does TrueBase work?
-* In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand!
+? How does it work, in theory?
+* TrueBase is built on groundbreaking new work into Cellular Programming Languages. Unlike traditional languages and encodings which are one-dimensional, TrueBase uses higher dimensions and context-sensitivity to minimize noise and increase the interconnectedness of the data. In TrueBase, it becomes increasingly difficult to lie as the size of the TrueBase increases.
+
+? How does TrueBase work, in practice?
+* In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand.
 * You put your data in Tree Notation form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible, making it timeless. No matter what format you need your data in the future it will be perfectly preserved in the simplest form possible. You will never regret putting your data in a TrueBase.
  https://treenotation.org Tree Notation
 * A growing ecosystem of tooling makes it easy to augment your TrueBase with data from Large Language Models, web crawlers, and APIs, and run integrity checks, steadily making your TrueBase truer and truer.
-* You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like web Autocomplete and syntax highlighting.
- https://jtree.treenotation.org/langs/grammar Grammar
-* You can query your TrueBuse using TQL (also a Tree Language).
+* You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like autocomplete and syntax highlighting.
+ https://jtree.treenotation.org/langs/grammar Grammar Language
+* You can query your TrueBase using TQL (also a Tree Language).
  https://truebase.pub/tql TQL
 * You can display your data using Scroll (also a Tree Language).
  https://scroll.pub Scroll

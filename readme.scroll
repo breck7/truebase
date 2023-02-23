@@ -64,7 +64,7 @@ code
 * Yes. TrueBase is public domain and is designed for public domain databases.
 
 ? Since TrueBase is so simple, what hasn't it been done before?
-* For large databases, TrueBase requires fast computers and fast SSD hard drives. TrueBue was not possible before the Apple M1s, which shipped in December 2020. Here is a post about early unsuccessful attempts at using TrueBase before Apple M1s.
+* For large databases, TrueBase requires fast computers and fast SSD hard drives. TrueBase was not possible before the Apple M1s, which shipped in December 2020. Here is a post about early unsuccessful attempts at using TrueBase before Apple M1s.
  https://breckyunits.com/building-a-treebase-with-6.5-million-files.html early unsuccessful attempts
 
 permalink index.html

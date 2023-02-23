@@ -13,7 +13,7 @@ const bodyParser = require("body-parser");
 const { Disk } = require("jtree/products/Disk.node.js");
 const { Utils } = require("jtree/products/Utils.js");
 const { TreeNode } = require("jtree/products/TreeNode.js");
-const tqlNode = require("jtree/products/tql.nodejs.js");
+const tqlNode = require("../tql/tql.nodejs.js");
 const delimitedEscapeFunction = (value) => (value.includes("\n") ? value.split("\n")[0] : value);
 const TrueBase_1 = require("./TrueBase");
 class TrueBaseServer {
@@ -205,7 +205,7 @@ class SearchServer {
                 matchingFilesAsObjectsWithSelectedColumns.forEach((obj) => {
                     obj[newName] = obj[oldName];
                     delete obj[oldName];
-                    columnNames = columnNames.map((columnName) => (oldName === columnName ? newName : columnName));
+                    columnNames = columnNames.map(columnName => (oldName === columnName ? newName : columnName));
                 });
             });
             hits = matchingFilesAsObjectsWithSelectedColumns;

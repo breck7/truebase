@@ -1,6 +1,6 @@
 {
   "name": "truebase",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "TrueBase is a system for long-term, collaborative, trustworthy semantic knowledge bases",
   "author": "Breck Yunits et al",
   "prettier": {

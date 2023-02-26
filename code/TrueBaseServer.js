@@ -61,6 +61,7 @@ class TrueBaseServer {
         this.searchServer = searchServer;
         this.app.get("/search.json", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)));
         this.app.get("/search.csv", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)));
+        this.app.get("/search.tsv", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)));
         this.app.get("/search.tree", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)));
         return this;
     }
@@ -226,6 +227,10 @@ class SearchServer {
     csv(treeQLCode) {
         const { hits, columnNames } = this.search(treeQLCode);
         return new TreeNode(hits).toDelimited(",", columnNames, delimitedEscapeFunction);
+    }
+    tsv(treeQLCode) {
+        const { hits, columnNames } = this.search(treeQLCode);
+        return new TreeNode(hits).toDelimited("\t", columnNames, delimitedEscapeFunction);
     }
 }
 exports.SearchServer = SearchServer;

@@ -4,6 +4,10 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 2.0.0 2023-2-26
+- 🎉 Set correct HTTP content type on json/csv/tsv/tree search routes
+- ⚠️ BREAKING: (no one should be affected) `json` search routes now work as you'd expect 
+
 # 1.3.0 2023-2-26
 - 🎉 Add `tsv` route
 

@@ -59,10 +59,10 @@ class TrueBaseServer {
     initSearch() {
         const searchServer = new SearchServer(this.folder, this.ignoreFolder);
         this.searchServer = searchServer;
-        this.app.get("/search.json", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)));
-        this.app.get("/search.csv", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)));
-        this.app.get("/search.tsv", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)));
-        this.app.get("/search.tree", (req, res) => res.send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)));
+        this.app.get("/search.json", (req, res) => res.setHeader("content-type", "application/json").send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)));
+        this.app.get("/search.csv", (req, res) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)));
+        this.app.get("/search.tsv", (req, res) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)));
+        this.app.get("/search.tree", (req, res) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)));
         return this;
     }
     async applyPatch(patch) {
@@ -219,7 +219,7 @@ class SearchServer {
         return searchCache[treeQLCode];
     }
     json(treeQLCode) {
-        return JSON.stringify(this.search(treeQLCode), undefined, 2);
+        return JSON.stringify(this.search(treeQLCode).hits, undefined, 2);
     }
     tree(treeQLCode) {
         return new TreeNode(this.search(treeQLCode).hits).toString();

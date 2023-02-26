@@ -73,10 +73,10 @@ class TrueBaseServer {
   initSearch() {
     const searchServer = new SearchServer(this.folder, this.ignoreFolder)
     this.searchServer = searchServer
-    this.app.get("/search.json", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
-    this.app.get("/search.csv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
-    this.app.get("/search.tsv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
-    this.app.get("/search.tree", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
+    this.app.get("/search.json", (req: any, res: any) => res.setHeader("content-type", "application/json").send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
+    this.app.get("/search.csv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
+    this.app.get("/search.tsv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
+    this.app.get("/search.tree", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
     return this
   }
 
@@ -259,7 +259,7 @@ class SearchServer {
   }
 
   json(treeQLCode: string) {
-    return JSON.stringify(this.search(treeQLCode), undefined, 2)
+    return JSON.stringify(this.search(treeQLCode).hits, undefined, 2)
   }
 
   tree(treeQLCode: string) {

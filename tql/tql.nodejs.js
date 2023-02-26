@@ -1,9 +1,9 @@
 #! /usr/bin/env node
 {
-  const { Utils } = require("/Users/breck/truebase/node_modules/jtree/products/Utils.js")
-  const { TreeNode } = require("/Users/breck/truebase/node_modules/jtree/products/TreeNode.js")
-  const { HandGrammarProgram } = require("/Users/breck/truebase/node_modules/jtree/products/GrammarLanguage.js")
-  const { GrammarBackedNode } = require("/Users/breck/truebase/node_modules/jtree/products/GrammarLanguage.js")
+  const { Utils } = require("jtree/products/Utils.js")
+  const { TreeNode } = require("jtree/products/TreeNode.js")
+  const { HandGrammarProgram } = require("jtree/products/GrammarLanguage.js")
+  const { GrammarBackedNode } = require("jtree/products/GrammarLanguage.js")
 
   class tqlNode extends GrammarBackedNode {
     createParser() {

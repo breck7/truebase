@@ -23,5 +23,6 @@ jobs:
       - run: |
           npm install .
           npm run build
+          ./tql/build.js
           npm run test
       # - run: npm run buildCoverageReport

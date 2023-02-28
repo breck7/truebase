@@ -18,17 +18,26 @@ const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.sp
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
 class TrueBaseServer {
-  folder: TrueBaseFolder
-  app: any
+  _folder: TrueBaseFolder
+  _app: any
   searchServer: SearchServer
   ignoreFolder = ""
 
   constructor(folder: TrueBaseFolder, ignoreFolder: string) {
-    this.folder = folder
-    const app = express()
-    this.app = app
+    this._folder = folder
     this.ignoreFolder = ignoreFolder
-    if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
+  }
+
+  get folder() {
+    return this._folder.loadFolder()
+  }
+
+  get app() {
+    if (this._app) return this._app
+
+    const app = express()
+    this._app = app
+    if (!Disk.exists(this.ignoreFolder)) Disk.mkdir(this.ignoreFolder)
 
     this._initLogs()
 
@@ -41,8 +50,7 @@ class TrueBaseServer {
       res.setHeader("Access-Control-Allow-Credentials", true)
       next()
     })
-
-    return this
+    return this._app
   }
 
   _initLogs() {

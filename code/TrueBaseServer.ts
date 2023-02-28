@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const fs = require("fs")
 const path = require("path")
 const lodash = require("lodash")
@@ -17,7 +15,7 @@ const tqlNode = require("../tql/tql.nodejs.js")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
 
-import { TrueBaseFolder } from "./TrueBase"
+import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
 class TrueBaseServer {
   folder: TrueBaseFolder
@@ -162,6 +160,30 @@ class TrueBaseServer {
     redirectApp.listen(80, () => console.log(`Running redirect app`))
     return this
   }
+
+  startDevServerCommand(port: number) {
+    this.listen(port)
+  }
+
+  startProdServerCommand() {
+    this.listenProd()
+  }
+
+  formatCommand() {
+    this.folder.forEach((file: TrueBaseFile) => file.prettifyAndSave())
+  }
+
+  createFromTreeCommand() {
+    TreeNode.fromDisk(path.join(this.ignoreFolder, "create.tree")).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+  }
+
+  createFromCsvCommand() {
+    TreeNode.fromCsv(Disk.read(path.join(this.ignoreFolder, "create.csv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+  }
+
+  createFromTsvCommand() {
+    TreeNode.fromTsv(Disk.read(path.join(this.ignoreFolder, "create.tsv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+  }
 }
 
 class SearchServer {
@@ -278,9 +300,3 @@ class SearchServer {
 }
 
 export { SearchServer, TrueBaseServer }
-
-if (!module.parent) {
-  const folderPath = process.cwd()
-  const folder = new TrueBaseFolder().setDir(folderPath).setGrammarDir(folderPath)
-  new SearchServer(folder, folderPath).csv(process.argv.slice(2).join(" "))
-}

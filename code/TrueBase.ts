@@ -122,7 +122,7 @@ class TrueBaseFile extends TreeNode {
   }
 
   get lowercaseNames() {
-    return this.names.map((name) => name.toLowerCase())
+    return this.names.map(name => name.toLowerCase())
   }
 
   get names() {
@@ -155,11 +155,11 @@ class TrueBaseFile extends TreeNode {
 
   getDoc(terms: string[]) {
     return terms
-      .map((term) => {
+      .map(term => {
         const nodes = this.findNodes(this._getFilePath() + " " + term)
         return nodes.map((node: treeNode) => node.childrenToString()).join("\n")
       })
-      .filter((identity) => identity)
+      .filter(identity => identity)
       .join("\n")
   }
 
@@ -224,7 +224,13 @@ class TrueBaseFile extends TreeNode {
   }
 
   sort() {
-    this.setChildren(this.parsed.sortFromSortTemplate().toString().replace(/\n+$/g, "") + "\n")
+    this.setChildren(
+      this.parsed
+        .sortFromSortTemplate()
+        .toString()
+        .replace(/\n\n+/g, "\n\n")
+        .replace(/\n+$/g, "") + "\n"
+    )
   }
 
   prettifyAndSave() {
@@ -241,7 +247,7 @@ class TrueBaseFolder extends TreeNode {
     const map = this.quickCache.searchIndex
     this.forEach((file: TrueBaseFile) => {
       const { id } = file
-      file.names.forEach((name) => map.set(name.toLowerCase(), id))
+      file.names.forEach(name => map.set(name.toLowerCase(), id))
     })
     return map
   }
@@ -425,7 +431,7 @@ class TrueBaseFolder extends TreeNode {
 
   private _readFiles(files: filepath[]) {
     return files
-      .map((fullPath) => {
+      .map(fullPath => {
         const content = Disk.read(fullPath)
         if (content.match(/\r/)) throw new Error("bad \\r in " + fullPath)
         const id = Utils.getFileName(Utils.removeFileExtension(fullPath))

@@ -1,6 +1,6 @@
 {
   "name": "truebase",
-  "version": "3.0.2",
+  "version": "4.0.0",
   "description": "TrueBase is a system for long-term, collaborative, trustworthy semantic knowledge bases",
   "author": "Breck Yunits et al",
   "prettier": {
@@ -11,7 +11,7 @@
     "trailingComma": "none"
   },
   "scripts": {
-    "build": "tsc; ./tql/build.js",
+    "build": "tsc",
     "test": "./test.js",
     "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')"
   },

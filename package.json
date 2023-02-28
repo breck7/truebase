@@ -11,7 +11,7 @@
     "trailingComma": "none"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc; ./tql/build.js",
     "test": "./test.js",
     "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')"
   },

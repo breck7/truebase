@@ -12,10 +12,7 @@ const truebaseFolder = path.join(__dirname, "planetsDB")
 
 class PlanetsDB {
   start(port) {
-    const folder = new TrueBaseFolder()
-      .setDir(truebaseFolder)
-      .setGrammarDir(truebaseFolder)
-      .loadFolder()
+    const folder = new TrueBaseFolder().setDir(truebaseFolder).setGrammarDir(truebaseFolder)
     const trueBaseServer = new TrueBaseServer(folder, ignoreFolder).initSearch().serveFolder(truebaseFolder)
     trueBaseServer.listen(port)
   }

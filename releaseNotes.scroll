@@ -4,6 +4,10 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 4.2.0 2023-3-2
+- 🎉 added `getAll` to `TrueBaseFile`
+- 🎉 added `makeNameSearchIndex` and `typedMapJson` to `TrueBaseFolder`
+
 # 4.1.0 2023-3-2
 - 🏥 upgrade Jtree
 

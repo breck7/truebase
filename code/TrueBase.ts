@@ -94,6 +94,10 @@ class TrueBaseFile extends TreeNode {
     return ""
   }
 
+  getAll(keyword: string) {
+    return this.findNodes(keyword).map((node: any) => node.content)
+  }
+
   getTypedValue(dotPath: string) {
     const value = dotPath.includes(".") ? lodash.get(this.typed, dotPath) : this.typed[dotPath]
     const typeOfValue = typeof value
@@ -242,10 +246,13 @@ class TrueBaseFile extends TreeNode {
 
 class TrueBaseFolder extends TreeNode {
   get searchIndex() {
-    if (this.quickCache.searchIndex) return this.quickCache.searchIndex
-    this.quickCache.searchIndex = new Map()
-    const map = this.quickCache.searchIndex
-    this.forEach((file: TrueBaseFile) => {
+    if (!this.quickCache.searchIndex) this.quickCache.searchIndex = this.makeNameSearchIndex(this)
+    return this.quickCache.searchIndex
+  }
+
+  makeNameSearchIndex(files: TrueBaseFile[] | TrueBaseFolder) {
+    const map = new Map<string, TrueBaseFile>()
+    files.forEach((file: TrueBaseFile) => {
       const { id } = file
       file.names.forEach(name => map.set(name.toLowerCase(), id))
     })
@@ -320,6 +327,11 @@ class TrueBaseFolder extends TreeNode {
     const map: stringMap = {}
     this.forEach((file: any) => (map[file.id] = file.typed))
     return map
+  }
+
+  get typedMapJson() {
+    if (!this.quickCache.typedMapJson) this.quickCache.typedMapJson = JSON.stringify(this.typedMap, null, 2)
+    return this.quickCache.typedMapJson
   }
 
   private _isLoaded = false

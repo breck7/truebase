@@ -7,6 +7,5 @@ const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 
 const tqlPath = path.join(__dirname, "tql.grammar")
 const tqlGrammar = new TreeNode(Disk.read(tqlPath))
-// Todo: fix path problems
 GrammarCompiler.compileGrammarForBrowser(tqlPath, __dirname + "/", false)
-GrammarCompiler.compileGrammarForNodeJs(tqlPath, __dirname + "/", true)
+GrammarCompiler.compileGrammarForNodeJs(tqlPath, __dirname + "/", true, "jtree/products")

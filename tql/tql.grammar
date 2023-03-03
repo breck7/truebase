@@ -14,6 +14,11 @@ numberOrStringCell
  highlightScope constant.numeric
 commentCell
  highlightScope comment
+javascriptCell
+ description Javascript code
+ extends stringCell
+customColumnNameCell
+ highlightScope constant.numeric
 columnNameCell
  description The column to search on.
  highlightScope constant.numeric
@@ -136,7 +141,6 @@ commentNode
 abstractModifierNode
  cells keywordCell
  cruxFromId
- single
 abstractColumnModifierNode
  extends abstractModifierNode
  catchAllCellType columnNameCell
@@ -146,8 +150,15 @@ selectNode
 selectAllNode
  description Select all the columns
  extends abstractColumnModifierNode
+addColumnNode
+ description Add a custom column using Javascript template strings.
+ cells keywordCell customColumnNameCell
+ catchAllCellType javascriptCell
+ extends abstractModifierNode
+ example
+  addColumn GoogleSearch <a href="https://www.google.com/search?q=${row.title}">Search Google for ${row.title}</a>
 renameNode
- cells keywordCell columnNameCell stringCell
+ cells keywordCell columnNameCell customColumnNameCell
  example
   rename githubRepo.stars Stars
  description Rename a column.
@@ -155,13 +166,16 @@ renameNode
 sortByNode
  description Sort by these columns.
  extends abstractColumnModifierNode
+ single
 reverseNode
  extends abstractModifierNode
  description Reverse the order of results.
+ single
 limitNode
  extends abstractModifierNode
  description Return a maximum of this many results.
  cells keywordCell numberCell
+ single
 abstractMetaNode
  cells keywordCell
  catchAllCellType stringCell

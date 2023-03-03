@@ -257,7 +257,7 @@ class SearchServer {
       // By default right now we basically add: select title titleLink
       // We will probably ditch that in the future and make it explicit.
       if (treeQLProgram.has("selectAll")) columnNames = treeQLProgram.rootGrammarTree.get("columnNameCell enum")?.split(" ") ?? Object.keys(rawHits[0]?.typed || undefined) ?? ["title"]
-      else columnNames = ["title", "titleLink"].concat((treeQLProgram.get("select") || "").split(" "))
+      else columnNames = ["title", "titleLink"].concat((treeQLProgram.get("select") || "").split(" ").filter((i: string) => i))
 
       let matchingFilesAsObjectsWithSelectedColumns = rawHits.map((file: any) => {
         const obj = file.selectAsObject(columnNames)
@@ -268,7 +268,14 @@ class SearchServer {
       const limit = treeQLProgram.get("limit")
       if (limit) matchingFilesAsObjectsWithSelectedColumns = matchingFilesAsObjectsWithSelectedColumns.slice(0, parseInt(limit))
 
-      const renames = treeQLProgram.findNodes("rename").forEach((node: any) => {
+      treeQLProgram.findNodes("addColumn").forEach((node: any) => {
+        const newName = node.getWord(1)
+        const code = node.getWordsFrom(2).join(" ")
+        matchingFilesAsObjectsWithSelectedColumns.forEach((row: any, index: number) => (row[newName] = eval(`\`${code}\``)))
+        columnNames.push(newName)
+      })
+
+      treeQLProgram.findNodes("rename").forEach((node: any) => {
         const oldName = node.getWord(1)
         const newName = node.getWord(2)
         matchingFilesAsObjectsWithSelectedColumns.forEach((obj: any) => {

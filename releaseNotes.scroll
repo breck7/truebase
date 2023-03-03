@@ -4,6 +4,12 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 4.3.0 2023-3-3
+- 🎉 TQL: added new keyword `addColumn` allowing for the definition of custom column from Javascript template strings
+- 🏥 TQL: fix bug where a blank column was being returned if no select statement added
+- 🏥 TQL: fix bug where you could only rename 1 column per query
+- 🏥 TQL: fix path bug in tql build script
+
 # 4.2.0 2023-3-2
 - 🎉 added `getAll` to `TrueBaseFile`
 - 🎉 added `makeNameSearchIndex` and `typedMapJson` to `TrueBaseFolder`

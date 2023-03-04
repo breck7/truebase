@@ -265,7 +265,7 @@ class TrueBaseFile extends TreeNode {
 
 class TrueBaseFolder extends TreeNode {
   computedColumnNames: string[] = []
-  globalSortFunction = (item: object) => Object.keys(item).length
+  globalSortFunction = (item: object) => -Object.keys(item).length // By default show the items with most cells filled up top.
   githubRepoPath = "breck7/truebase"
   defaultColumnSortOrder = ["title"]
   dir = ""
@@ -372,8 +372,7 @@ class TrueBaseFolder extends TreeNode {
   }
 
   get columnsCsvOutput() {
-    const { columnDocumentation } = this
-    const columnsMetadataTree = new TreeNode(columnDocumentation)
+    const columnsMetadataTree = new TreeNode(this.columnDocumentation)
     const columnMetadataColumnNames = ["Index", "Column", "Values", "Coverage", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
 
     const columnsCsv = columnsMetadataTree.toDelimited(",", columnMetadataColumnNames)

@@ -6,12 +6,31 @@ const { TreeNode, TreeEvents } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram, GrammarConstants } = require("jtree/products/GrammarLanguage.js")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
+const { Table } = require("jtree/products/jtable.node.js")
 const grammarNode = require("jtree/products/grammar.nodejs.js")
 
 declare type stringMap = { [firstWord: string]: any }
 declare type fileName = string
 declare type filepath = string
 declare type treeNode = any
+
+/*
+Flatten a tree node into an object like {twitter:"pldb", "twitter.followers":123}.
+Todo: upstream this to jtree and name it appropriately
+*/
+const nodeToFlatObject = (parentNode: treeNode) => {
+  const delimiter = "."
+  let newObject: stringMap = {}
+  parentNode.forEach((child: treeNode, index: number) => {
+    newObject[child.getWord(0)] = child.content
+    child.getTopDownArray().forEach((node: treeNode) => {
+      const newColumnName = node.getFirstWordPathRelativeTo(parentNode).replace(/ /g, delimiter)
+      const value = node.content
+      newObject[newColumnName] = value
+    })
+  })
+  return newObject
+}
 
 class TrueBasePageTemplate {
   constructor(file: TrueBaseFile) {
@@ -245,9 +264,195 @@ class TrueBaseFile extends TreeNode {
 }
 
 class TrueBaseFolder extends TreeNode {
+  computedColumnNames: string[] = []
+  globalSortFunction = (item: object) => -Object.keys(item).length // By default show the items with most cells filled up top.
+  githubRepoPath = "breck7/truebase"
+  defaultColumnSortOrder = ["title"]
+  dir = ""
+  grammarDir = ""
+  grammarCode = ""
+  grammarProgramConstructor: any = undefined
+  fileExtension = ""
+  baseUrl = ""
+
   get searchIndex() {
     if (!this.quickCache.searchIndex) this.quickCache.searchIndex = this.makeNameSearchIndex(this)
     return this.quickCache.searchIndex
+  }
+
+  get bytes() {
+    if (!this.quickCache.bytes) this.quickCache.bytes = this.toString().length
+    return this.quickCache.bytes
+  }
+
+  get nodesForCsv() {
+    if (this.quickCache.nodesForCsv) return this.quickCache.nodesForCsv
+    const { computedColumnNames } = this
+    this.quickCache.nodesForCsv = this.map((file: TrueBaseFile) => {
+      const clone = file.parsed.clone()
+      clone.getTopDownArray().forEach((node: any) => {
+        if (node.includeChildrenInCsv === false) node.deleteChildren()
+        if (node.getNodeTypeId() === "blankLineNode") node.destroy()
+      })
+
+      computedColumnNames.forEach(prop => {
+        const value = file[prop]
+        if (value !== undefined) clone.set(prop, value.toString())
+      })
+
+      return clone
+    })
+    return this.quickCache.nodesForCsv
+  }
+
+  get objectsForCsv() {
+    if (!this.quickCache.objectsForCsv) this.quickCache.objectsForCsv = lodash.sortBy(this.nodesForCsv.map(nodeToFlatObject), this.globalSortFunction)
+    return this.quickCache.objectsForCsv
+  }
+
+  get grammarFileMap() {
+    if (this.quickCache.grammarFileMap) return this.quickCache.grammarFileMap
+    this.quickCache.grammarFileMap = {}
+    const map = this.quickCache.grammarFileMap
+    this.grammarFilePaths.forEach((filepath: string) => (map[filepath] = Disk.read(filepath)))
+    return map
+  }
+
+  // todo: is there already a way to do this in jtree?
+  getFilePathAndLineNumberWhereGrammarNodeIsDefined(nodeTypeId: string) {
+    const { grammarFileMap } = this
+    const regex = new RegExp(`^${nodeTypeId}`, "gm")
+    let filePath: string
+    let lineNumber: number
+    Object.keys(grammarFileMap).some(grammarFilePath => {
+      const code = grammarFileMap[grammarFilePath]
+      if (grammarFileMap[grammarFilePath].match(regex)) {
+        filePath = grammarFilePath
+        lineNumber = code.split("\n").indexOf(nodeTypeId)
+        return true
+      }
+    })
+    return { filePath, lineNumber }
+  }
+
+  get colNameToGrammarDefMap() {
+    if (this.quickCache.colNameToGrammarDefMap) return this.quickCache.colNameToGrammarDefMap
+    this.quickCache.colNameToGrammarDefMap = new Map()
+    const map = this.quickCache.colNameToGrammarDefMap
+    this.nodesForCsv.forEach((node: any) => {
+      node.getTopDownArray().forEach((node: any) => {
+        const path = node.getFirstWordPath().replace(/ /g, ".")
+        map.set(path, node.getDefinition())
+      })
+    })
+    return map
+  }
+
+  get colNamesForCsv() {
+    return this.columnDocumentation.map((col: any) => col.Column)
+  }
+
+  makeCsv(filename: string, objectsForCsv = this.objectsForCsv) {
+    if (this.quickCache[filename]) return this.quickCache[filename]
+    const { colNamesForCsv } = this
+    this.quickCache[filename] = new TreeNode(objectsForCsv).toDelimited(",", colNamesForCsv)
+    return this.quickCache[filename]
+  }
+
+  get sources() {
+    const sources = Array.from(
+      new Set(
+        this.grammarCode
+          .split("\n")
+          .filter(line => line.includes("string sourceDomain"))
+          .map(line => line.split("string sourceDomain")[1].trim())
+      )
+    )
+    return sources.sort()
+  }
+
+  get columnsCsvOutput() {
+    const columnsMetadataTree = new TreeNode(this.columnDocumentation)
+    const columnMetadataColumnNames = ["Index", "Column", "Values", "Coverage", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
+
+    const columnsCsv = columnsMetadataTree.toDelimited(",", columnMetadataColumnNames)
+
+    return {
+      columnsCsv,
+      columnsMetadataTree,
+      columnMetadataColumnNames
+    }
+  }
+
+  get columnDocumentation() {
+    if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
+
+    // Return columns with documentation sorted in the most interesting order.
+
+    const { colNameToGrammarDefMap, objectsForCsv, githubRepoPath, defaultColumnSortOrder } = this
+    const colNames = new TreeNode(objectsForCsv)
+      .toCsv()
+      .split("\n")[0]
+      .split(",")
+      .map((col: string) => {
+        return { name: col }
+      })
+    const table = new Table(objectsForCsv, colNames, undefined, false) // todo: fix jtable or switch off
+    const cols = table
+      .getColumnsArray()
+      .map((col: any) => {
+        const reductions = col.getReductions()
+        const Column = col.getColumnName()
+        const colDef = colNameToGrammarDefMap.get(Column)
+        let colDefId
+        if (colDef) colDefId = colDef.getLine()
+        else colDefId = ""
+
+        const Example = reductions.mode
+        const Description = colDefId !== "" && colDefId !== "errorNode" ? colDef.get("description") : "computed"
+        let Source
+        if (colDef) Source = colDef.getFrom("string sourceDomain")
+        else Source = ""
+
+        const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
+        const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
+        const DefinitionLink =
+          colDefId !== "" && colDefId !== "errorNode"
+            ? `https://github.com/${githubRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}`
+            : `https://github.com/${githubRepoPath}/main/code/${__filename}#:~:text=get%20${Column}()`
+        const SourceLink = Source ? `https://${Source}` : ""
+        return {
+          Column,
+          Values: reductions.count,
+          Coverage: Math.round((100 * reductions.count) / (reductions.count + reductions.incompleteCount)) + "%",
+          Example,
+          Source,
+          SourceLink,
+          Description,
+          Definition,
+          DefinitionLink,
+          Recommended: colDef && colDef.getFrom("boolean alwaysRecommended") === "true"
+        }
+      })
+      .filter((col: any) => col.Values)
+
+    const sortedCols: any[] = []
+    defaultColumnSortOrder.forEach(colName => {
+      const hit = cols.find((col: any) => col.Column === colName)
+      sortedCols.push(hit)
+    })
+
+    lodash
+      .sortBy(cols, "Values")
+      .reverse()
+      .forEach((col: any) => {
+        if (!defaultColumnSortOrder.includes(col.Column)) sortedCols.push(col)
+      })
+
+    sortedCols.forEach((col, index) => (col.Index = index + 1))
+
+    this.quickCache.columnDocumentation = sortedCols
+    return sortedCols
   }
 
   makeNameSearchIndex(files: TrueBaseFile[] | TrueBaseFolder) {
@@ -362,13 +567,6 @@ class TrueBaseFolder extends TreeNode {
     this.fileExtension = new this.grammarProgramConstructor().fileExtension
     return this
   }
-
-  dir = ""
-  grammarDir = ""
-  grammarCode = ""
-  grammarProgramConstructor: any = undefined
-  fileExtension = ""
-  baseUrl = ""
 
   get grammarFilePaths() {
     return Disk.getFiles(this.grammarDir).filter((file: string) => file.endsWith(GrammarConstants.grammarFileExtension))

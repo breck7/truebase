@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 5.0.1 2023-3-4
+- 🏥 csvDocumentation fix
+
 # 5.0.0 2023-3-4
 - ⚠️ BREAKING: Pass the main website folder to the constructor when creating a TrueBase folder
 - 🎉 new `beforeListen` method TrueBaseServer subclasses can override

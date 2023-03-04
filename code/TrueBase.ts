@@ -274,6 +274,7 @@ class TrueBaseFolder extends TreeNode {
   grammarProgramConstructor: any = undefined
   fileExtension = ""
   baseUrl = ""
+  sourceFilename = Utils.getFileName(__filename)
 
   get searchIndex() {
     if (!this.quickCache.searchIndex) this.quickCache.searchIndex = this.makeNameSearchIndex(this)
@@ -419,7 +420,7 @@ class TrueBaseFolder extends TreeNode {
         const DefinitionLink =
           colDefId !== "" && colDefId !== "errorNode"
             ? `https://github.com/${githubRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}`
-            : `https://github.com/${githubRepoPath}/main/code/${__filename}#:~:text=get%20${Column}()`
+            : `https://github.com/${githubRepoPath}/main/code/${this.sourceFilename}#:~:text=get%20${Column}()`
         const SourceLink = Source ? `https://${Source}` : ""
         return {
           Column,

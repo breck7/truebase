@@ -10,8 +10,9 @@ const bodyParser = require("body-parser")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
+const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 
-const tqlNode = require("../tql/tql.nodejs.js")
+const genericTqlNode = require("../tql/tql.nodejs.js")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
 
@@ -23,7 +24,8 @@ class TrueBaseServer {
   searchServer: SearchServer
   ignoreFolder = ""
   siteFolder = ""
-  mainCsvFilename = "truebase.csv"
+  distFolder: string
+  trueBaseId = "truebase"
 
   constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
     this._folder = folder
@@ -89,6 +91,30 @@ class TrueBaseServer {
     this.app.get("/search.tree", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
     return this
   }
+
+  buildRunTimeGrammarsCommand() {
+    const { distFolder, folder, trueBaseId } = this
+    if (!Disk.exists(distFolder)) Disk.mkdir(distFolder)
+    const tqlPath = path.join(__dirname, "..", "tql", "tql.grammar")
+    const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
+    extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
+    const extendedTqlName = `${trueBaseId}Tql`
+    extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
+    const extendedTqlPath = path.join(distFolder, `${extendedTqlName}.grammar`)
+    Disk.write(extendedTqlPath, extendedTqlGrammar.toString())
+    GrammarCompiler.compileGrammarForBrowser(extendedTqlPath, distFolder + "/", false)
+    const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, distFolder + "/", true)
+    this.extendedTqlParser = require(jsPath)
+
+    const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
+    const grammar = new TreeNode(folder.grammarCode)
+    grammar.getNode("permalinkCell").set("enum", ids)
+    const grammarFileName = `${trueBaseId}.grammar`
+    Disk.write(path.join(distFolder, grammarFileName), grammar.toString())
+    GrammarCompiler.compileGrammarForBrowser(path.join(distFolder, grammarFileName), distFolder + "/", false)
+  }
+
+  extendedTqlParser: any
 
   async applyPatch(patch: string) {
     const { folder } = this
@@ -188,7 +214,8 @@ class TrueBaseServer {
   }
 
   buildCsvFilesCommand() {
-    const { folder, mainCsvFilename } = this
+    const { folder, trueBaseId } = this
+    const mainCsvFilename = `${trueBaseId}.csv`
     Disk.writeIfChanged(path.join(this.siteFolder, mainCsvFilename), folder.makeCsv(mainCsvFilename))
     Disk.writeIfChanged(path.join(this.siteFolder, "columns.csv"), folder.columnsCsvOutput.columnsCsv)
   }
@@ -246,7 +273,7 @@ class SearchServer {
     return (<any>this)[format](decodeURIComponent(originalQuery).replace(/\r/g, ""))
   }
 
-  search(treeQLCode: string, tqlParser: any = tqlNode) {
+  search(treeQLCode: string, tqlParser: any = genericTqlNode) {
     const { searchCache } = this
     if (searchCache[treeQLCode]) return searchCache[treeQLCode]
 

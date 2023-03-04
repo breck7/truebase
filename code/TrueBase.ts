@@ -137,7 +137,7 @@ class TrueBaseFile extends TreeNode {
   }
 
   get title() {
-    return this.id
+    return this.get("title") || this.id
   }
 
   get lowercase() {

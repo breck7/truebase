@@ -11,7 +11,7 @@ const testTree: any = {}
 const getFolder = () => new TrueBaseFolder().setDir(folderPath).setGrammarDir(folderPath)
 
 testTree.basics = (equal: any) => {
-  const searchServer = new TrueBaseServer(getFolder(), path.join(__dirname, "..", "ignore")).initSearch().searchServer
+  const searchServer = new TrueBaseServer(getFolder(), path.join(__dirname, "..", "ignore"), __dirname).initSearch().searchServer
   const results = searchServer.search("includes mars")
   equal(results.hits.length, 2)
 }

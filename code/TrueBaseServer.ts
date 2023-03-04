@@ -22,9 +22,12 @@ class TrueBaseServer {
   _app: any
   searchServer: SearchServer
   ignoreFolder = ""
+  siteFolder = ""
+  mainCsvFilename = "truebase.csv"
 
-  constructor(folder: TrueBaseFolder, ignoreFolder: string) {
+  constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
     this._folder = folder
+    this.siteFolder = siteFolder
     this.ignoreFolder = ignoreFolder
   }
 
@@ -50,6 +53,7 @@ class TrueBaseServer {
       res.setHeader("Access-Control-Allow-Credentials", true)
       next()
     })
+    this.serveFolder(this.siteFolder)
     return this._app
   }
 
@@ -143,13 +147,19 @@ class TrueBaseServer {
     }
   }
 
+  beforeListen() {
+    // A hook for subclasses to override
+  }
+
   listen(port = 4444) {
+    this.beforeListen()
     this._addNotFoundRoute()
     this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this
   }
 
   listenProd() {
+    this.beforeListen()
     this._addNotFoundRoute()
     const key = fs.readFileSync(path.join(this.ignoreFolder, "privkey.pem"))
     const cert = fs.readFileSync(path.join(this.ignoreFolder, "fullchain.pem"))
@@ -175,6 +185,12 @@ class TrueBaseServer {
 
   startProdServerCommand() {
     this.listenProd()
+  }
+
+  buildCsvFilesCommand() {
+    const { folder, mainCsvFilename } = this
+    Disk.writeIfChanged(path.join(this.siteFolder, mainCsvFilename), folder.makeCsv(mainCsvFilename))
+    Disk.writeIfChanged(path.join(this.siteFolder, "columns.csv"), folder.columnsCsvOutput.columnsCsv)
   }
 
   formatCommand() {

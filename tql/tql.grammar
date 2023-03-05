@@ -25,7 +25,7 @@ columnNameCell
 blankCell
 tqlNode
  root
- description Tree Query Language (TQL) is a new language for searching a TrueBase.
+ description TrueBase Query Language (TQL) is a new language for querying a TrueBase.
  catchAllNodeType catchAllErrorNode
  inScope abstractQueryNode blankLineNode commentNode abstractModifierNode abstractMetaNode
  javascript

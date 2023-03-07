@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 6.1.0 2023-3-7
+- 🎉 added user account functionality
+
 # 6.0.0 2023-3-4
 - ⚠️ BREAKING: instead of `mainCsvFilename` specify `trueBaseId`
 - 🎉 Upstreamed `buildRunTimeGrammarsCommand`. Set `distFolder` on `TrueBaseServer` to use.

@@ -1,6 +1,6 @@
 {
   "name": "truebase",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "TrueBase is a system for long-term, collaborative, trustworthy semantic knowledge bases",
   "author": "Breck Yunits et al",
   "prettier": {
@@ -25,9 +25,10 @@
   },
   "dependencies": {
     "express": "*",
-    "jtree": "^69.2.1",
+    "jtree": "^69.3.1",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.9.1",
     "scroll-cli": "^58.2.3"
   },
   "devDependencies": {

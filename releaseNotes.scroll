@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 6.1.1 2023-3-7
+- 🏥 fix to login log
+
 # 6.1.0 2023-3-7
 - 🎉 added user account functionality
 

@@ -171,7 +171,7 @@ class TrueBaseServer {
     app.post("/login", (req: any, res: any) => {
       const { email, password } = req.body
       if (Utils.isValidEmail(email) && this.trueBaseUsers.has(email) && this.trueBaseUsers.get(`${email} password`) === password) {
-        Disk.append(this.loginLogPath, `${email} ${new Date()}`)
+        Disk.append(this.loginLogPath, `${email} ${new Date()}\n`)
         return res.send("OK")
       }
       return res.send("FAIL")

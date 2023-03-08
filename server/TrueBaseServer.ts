@@ -12,7 +12,7 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
-const { ScrollCli } = require("scroll-cli")
+const { ScrollCli, ScrollFile } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
 const nodeModulesFolder = path.join(__dirname, "..", "node_modules")
@@ -20,6 +20,7 @@ const jtreeFolder = path.join(nodeModulesFolder, "jtree")
 const browserAppFolder = path.join(__dirname, "..", "browser")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
+const delimiter = " DeLiM "
 
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
@@ -28,18 +29,22 @@ class TrueBaseServer {
   _app: any
   searchServer: SearchServer
   ignoreFolder = ""
-  siteFolder = ""
-  distFolder = ""
+  siteFolder: string
+  distFolder: string
   trueBaseId = "truebase"
   siteName = "TrueBase"
   siteDomain = "truebase.pub"
   notFoundPage = "Not found"
+  scrollFooter: string
+  scrollHeader: string
 
   constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
     this._folder = folder
     this.siteFolder = siteFolder
     this.distFolder = path.join(this.siteFolder, "dist")
     this.ignoreFolder = ignoreFolder
+    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
+    this.scrollHeader = new ScrollFile(undefined, path.join(siteFolder, "header.scroll")).importResults.code
   }
 
   get folder() {
@@ -65,6 +70,7 @@ class TrueBaseServer {
       next()
     })
     this.serveFolder(this.siteFolder)
+    this.initSearch()
     return this._app
   }
 
@@ -184,13 +190,68 @@ class TrueBaseServer {
   }
 
   initSearch() {
+    const { app } = this
     const searchServer = new SearchServer(this.folder, this.ignoreFolder)
     this.searchServer = searchServer
-    this.app.get("/search.json", (req: any, res: any) => res.setHeader("content-type", "application/json").send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
-    this.app.get("/search.csv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
-    this.app.get("/search.tsv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
-    this.app.get("/search.tree", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
+    app.get("/search.json", (req: any, res: any) => res.setHeader("content-type", "application/json").send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
+    app.get("/search.csv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
+    app.get("/search.tsv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
+    app.get("/search.tree", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
+
+    const searchCache: any = {}
+    app.get("/search.html", (req: any, res: any) => {
+      const { searchServer } = this
+      const query = req.query.q ?? ""
+      searchServer.logQuery(query, req.ip, "scroll")
+      if (!searchCache[query]) searchCache[query] = this.searchToHtml(query)
+
+      res.send(searchCache[query])
+    })
+
+    app.get("/s/:query", (req: any, res: any) => res.redirect(`/search.html?q=includes+${req.params.query}`))
+
+    app.get("/fullTextSearch", (req: any, res: any) => res.redirect(`/search.html?q=includes+${req.query.q}`))
+
     return this
+  }
+
+  // todo: cleanup
+  searchToHtml(originalQuery: string) {
+    const { hits, queryTime, columnNames, errors, title, description } = this.searchServer.search(decodeURIComponent(originalQuery).replace(/\r/g, ""), this.extendedTqlParser)
+    const { folder } = this
+    const results = new TreeNode(hits)._toDelimited(delimiter, columnNames, delimitedEscapeFunction)
+    const encodedTitle = Utils.escapeScrollAndHtml(title)
+    const encodedDescription = Utils.escapeScrollAndHtml(description)
+    const encodedQuery = encodeURIComponent(originalQuery)
+
+    return new ScrollFile(
+      `${this.scrollHeader}
+
+title Search Results
+ hidden
+
+html <form method="get" action="search.html" class="tqlForm"><textarea id="tqlInput" name="q"></textarea><input type="submit" value="Search"></form>
+html <div id="tqlErrors"></div>
+
+* Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s.
+ class trueBaseThemeSearchResultsHeader
+
+${title ? `# ${encodedTitle}` : ""}
+${description ? `* ${encodedDescription}` : ""}
+
+table ${delimiter}
+ ${results.replace(/\n/g, "\n ")}
+
+* Results as JSON, CSV, TSV or Tree
+ link search.json?q=${encodedQuery} JSON
+ link search.csv?q=${encodedQuery} CSV
+ link search.tsv?q=${encodedQuery} TSV
+ link search.tree?q=${encodedQuery} Tree
+
+html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().renderSearchPage())</script>
+
+${this.scrollFooter}`
+    ).html
   }
 
   extendedTqlParser: any

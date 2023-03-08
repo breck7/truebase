@@ -3,15 +3,45 @@ title TrueBase
 
 # Information you can trust
 
-image logo.png
+css
+ iframe {
+    height: 600px;
+    width: 600px;
+    border: 0;
+    transform: scale(0.5); 
+    transform-origin: 0 0;
+ }
+ .iframeHolder {
+   width: 300px;
+   height: 300px;
+   box-shadow: 2px 2px 2px 2px rgba(0,0,0,.2);
+   border-radius: 8px;
+   margin: 10px;
+   display: inline-block;
+ }
+
+html <center><div class="iframeHolder"><iframe src="https://pldb.com/"></iframe></div><div class="iframeHolder"><iframe src="https://cancerdb.com/"></iframe></div></center>
 
 startColumns 2
+
+? Where can I try it?
+* The examples above are live-you can play with them right on this page! PLDB.com and CancerDB.com are both powered by TrueBase.
+ https://pldb.com PLDB.com
+ https://cancerdb.com CancerDB
+
+? Where are the Release Notes?
+* Here
+ link releaseNotes.html
+
+? I need a TrueBase for X, can you build one for me?
+* Yes. We offer a paid complete white-glove service for mission critical problems. You can also email pro@truebase.pub for a custom quote.
+ https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
 
 ? What is TrueBase?
 * TrueBase is a new kind of database designed from the ground up for trust.
 
 ? Why TrueBase?
-* We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, unnecessarily complex languages, patents—an information wasteland. TrueBase is the _only database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
+* We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information wasteland. TrueBase is the _only database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
 
 ? What are the features?
 - Data is stored in plain text
@@ -21,25 +51,17 @@ startColumns 2
 - One notation for data, schema, querying, and visualization
 - Entire schema and data can be pivoted in a single commit
 - Everything is public domain
+- Decentralized so every user can have their own complete copy
 
-? What are some example TrueBases?
-* PLDB
- https://pldb.com
-* CancerDB
- https://cancerdb.com
-
-? Can I pay you to build one for me?
-* Yes. We offer a complete white-glove service for mission critical problems.
- https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
-
-? How do I get started?
-* Documentation is still sparse, but you can try the sample TrueBase:
-
+? How do I build a TrueBase on my own?
+* The Cutting Edge Option is to work from the demo PlanetsDB TrueBase:
 code
  git clone https://github.com/breck7/truebase
  cd truebase
  npm install .
  npm run local
+
+* Most people will want to use the Getting Started Guide. We are currently beta testing the Getting Started Guide. If you'd like to join the waitlist, please email waitlist@truebase.pub.
 
 ? How does it work, in theory?
 * TrueBase is built on groundbreaking new work into Cellular Programming Languages. Unlike traditional languages and encodings which are one-dimensional, TrueBase uses higher dimensions and context-sensitivity to minimize noise and increase the interconnectedness of the data. In TrueBase, it becomes increasingly difficult to lie as the size of the TrueBase increases.

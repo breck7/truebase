@@ -1,4 +1,4 @@
-class TrueBaseFrontEndApp {
+class TrueBaseBrowserApp {
   constructor() {
     window.app = this
   }

@@ -14,7 +14,7 @@
     "build": "tsc; ./tql/build.js",
     "test": "./test.js",
     "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')",
-    "local": "./planetsDB/PlanetsDB.js"
+    "local": "./planetsDB/PlanetsDB.js startDevServer"
   },
   "files": [
     "server/*",

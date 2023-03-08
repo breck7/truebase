@@ -1,0 +1,9 @@
+importOnly
+
+replaceDefault BASE_URL 
+
+description PlanetsDB: a demo TrueBase about the planets
+git https://github.com/breck7/truebase
+viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
+email planetsDB@truebase.pub
+baseUrl https://planetsdb.truebase.pub

@@ -13,10 +13,12 @@
   "scripts": {
     "build": "tsc; ./tql/build.js",
     "test": "./test.js",
-    "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')"
+    "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')",
+    "local": "./planetsDB/PlanetsDB.js startDevServer"
   },
   "files": [
-    "code/*",
+    "server/*",
+    "browser/*",
     "tql/*"
   ],
   "repository": {
@@ -29,7 +31,7 @@
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.1",
-    "scroll-cli": "^58.2.3"
+    "scroll-cli": "^59.4.0"
   },
   "devDependencies": {
     "@types/codemirror": "0.0.74",

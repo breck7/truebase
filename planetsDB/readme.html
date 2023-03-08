@@ -1,0 +1,13 @@
+<div class="scrollSectionComponent"><h1 class="scrollTitleComponent"><a href="readme.html">PlanetsDB</a></h1>
+</div>
+<div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">This is a demo TrueBase</h3>
+<p class="scrollParagraphComponent">It contains a file for each planet.</p>
+<p class="scrollParagraphComponent">You can test the search:</p>
+</div>
+<div><textarea name="q" id="query" style="width: 800px; height: 200px;">where diameter > 15000</textarea><button onclick="runSearch()">Search</button></div>
+<script>const runSearch = async () => {
+   let response = await fetch(`/search.tree?q=` + encodeURIComponent(document.getElementById("query").value ))
+   document.getElementById("results").innerHTML = await response.text()
+}
+</script>
+<pre id="results"></pre>

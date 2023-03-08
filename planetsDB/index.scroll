@@ -1,0 +1,16 @@
+import header.scroll
+
+title PlanetsDB
+ hidden
+
+# PlanetsDB: a demo TrueBase
+
+html <center>
+
+import searchForm.scroll
+
+replace BASE_URL .
+
+html </center>
+
+import footer.scroll

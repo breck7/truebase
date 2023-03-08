@@ -1,0 +1,16 @@
+importOnly
+
+viewSource
+
+stumpNoSnippet
+ div
+  class trueBaseThemeFooter
+  a PlanetsDB
+   href BASE_URL/index.html
+   class trueBaseThemeLogo
+  span ·
+  a Search
+   href BASE_URL/search.html
+  span ·
+  a GitHub
+   href https://github.com/breck7/truebase

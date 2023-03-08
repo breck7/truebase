@@ -13,7 +13,8 @@
   "scripts": {
     "build": "tsc; ./tql/build.js",
     "test": "./test.js",
-    "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')"
+    "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')",
+    "local": "./PlanetsDB/PlanetsDB.js"
   },
   "files": [
     "code/*",

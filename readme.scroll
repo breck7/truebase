@@ -39,7 +39,7 @@ code
  git clone https://github.com/breck7/truebase
  cd truebase
  npm install .
- ./PlanetsDB.js
+ npm run local
 
 ? How does it work, in theory?
 * TrueBase is built on groundbreaking new work into Cellular Programming Languages. Unlike traditional languages and encodings which are one-dimensional, TrueBase uses higher dimensions and context-sensitivity to minimize noise and increase the interconnectedness of the data. In TrueBase, it becomes increasingly difficult to lie as the size of the TrueBase increases.

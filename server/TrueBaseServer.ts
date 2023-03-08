@@ -12,8 +12,12 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
+const { ScrollCli } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
+const nodeModulesFolder = path.join(__dirname, "..", "node_modules")
+const jtreeFolder = path.join(nodeModulesFolder, "jtree")
+const browserAppFolder = path.join(__dirname, "..", "browser")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
 
@@ -25,7 +29,7 @@ class TrueBaseServer {
   searchServer: SearchServer
   ignoreFolder = ""
   siteFolder = ""
-  distFolder: string
+  distFolder = ""
   trueBaseId = "truebase"
   siteName = "TrueBase"
   siteDomain = "truebase.pub"
@@ -34,6 +38,7 @@ class TrueBaseServer {
   constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
     this._folder = folder
     this.siteFolder = siteFolder
+    this.distFolder = path.join(this.siteFolder, "dist")
     this.ignoreFolder = ignoreFolder
   }
 
@@ -188,28 +193,6 @@ class TrueBaseServer {
     return this
   }
 
-  buildRunTimeGrammarsCommand() {
-    const { distFolder, folder, trueBaseId } = this
-    if (!Disk.exists(distFolder)) Disk.mkdir(distFolder)
-    const tqlPath = path.join(__dirname, "..", "tql", "tql.grammar")
-    const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
-    extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
-    const extendedTqlName = `${trueBaseId}Tql`
-    extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
-    const extendedTqlPath = path.join(distFolder, `${extendedTqlName}.grammar`)
-    Disk.write(extendedTqlPath, extendedTqlGrammar.toString())
-    GrammarCompiler.compileGrammarForBrowser(extendedTqlPath, distFolder + "/", false)
-    const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, distFolder + "/", true)
-    this.extendedTqlParser = require(jsPath)
-
-    const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
-    const grammar = new TreeNode(folder.grammarCode)
-    grammar.getNode("permalinkCell").set("enum", ids)
-    const grammarFileName = `${trueBaseId}.grammar`
-    Disk.write(path.join(distFolder, grammarFileName), grammar.toString())
-    GrammarCompiler.compileGrammarForBrowser(path.join(distFolder, grammarFileName), distFolder + "/", false)
-  }
-
   extendedTqlParser: any
 
   async applyPatch(patch: string) {
@@ -307,6 +290,61 @@ class TrueBaseServer {
 
   startProdServerCommand() {
     this.listenProd()
+  }
+
+  get jsFiles() {
+    return `${jtreeFolder}/products/Utils.browser.js
+${jtreeFolder}/products/TreeNode.browser.js
+${jtreeFolder}/products/GrammarLanguage.browser.js
+${jtreeFolder}/products/GrammarCodeMirrorMode.browser.js
+${jtreeFolder}/sandbox/lib/codemirror.js
+${jtreeFolder}/sandbox/lib/show-hint.js
+${this.distFolder}/${this.folder.fileExtension}.browser.js
+${this.distFolder}/tql.browser.js
+${browserAppFolder}/libs.js
+${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
+  }
+
+  get cssFiles() {
+    return [path.join(jtreeFolder, "sandbox/lib/codemirror.css"), path.join(jtreeFolder, "sandbox/lib/codemirror.show-hint.css"), path.join(this.siteFolder, "scroll.css"), path.join(browserAppFolder, "TrueBaseTheme.css")]
+  }
+
+  get combinedCss() {
+    return this.cssFiles.map(Disk.read).join(`\n\n`)
+  }
+
+  get combinedJs() {
+    return this.jsFiles.map(filename => Disk.read(filename)).join(`;\n\n`)
+  }
+
+  buildScrollsCommand() {
+    const scrolls = new ScrollCli().findScrollsInDirRecursive(this.siteFolder)
+    Object.keys(scrolls).forEach(key => new ScrollCli().buildCommand(key))
+  }
+
+  buildDistFolderCommand() {
+    const { distFolder, folder, trueBaseId } = this
+    if (!Disk.exists(distFolder)) Disk.mkdir(distFolder)
+    const tqlPath = path.join(__dirname, "..", "tql", "tql.grammar")
+    const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
+    extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
+    const extendedTqlName = `${trueBaseId}Tql`
+    extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
+    const extendedTqlPath = path.join(distFolder, `${extendedTqlName}.grammar`)
+    Disk.write(extendedTqlPath, extendedTqlGrammar.toString())
+    GrammarCompiler.compileGrammarForBrowser(extendedTqlPath, distFolder + "/", false)
+    const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, distFolder + "/", true)
+    this.extendedTqlParser = require(jsPath)
+
+    const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
+    const grammar = new TreeNode(folder.grammarCode)
+    grammar.getNode("trueBaseIdCell").set("enum", ids)
+    const grammarFileName = `${trueBaseId}.grammar`
+    Disk.write(path.join(distFolder, grammarFileName), grammar.toString())
+    GrammarCompiler.compileGrammarForBrowser(path.join(distFolder, grammarFileName), distFolder + "/", false)
+
+    Disk.write(path.join(this.distFolder, "combined.js"), this.combinedJs)
+    Disk.write(path.join(this.distFolder, "combined.css"), this.combinedCss)
   }
 
   buildCsvFilesCommand() {

@@ -7,15 +7,9 @@ stumpNoSnippet
  link
   rel stylesheet
   type text/css
-  href BASE_URL/scroll.css
- link
-  rel stylesheet
-  type text/css
-  href BASE_URL/TrueBaseTheme.css
+  href BASE_URL/dist/combined.css
  script
-  src BASE_URL/libs.js
- script
-  src BASE_URL/TrueBaseBrowserApp.js
+  src BASE_URL/dist/combined.js
  div
   class trueBaseThemeHeader
   a PlanetsDB

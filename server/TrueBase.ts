@@ -156,7 +156,7 @@ class TrueBaseFile extends TreeNode {
     return lodash.uniq(
       this.parsed
         .getTopDownArray()
-        .filter((node: TrueBaseFile) => node.providesPermalinks)
+        .filter((node: TrueBaseFile) => node.containsTrueBaseIds)
         .map((node: TrueBaseFile) => node.getWordsFrom(1))
         .flat()
     )
@@ -218,15 +218,15 @@ class TrueBaseFile extends TreeNode {
     return new TreeNode.Parser(TreeNode)
   }
 
-  updatePermalinks(oldId: string, newId: string) {
+  updateTrueBaseIds(oldTrueBaseId: string, newTrueBaseId: string) {
     this.parsed
       .getTopDownArray()
-      .filter((node: TrueBaseFile) => node.providesPermalinks)
+      .filter((node: TrueBaseFile) => node.containsTrueBaseIds)
       .map((node: TrueBaseFile) =>
         node.setContent(
           node
             .getWordsFrom(1)
-            .map((word: string) => (word === oldId ? newId : word))
+            .map((word: string) => (word === oldTrueBaseId ? newTrueBaseId : word))
             .join(" ")
         )
       )
@@ -482,12 +482,12 @@ class TrueBaseFolder extends TreeNode {
   }
 
   // todo: do this properly upstream in jtree
-  rename(oldId: string, newId: string) {
-    const content = this.getFile(oldId).childrenToString()
-    Disk.write(this.makeFilePath(newId), content)
-    this.delete(oldId)
-    this.filter((file: TrueBaseFile) => file.doesLinkTo(oldId)).forEach((file: TrueBaseFile) => file.updatePermalinks(oldId, newId))
-    this.appendLineAndChildren(newId, content)
+  rename(oldTrueBaseId: string, newTrueBaseId: string) {
+    const content = this.getFile(oldTrueBaseId).childrenToString()
+    Disk.write(this.makeFilePath(newTrueBaseId), content)
+    this.delete(oldTrueBaseId)
+    this.filter((file: TrueBaseFile) => file.doesLinkTo(oldTrueBaseId)).forEach((file: TrueBaseFile) => file.updateTrueBaseIds(oldTrueBaseId, newTrueBaseId))
+    this.appendLineAndChildren(newTrueBaseId, content)
   }
 
   getFile(id: string) {

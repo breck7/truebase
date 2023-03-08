@@ -1,31 +1,22 @@
 #!/usr/bin/env node
 
-// This is a demo TrueBase
-const path = require("path");
-const express = require("express");
+const path = require("path")
+const { Utils } = require("jtree/products/Utils.js")
+const { TrueBaseFolder } = require("../server/TrueBase.js")
+const { TrueBaseServer } = require("../server/TrueBaseServer.js")
 
-const { TrueBaseFolder } = require("../server/TrueBase.js");
-const { TrueBaseServer } = require("../server/TrueBaseServer.js");
+const ignoreFolder = path.join(__dirname, "..", "ignore")
+const browserFolder = path.join(__dirname, "..", "browser")
 
-const ignoreFolder = path.join(__dirname, "..", "ignore");
-const browserFolder = path.join(__dirname, "..", "browser");
-const truebaseFolder = path.join(__dirname);
-
-class PlanetsDB {
-  start(port) {
-    const folder = new TrueBaseFolder()
-      .setDir(truebaseFolder)
-      .setGrammarDir(truebaseFolder);
-    const trueBaseServer = new TrueBaseServer(
-      folder,
-      ignoreFolder,
-      truebaseFolder
-    )
-      .initSearch()
-      .serveFolder(browserFolder);
-    trueBaseServer.listen(port);
+class PlanetsDBServer extends TrueBaseServer {
+  beforeListen() {
+    this.buildScrollsCommand()
+    this.buildDistFolderCommand()
   }
 }
-if (!module.parent) new PlanetsDB().start(3333);
 
-module.exports = { PlanetsDB };
+const PlanetsDB = new PlanetsDBServer(new TrueBaseFolder().setDir(__dirname).setGrammarDir(__dirname), ignoreFolder, __dirname)
+
+module.exports = { PlanetsDB }
+
+if (!module.parent) Utils.runCommand(PlanetsDB, process.argv[2], process.argv[3])

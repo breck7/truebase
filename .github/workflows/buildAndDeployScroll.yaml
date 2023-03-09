@@ -13,9 +13,11 @@ jobs:
       - name: Install and Build
         run: |
           npm install -g scroll-cli
-          scroll list | scroll build
           # The line below is needed if you have *.html in your gitignore file
           rm .gitignore
+          scroll build
+          cd tql
+          scroll build
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:

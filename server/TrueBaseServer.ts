@@ -34,13 +34,14 @@ class TrueBaseServer {
   trueBaseId = "truebase"
   siteName = "TrueBase"
   siteDomain = "truebase.pub"
-  notFoundPage = "Not found"
+  notFoundPage: string
   scrollFooter: string
   scrollHeader: string
 
   constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
     this._folder = folder
     this.siteFolder = siteFolder
+    this.notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
     this.distFolder = path.join(this.siteFolder, "dist")
     this.ignoreFolder = ignoreFolder
     this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
@@ -406,6 +407,21 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 
     Disk.write(path.join(this.distFolder, "combined.js"), this.combinedJs)
     Disk.write(path.join(this.distFolder, "combined.css"), this.combinedCss)
+    Disk.write(path.join(this.distFolder, "autocomplete.json"), this.autocompleteJson)
+  }
+
+  get autocompleteJson() {
+    return JSON.stringify(
+      this.folder.map((file: any) => {
+        return {
+          label: file.get("title"),
+          id: file.id,
+          url: `/truebase/${file.id}.html`
+        }
+      }),
+      undefined,
+      2
+    )
   }
 
   buildCsvFilesCommand() {

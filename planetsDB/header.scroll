@@ -26,11 +26,11 @@ stumpNoSnippet
     placeholder Search
     autocomplete off
   a Everything
-   href BASE_URL/search.html?q=select+type
+   href BASE_URL/search.html
   a CSV
    href BASE_URL/pages/csvDocumentation.html
   a Readme
-   href BASE_URL/about.html
+   href BASE_URL/readme.html
   a Logout
    onclick new TrueBaseBrowserApp().logoutCommand()
    class loggedIn

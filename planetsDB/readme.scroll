@@ -1,15 +1,19 @@
-title PlanetsDB
+import header.scroll
 
-# This is a demo TrueBase
-* It contains a file for each planet.
-* You can test the search:
+title PlanetsDB Readme
 
-html
- <div><textarea name="q" id="query" style="width: 800px; height: 200px;">where diameter > 15000</textarea><button onclick="runSearch()">Search</button></div>
- <script>const runSearch = async () => {
-    let response = await fetch(`/search.tree?q=` + encodeURIComponent(document.getElementById("query").value ))
-    document.getElementById("results").innerHTML = await response.text()
- }
- </script>
- <pre id="results"></pre>
+startColumns 1
 
+# PlanetDBs is a sample TrueBase for demonstration, R&D and testing purpose.
+* It contains a file for each planet in our Solar System.
+
+## Try it
+code
+ git clone https://github.com/breck7/truebase
+ cd truebase
+ npm install .
+ npm run local
+
+endColumns
+
+import footer.scroll

@@ -12,6 +12,7 @@ class PlanetsDBServer extends TrueBaseServer {
   beforeListen() {
     this.buildScrollsCommand()
     this.buildDistFolderCommand()
+    super.beforeListen()
   }
 }
 

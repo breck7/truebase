@@ -68,6 +68,7 @@ class TrueBaseServer {
     })
     this.serveFolder(this.siteFolder)
     this.initSearch()
+    app.get(`/${this.trueBaseId}.json`, (req: any, res: any) => res.setHeader("content-type", "application/json").send(this.folder.typedMapJson))
     return this._app
   }
 
@@ -80,14 +81,6 @@ class TrueBaseServer {
     const requestTimesLog = path.join(ignoreFolder, "requestTimes.log")
     Disk.touch(requestTimesLog)
     app.use(morgan("tiny", { stream: fs.createWriteStream(requestTimesLog, { flags: "a" }) }))
-  }
-
-  _addNotFoundRoute() {
-    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
-    this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
-    const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
-    //The 404 Route (ALWAYS Keep this as the last route)
-    this.app.get("*", (req: any, res: any) => res.status(404).send(notFoundPage))
   }
 
   serveFolder(folder: string) {
@@ -313,19 +306,23 @@ ${this.scrollFooter}`
   }
 
   beforeListen() {
-    // A hook for subclasses to override
+    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
+    this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
+    const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
+    this.initUserAccounts()
+
+    //The 404 Route (ALWAYS Keep this as the last route)
+    this.app.get("*", (req: any, res: any) => res.status(404).send(notFoundPage))
   }
 
   listen(port = 4444) {
     this.beforeListen()
-    this._addNotFoundRoute()
     this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this
   }
 
   listenProd() {
     this.beforeListen()
-    this._addNotFoundRoute()
     const key = fs.readFileSync(path.join(this.ignoreFolder, "privkey.pem"))
     const cert = fs.readFileSync(path.join(this.ignoreFolder, "fullchain.pem"))
     https

@@ -5,7 +5,9 @@ class TrueBaseBrowserApp {
 
   localStorageKeys = {
     email: "email",
-    password: "password"
+    password: "password",
+    staged: "staged",
+    author: "author"
   }
 
   domainName = "truebase.pub"
@@ -16,6 +18,33 @@ class TrueBaseBrowserApp {
 
   get loggedInUser() {
     return this.store.getItem(this.localStorageKeys.email)
+  }
+
+  get author() {
+    try {
+      return this.store.getItem(localStorageKeys.author) || this.defaultAuthor
+    } catch (err) {
+      console.error(err)
+    }
+
+    return this.defaultAuthor
+  }
+
+  defaultAuthor = this.genDefaultAuthor()
+  genDefaultAuthor() {
+    let user = "region.platform.vendor"
+    try {
+      const region = Intl.DateTimeFormat().resolvedOptions().timeZone ?? ""
+      const platform = navigator.userAgentData?.platform ?? navigator.platform ?? ""
+      const vendor = navigator.vendor ?? ""
+      // make sure email address is not too long. i think 64 is the limit.
+      // so here length is max 45 + 7 + 4 + 4.
+      user = [region, platform, vendor].map(str => str.replace(/[^a-zA-Z]/g, "").substr(0, 15)).join(".")
+    } catch (err) {
+      console.error(err)
+    }
+    const hash = Utils.getRandomCharacters(7)
+    return `Anon <${`anon.${user}.${hash}`}@${window.location.host}.com>`
   }
 
   searchIndex = false
@@ -154,5 +183,200 @@ class TrueBaseBrowserApp {
 
   get value() {
     return this.codeMirrorInstance.getValue()
+  }
+
+  async renderEditPage() {
+    this.renderCodeEditorStuff()
+    await this.initEditData()
+    this.updateQuickLinks()
+  }
+
+  renderCreatePage() {
+    this.renderCodeEditorStuff()
+    document.getElementById("exampleSection").innerHTML = `Example:<br><pre>title Elixir
+appeared 2011
+type pl
+creators José Valim
+website https://elixir-lang.org/
+githubRepo https://github.com/elixir-lang/elixir</pre>`
+  }
+
+  renderCodeEditorStuff() {
+    this.renderForm()
+    this.startPLDBCodeMirror()
+    this.bindStageButton()
+    this.updateStagedStatus()
+    this.updateAuthor()
+  }
+
+  async initEditData(currentValue, missingRecommendedColumns) {
+    const { filename, currentFileId } = this
+    const localValue = this.stagedFiles.getNode(filename)
+    let response = await fetch(`/edit.json?id=${currentFileId}`)
+    const data = await response.json()
+
+    if (data.error) return (document.getElementById("formHolder").innerHTML = data.error)
+
+    document.getElementById("pageTitle").innerHTML = `Editing file <i>${filename}</i>`
+
+    document.addEventListener("keydown", function(event) {
+      if (document.activeElement !== document.body) return
+      if (event.key === "ArrowLeft") window.location = `edit.html?id=` + data.previous
+      else if (event.key === "ArrowRight") window.location = `edit.html?id=` + data.next
+    })
+
+    this.codeMirrorInstance.setValue(localValue ? localValue.childrenToString() : data.content)
+    document.getElementById("missingRecommendedColumns").innerHTML = `<br><b>Missing columns:</b><br>${data.missingRecommendedColumns.map(col => col.Column).join("<br>")}`
+  }
+
+  updateStagedStatus() {
+    const el = document.getElementById("stagedStatus")
+    const { stagedFiles } = this
+    el.style.display = "none"
+    if (!stagedFiles.length) return
+    document.getElementById("patch").value = stagedFiles.toString()
+    el.style.display = "block"
+  }
+
+  bindStageButton() {
+    const el = document.getElementById("stageButton")
+    el.onclick = () => {
+      const tree = this.stagedFiles
+      tree.touchNode(this.filename).setChildren(this.value)
+      this.setStage(tree.toString())
+      this.updateStagedStatus()
+    }
+
+    Mousetrap.bind("mod+s", evt => {
+      el.click()
+      evt.preventDefault()
+      return false
+    })
+  }
+
+  setStage(str) {
+    this.store.setItem(localStorageKeys.staged, str)
+    document.getElementById("patch").value = str
+  }
+
+  get stagedFiles() {
+    const str = this.store.getItem(localStorageKeys.staged)
+    return str ? new TreeNode(str) : new TreeNode()
+  }
+
+  renderForm() {
+    document.getElementById("formHolder").innerHTML = `<form method="POST" action="/saveCommitAndPush" id="stagedStatus" style="display: none;">
+ <div>You have a patch ready to submit. Author is set as: <span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
+ <textarea id="patch" name="patch" readonly></textarea><br>
+ <input type="hidden" name="author" id="author" />
+ <input type="submit" value="Commit and push" id="saveCommitAndPushButton" onClick="app.saveAuthorIfUnsaved()"/> <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>
+</form>
+<div id="editForm">
+ <div class="cell" id="leftCell">
+   <textarea id="fileContent"></textarea>
+   <div id="tqlErrors"></div> <!-- todo: cleanup. -->
+ </div>
+ <div class="cell">
+   <div id="quickLinks"></div>
+   <div id="missingRecommendedColumns"></div>
+   <div id="exampleSection"></div>
+ </div>
+ <div>
+   <button id="stageButton">Stage</button>
+ </div>
+</div>`
+  }
+
+  clearChanges() {
+    if (confirm("Are you sure you want to delete all local changes? This cannot be undone.")) this.setStage("")
+    this.updateStagedStatus()
+  }
+
+  async startCodeMirrorEditor() {
+    this.programCompiler = pldbNode
+    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => pldbNode, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("fileContent"), {
+      lineWrapping: false,
+      lineNumbers: true
+    })
+
+    this.codeMirrorInstance.setSize(this.codeMirrorWidth, 500)
+    this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
+  }
+
+  get currentFileId() {
+    return new URLSearchParams(window.location.search).get("id")
+  }
+
+  get filename() {
+    if (location.pathname.includes("create.html")) return "create"
+    return this.currentFileId + ".pldb"
+  }
+
+  get codeMirrorWidth() {
+    return document.getElementById("leftCell").width
+  }
+
+  updateAuthor() {
+    document.getElementById("authorLabel").innerHTML = Utils.htmlEscaped(this.author)
+    document.getElementById("author").value = this.author
+  }
+
+  get store() {
+    return window.localStorage
+  }
+
+  saveAuthorIfUnsaved() {
+    try {
+      if (!this.store.getItem(localStorageKeys.author)) this.saveAuthor(this.defaultAuthor)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  saveAuthor(name) {
+    try {
+      this.store.setItem(localStorageKeys.author, name)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  changeAuthor() {
+    const newValue = prompt(`Enter author name and email formatted like "Breck Yunits <by@breckyunits.com>". This information is recorded in the public Git log.`, this.author)
+    if (newValue === "") this.saveAuthor(this.defaultAuthor)
+    if (newValue) this.saveAuthor(newValue)
+    this.updateAuthor()
+  }
+
+  get route() {
+    return location.pathname.split("/")[1]
+  }
+
+  updateQuickLinks() {
+    const code = this.codeMirrorInstance.getValue()
+    if (!code) return
+    const tree = new TreeNode(code)
+    const title = tree.get("title")
+    const references = tree.findNodes("reference").map(node => "Reference: " + node.content)
+
+    const links = ["website", "githubRepo", "wikipedia"].filter(key => tree.has(key)).map(key => `${Utils.capitalizeFirstLetter(key)}: ${tree.get(key)}`)
+
+    const permalink = this.route
+    document.getElementById("quickLinks").innerHTML =
+      Utils.linkify(`<b>PLDB on ${title}:</b><br>
+Git: https://github.com/breck7/pldb/blob/main/truebase/things/${permalink}.pldb<br>
+HTML page: https://pldb.com/truebase/${permalink}.html
+<br><br>
+<b>Links about ${title}:</b><br>
+${links.join("<br>")}
+${references.join("<br>")}<br><br>
+
+<b>Search for more information about ${title}:</b><br>
+Google: https://www.google.com/search?q=${title}+programming+language<br>
+Google w/time: https://www.google.com/search?q=${title}+programming+language&tbs=cdr%3A1%2Ccd_min%3A1%2F1%2F1980%2Ccd_max%3A12%2F31%2F1995&tbm=<br>
+Google Scholar: https://scholar.google.com/scholar?q=${title}<br>
+Google Groups: https://groups.google.com/forum/#!search/${title}<br>
+Google Trends: https://trends.google.com/trends/explore?date=all&q=${title}<br>
+DDG: https://duckduckgo.com/?q=${title}<br>`) + `Wayback Machine: <a target="_blank" href="https://web.archive.org/web/20220000000000*/${title}">https://web.archive.org/web/20220000000000*/${title}</a>`
   }
 }

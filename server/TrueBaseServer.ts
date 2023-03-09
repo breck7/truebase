@@ -7,6 +7,7 @@ const https = require("https")
 const express = require("express")
 const nodemailer = require("nodemailer")
 const bodyParser = require("body-parser")
+const simpleGit = require("simple-git")
 
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
@@ -15,8 +16,10 @@ const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const { ScrollCli, ScrollFile } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
-let jtreeFolder = path.join(__dirname, "..", "node_modules", "jtree")
-if (!Disk.exists(jtreeFolder)) jtreeFolder = path.join(__dirname, "..", "..", "jtree") // Hacky. Todo: cleanup
+let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
+if (!Disk.exists(nodeModulesFolder)) nodeModulesFolder = path.join(__dirname, "..", "..") // Hacky. Todo: cleanup
+const jtreeFolder = path.join(nodeModulesFolder, "jtree")
+
 const browserAppFolder = path.join(__dirname, "..", "browser")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
@@ -29,6 +32,7 @@ class TrueBaseServer {
   _app: any
   searchServer: SearchServer
   ignoreFolder = ""
+  editLogPath: string
   siteFolder: string
   distFolder: string
   trueBaseId = "truebase"
@@ -42,6 +46,7 @@ class TrueBaseServer {
     this.siteFolder = siteFolder
     this.distFolder = path.join(this.siteFolder, "dist")
     this.ignoreFolder = ignoreFolder
+    this.editLogPath = path.join(ignoreFolder, "trueBaseServerLog.tree")
   }
 
   get folder() {
@@ -73,9 +78,51 @@ class TrueBaseServer {
       res.setHeader("Access-Control-Allow-Credentials", true)
       next()
     })
+    this.serveFolder(browserAppFolder)
     this.serveFolder(this.siteFolder)
     this._initSearch()
     this._initUserAccounts()
+
+    app.get("/edit.json", (req: any, res: any) => {
+      const { id } = req.query
+      const file = this.folder.getFile(id)
+      if (!file) return res.send(JSON.stringify({ error: "Not found" }))
+      res.send(
+        JSON.stringify({
+          content: file.childrenToString(),
+          missingRecommendedColumns: file.missingRecommendedColumns,
+          next: file.nextRanked.id,
+          previous: file.previousRanked.id
+        })
+      )
+    })
+
+    app.post("/saveCommitAndPush", async (req: any, res: any) => {
+      const { author } = req.body
+      const patch = Utils.removeReturnChars(req.body.patch).trim()
+      this.appendToPostLog(author, patch)
+
+      try {
+        const { authorName, authorEmail } = this.parseGitAuthor(author)
+        if (!Utils.isValidEmail(authorEmail)) throw new Error(`Invalid email: "${Utils.htmlEscaped(authorEmail)}"`)
+
+        const changedFiles = this.applyPatch(patch)
+        const hash = await this.saveCommitAndPush(
+          changedFiles.map(file => file.filename),
+          authorName,
+          authorEmail
+        )
+        changedFiles.forEach(file => file.writeScrollFileIfChanged(path.join(this.siteFolder, "truebase")))
+
+        res.redirect(`/thankYou.html?commit=${hash}`)
+      } catch (error) {
+        console.error(error)
+        res.status(500).redirect(`/error.html?error=${encodeURIComponent(error)}`)
+      }
+    })
+
+    // Short urls:
+    app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/truebase/${req.params.id.toLowerCase()}.html`) : next()))
 
     app.get(`/${this.trueBaseId}.json`, (req: any, res: any) => res.setHeader("content-type", "application/json").send(this.folder.typedMapJson))
     return this._app
@@ -84,6 +131,112 @@ class TrueBaseServer {
   serveFolder(folder: string) {
     this.app.use(express.static(folder))
     return this
+  }
+
+  serveFolderNested(nestedPath: string, folder: string) {
+    this.app.use(nestedPath, express.static(folder))
+  }
+
+  gitOn = false
+  GIT_DEFAULT_USERNAME = "PLDBBot"
+  GIT_DEFAULT_EMAIL = "bot@pldb.com"
+
+  parseGitAuthor(field = `${this.GIT_DEFAULT_USERNAME} <${this.GIT_DEFAULT_EMAIL}>`) {
+    const authorName = field
+      .split("<")[0]
+      .trim()
+      .replace(/[^a-zA-Z \.]/g, "")
+      .substr(0, 32)
+    const authorEmail = field
+      .split("<")[1]
+      .replace(">", "")
+      .trim()
+    return {
+      authorName,
+      authorEmail
+    }
+  }
+
+  async saveCommitAndPush(filenames: string[], authorName: string, authorEmail: string) {
+    const commitResult = await this.commitFilesPullAndPush(filenames, authorName, authorEmail)
+
+    return commitResult.commitHash
+  }
+
+  _git: any
+  get git() {
+    if (!this._git)
+      this._git = simpleGit({
+        baseDir: this.folder.dir,
+        binary: "git",
+        maxConcurrentProcesses: 1,
+        // Needed since git won't let you commit if there's no user name config present (i.e. CI), even if you always
+        // specify `author=` in every command. See https://stackoverflow.com/q/29685337/10670163 for example.
+        config: [`user.name='${this.GIT_DEFAULT_USERNAME}'`, `user.email='${this.GIT_DEFAULT_EMAIL}'`]
+      })
+    return this._git
+  }
+
+  async commitFilesPullAndPush(filenames: string[], authorName: string, authorEmail: string) {
+    const commitMessage = filenames.join(" ")
+    if (!this.gitOn) {
+      console.log(`Would commit "${commitMessage}" with author "${authorName} <${authorEmail}>"`)
+      return {
+        success: true,
+        commitHash: `pretendCommitHash`
+      }
+    }
+    const { git } = this
+    try {
+      // git add
+      // git commit
+      // git pull --rebase
+      // git push
+
+      if (!Utils.isValidEmail(authorEmail)) throw new Error(`Invalid email: ${authorEmail}`)
+
+      // for (const filename of filenames) {
+      //   await git.add(filename)
+      // }
+
+      const commitResult = await git.commit(commitMessage, filenames, {
+        "--author": `${authorName} <${authorEmail}>`
+      })
+
+      await this.git.pull("origin", "main")
+      await git.push()
+
+      // todo: verify that this is the users commit
+      const commitHash = require("child_process")
+        .execSync("git rev-parse HEAD", {
+          cwd: this.siteFolder
+        })
+        .toString()
+        .trim()
+
+      return {
+        success: true,
+        commitHash
+      }
+    } catch (error) {
+      console.error(error)
+      return {
+        success: false,
+        error
+      }
+    }
+  }
+
+  appendToPostLog(author = "", content = "") {
+    // Write to log for backup in case something goes wrong.
+    Disk.append(
+      this.editLogPath,
+      `post
+ time ${new Date().toString()}
+ author ${author.replace(/\n/g, " ")}
+ content
+  ${content.replace(/\n/g, "\n  ")}\n`
+    )
   }
 
   async createEmailConfig() {
@@ -246,7 +399,7 @@ ${this.scrollFooter}`
 
   extendedTqlParser: any
 
-  async applyPatch(patch: string) {
+  applyPatch(patch: string) {
     const { folder } = this
     const tree = new TreeNode(patch)
 
@@ -303,9 +456,19 @@ ${this.scrollFooter}`
     }
   }
 
+  initSiteCommand() {
+    const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
+    defaultScrollFiles.forEach((file: string) => {
+      const newPath = path.join(this.siteFolder, path.basename(file))
+      if (!Disk.exists(newPath)) Disk.write(newPath, Disk.read(file))
+    })
+  }
+
   beforeListen() {
+    this.initSiteCommand()
     this.buildDistFolderCommand() // todo: cleanup
     this.buildCsvFilesCommand()
+    this.buildScrollsCommand()
     this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
     this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
     const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
@@ -321,7 +484,8 @@ ${this.scrollFooter}`
 
   httpServer: any
   httpsServer: any
-  listen(port = 4444) {
+  devPort = 4444
+  listen(port = this.devPort) {
     this.beforeListen()
     this.httpServer = this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this
@@ -455,10 +619,12 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
           .map(key => {
             let value = varMap[key]
 
-            if (value.rows)
+            if (value.rows) {
+              const rows = value.rows instanceof TreeNode ? value.rows : new TreeNode(value.rows)
               return `replace ${key}
  pipeTable
-  ${value.rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
+  ${rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
+            }
 
             value = value.toString()
 
@@ -489,6 +655,39 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 
   createFromTsvCommand() {
     TreeNode.fromTsv(Disk.read(path.join(this.ignoreFolder, "create.tsv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+  }
+  // Example: new PlanetsDB().changeListDelimiterCommand("originCommunity", " && ")
+  changeListDelimiterCommand(field: string, newDelimiter: string) {
+    this.folder.forEach((file: any) => {
+      const hit = file.getNode(field)
+      if (hit) {
+        const parsed = file.parsed.getNode(field)
+        hit.setContent(parsed.list.join(newDelimiter))
+        file.save()
+      }
+    })
+  }
+
+  // Example: new PlanetsDB().replaceListItems("originCommunity", { "Apple Inc": "Apple" })
+  replaceListItems(field: string, replacementMap: any) {
+    const keys = Object.keys(replacementMap)
+    const delimiter = " && "
+    this.folder.forEach((file: any) => {
+      const value = file.get(field)
+      if (!value) return
+
+      const values = value.split(delimiter).map((value: any) => (replacementMap[value] ? replacementMap[value] : value))
+
+      const joined = values.join(delimiter)
+      if (joined === value) return
+
+      file.set(field, joined)
+      file.prettifyAndSave()
+    })
+  }
+
+  searchCommand() {
+    console.log(new SearchServer(this.folder, this.ignoreFolder).csv(process.argv.slice(3).join(" ")))
   }
 }
 

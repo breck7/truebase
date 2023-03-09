@@ -14,6 +14,19 @@ declare type fileName = string
 declare type filepath = string
 declare type treeNode = any
 
+interface ColumnInterface {
+  Column: string
+  Values: number
+  Coverage: string
+  Example: string
+  Source: string
+  SourceLink: string
+  Description: string
+  Definition: string
+  DefinitionLink: string
+  Recommended: boolean
+}
+
 /*
 Flatten a tree node into an object like {twitter:"pldb", "twitter.followers":123}.
 Todo: upstream this to jtree and name it appropriately
@@ -53,6 +66,21 @@ code
  ${this.childrenToString().replace(/\n/g, "\n ")}
 
 import ../footer.scroll`
+  }
+
+  writeScrollFileIfChanged(folder: string) {
+    Disk.writeIfChanged(path.join(folder, this.id + ".scroll"), this.toScroll())
+  }
+
+  get missingColumns() {
+    return (this.parent.columnDocumentation as ColumnInterface[])
+      .filter(col => col.Description !== "computed")
+      .filter(col => !col.Column.includes("."))
+      .filter(col => !this.has(col.Column))
+  }
+
+  get missingRecommendedColumns() {
+    return this.missingColumns.filter(col => col.Recommended === true)
   }
 
   get webPermalink() {
@@ -192,6 +220,10 @@ import ../footer.scroll`
     this.save()
   }
 
+  get factCount() {
+    return this.parsed.getTopDownArray().filter((node: any) => node.shouldSerialize !== false).length
+  }
+
   get parsed() {
     if (!this.quickCache.parsed) {
       const programParser = this.parent.grammarProgramConstructor
@@ -244,6 +276,11 @@ class TrueBaseFolder extends TreeNode {
     return this.quickCache.bytes
   }
 
+  get factCount() {
+    if (!this.quickCache.factCount) this.quickCache.factCount = lodash.sum(this.map((file: TrueBaseFile) => file.factCount))
+    return this.quickCache.factCount
+  }
+
   get nodesForCsv() {
     if (this.quickCache.nodesForCsv) return this.quickCache.nodesForCsv
     const { computedColumnNames } = this
@@ -275,6 +312,26 @@ class TrueBaseFolder extends TreeNode {
     const map = this.quickCache.grammarFileMap
     this.grammarFilePaths.forEach((filepath: string) => (map[filepath] = Disk.read(filepath)))
     return map
+  }
+
+  get pageRankLinks() {
+    if (this.quickCache.pageRankLinks) return this.quickCache.pageRankLinks
+
+    this.quickCache.pageRankLinks = {}
+    const pageRankLinks = this.quickCache.pageRankLinks
+    this.forEach((file: any) => {
+      pageRankLinks[file.id] = []
+    })
+
+    this.forEach((file: any) => {
+      file.linksToOtherFiles.forEach((link: any) => {
+        if (!pageRankLinks[link]) throw new Error(`Broken permalink in '${file.id}': No language "${link}" found`)
+
+        pageRankLinks[link].push(file.id)
+      })
+    })
+
+    return pageRankLinks
   }
 
   // todo: is there already a way to do this in jtree?
@@ -343,7 +400,7 @@ class TrueBaseFolder extends TreeNode {
     }
   }
 
-  get columnDocumentation() {
+  get columnDocumentation(): ColumnInterface[] {
     if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
 
     // Return columns with documentation sorted in the most interesting order.

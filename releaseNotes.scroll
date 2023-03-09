@@ -4,11 +4,16 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
-# Edge 2023-3-8
+# 7.0.0 2023-3-9
+* Warning: TrueBase is still in an unstable beta state. This release likely has some bugs.
 - 🎉 TrueBase now ships with a browser app and a Scroll theme
 - 🎉 Readme update
 - 🎉 Getting Started Guide beta now available
 - ⚠️ BREAKING: `code/` folder is now `server/`
+- ⚠️ BREAKING: by default CSV docs are generated at `/csv.html`
+- ⚠️ BREAKING: change `permalinkCell` to `trueBaseIdCell`
+- ⚠️ BREAKING: change `providesPermalinks` to `containsTrueBaseIds`
+- 🏥 improved testability and added test coverage
 
 # 6.1.1 2023-3-7
 - 🏥 fix to login log

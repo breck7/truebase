@@ -1,2 +1,4 @@
 dist/
 truebase/
+*Imports.scroll
+*.csv

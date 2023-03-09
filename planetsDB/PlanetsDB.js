@@ -9,9 +9,12 @@ const ignoreFolder = path.join(__dirname, "..", "ignore")
 const browserFolder = path.join(__dirname, "..", "browser")
 
 class PlanetsDBServer extends TrueBaseServer {
+  trueBaseId = "planetsdb"
+  siteName = "PlanetsDB"
+  siteDomain = "planetsdb.truebase.pub"
   beforeListen() {
-    this.buildScrollsCommand()
     super.beforeListen()
+    this.buildScrollsCommand()
   }
 }
 

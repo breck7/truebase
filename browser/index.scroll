@@ -1,9 +1,9 @@
 import header.scroll
 
-title PlanetsDB
+title SITE_NAME
  hidden
 
-# PlanetsDB: a demo TrueBase
+# SITE_NAME: SITE_DESCRIPTION
 
 html <center>
 

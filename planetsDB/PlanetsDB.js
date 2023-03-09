@@ -12,10 +12,7 @@ class PlanetsDBServer extends TrueBaseServer {
   trueBaseId = "planetsdb"
   siteName = "PlanetsDB"
   siteDomain = "planetsdb.truebase.pub"
-  beforeListen() {
-    super.beforeListen()
-    this.buildScrollsCommand()
-  }
+  devPort = 5678
 }
 
 const PlanetsDB = new PlanetsDBServer(new TrueBaseFolder().setDir(__dirname).setGrammarDir(__dirname), ignoreFolder, __dirname)

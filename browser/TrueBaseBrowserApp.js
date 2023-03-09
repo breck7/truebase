@@ -30,7 +30,7 @@ class TrueBaseBrowserApp {
     return this.defaultAuthor
   }
 
-  defaultAuthor = genDefaultAuthor()
+  defaultAuthor = this.genDefaultAuthor()
   genDefaultAuthor() {
     let user = "region.platform.vendor"
     try {

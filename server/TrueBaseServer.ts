@@ -78,6 +78,7 @@ class TrueBaseServer {
       res.setHeader("Access-Control-Allow-Credentials", true)
       next()
     })
+    this.serveFolder(browserAppFolder)
     this.serveFolder(this.siteFolder)
     this._initSearch()
     this._initUserAccounts()
@@ -455,9 +456,19 @@ ${this.scrollFooter}`
     }
   }
 
+  initSiteCommand() {
+    const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
+    defaultScrollFiles.forEach((file: string) => {
+      const newPath = path.join(this.siteFolder, path.basename(file))
+      if (!Disk.exists(newPath)) Disk.write(newPath, Disk.read(file))
+    })
+  }
+
   beforeListen() {
+    this.initSiteCommand()
     this.buildDistFolderCommand() // todo: cleanup
     this.buildCsvFilesCommand()
+    this.buildScrollsCommand()
     this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
     this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
     const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
@@ -473,7 +484,8 @@ ${this.scrollFooter}`
 
   httpServer: any
   httpsServer: any
-  listen(port = 4444) {
+  devPort = 4444
+  listen(port = this.devPort) {
     this.beforeListen()
     this.httpServer = this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this
@@ -607,10 +619,12 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
           .map(key => {
             let value = varMap[key]
 
-            if (value.rows)
+            if (value.rows) {
+              const rows = value.rows instanceof TreeNode ? value.rows : new TreeNode(value.rows)
               return `replace ${key}
  pipeTable
-  ${value.rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
+  ${rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
+            }
 
             value = value.toString()
 

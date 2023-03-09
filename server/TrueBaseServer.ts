@@ -34,18 +34,14 @@ class TrueBaseServer {
   trueBaseId = "truebase"
   siteName = "TrueBase"
   siteDomain = "truebase.pub"
-  notFoundPage: string
   scrollFooter: string
   scrollHeader: string
 
   constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
     this._folder = folder
     this.siteFolder = siteFolder
-    this.notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
     this.distFolder = path.join(this.siteFolder, "dist")
     this.ignoreFolder = ignoreFolder
-    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
-    this.scrollHeader = new ScrollFile(undefined, path.join(siteFolder, "header.scroll")).importResults.code
   }
 
   get folder() {
@@ -87,7 +83,9 @@ class TrueBaseServer {
   }
 
   _addNotFoundRoute() {
-    const { notFoundPage } = this
+    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
+    this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
+    const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => res.status(404).send(notFoundPage))
   }

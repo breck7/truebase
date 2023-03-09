@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc; ./tql/build.js",
     "test": "./test.js",
+    "coverage": "tap ./test.js --coverage-report=lcov",
     "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')",
     "local": "./planetsDB/PlanetsDB.js startDevServer"
   },

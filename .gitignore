@@ -6,3 +6,5 @@ ignore/
 *.js
 *.css
 dist/
+.nyc_output/
+coverage/

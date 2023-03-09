@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 7.2.1 2023-3-9
+- 🏥 minor fixes to editing page
+
 # 7.2.0 2023-3-9
 - 🎉 add more default pages to `initSiteCommand`
 

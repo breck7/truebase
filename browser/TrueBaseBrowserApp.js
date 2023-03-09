@@ -22,7 +22,7 @@ class TrueBaseBrowserApp {
 
   get author() {
     try {
-      return this.store.getItem(localStorageKeys.author) || this.defaultAuthor
+      return this.store.getItem(this.localStorageKeys.author) || this.defaultAuthor
     } catch (err) {
       console.error(err)
     }
@@ -203,7 +203,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
 
   renderCodeEditorStuff() {
     this.renderForm()
-    this.startPLDBCodeMirror()
+    this.startCodeMirrorEditor()
     this.bindStageButton()
     this.updateStagedStatus()
     this.updateAuthor()
@@ -255,12 +255,12 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
   }
 
   setStage(str) {
-    this.store.setItem(localStorageKeys.staged, str)
+    this.store.setItem(this.localStorageKeys.staged, str)
     document.getElementById("patch").value = str
   }
 
   get stagedFiles() {
-    const str = this.store.getItem(localStorageKeys.staged)
+    const str = this.store.getItem(this.localStorageKeys.staged)
     return str ? new TreeNode(str) : new TreeNode()
   }
 
@@ -327,7 +327,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
 
   saveAuthorIfUnsaved() {
     try {
-      if (!this.store.getItem(localStorageKeys.author)) this.saveAuthor(this.defaultAuthor)
+      if (!this.store.getItem(this.localStorageKeys.author)) this.saveAuthor(this.defaultAuthor)
     } catch (err) {
       console.error(err)
     }
@@ -335,7 +335,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
 
   saveAuthor(name) {
     try {
-      this.store.setItem(localStorageKeys.author, name)
+      this.store.setItem(this.localStorageKeys.author, name)
     } catch (err) {
       console.error(err)
     }

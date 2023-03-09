@@ -11,5 +11,6 @@ import searchForm.scroll
 html <script>document.getElementById("searchFormInput").value = (window.location.pathname + "").split("/").pop().replace(/\.[^\.]+$/, "").replace(/</g, "&lt;") </script>
 
 * You can report a broken link on the GitHub.
+ GIT_URL/issues report a broken link
 
 import footer.scroll

@@ -4,6 +4,11 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 7.1.0 2023-3-9
+- 🎉 added `initSiteCommand` which provides default homepage, search form, header, footer, style, 404 page, and csv page now included.
+- 🎉 devPort option
+- 🎉 editing code
+
 # 7.0.1 2023-3-9
 - 🏥 cloud fix
 

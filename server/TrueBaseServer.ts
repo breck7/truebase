@@ -15,8 +15,8 @@ const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const { ScrollCli, ScrollFile } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
-const nodeModulesFolder = path.join(__dirname, "..", "node_modules")
-const jtreeFolder = path.join(nodeModulesFolder, "jtree")
+let jtreeFolder = path.join(__dirname, "..", "node_modules", "jtree")
+if (!Disk.exists(jtreeFolder)) jtreeFolder = path.join(__dirname, "..", "..", "jtree") // Hacky. Todo: cleanup
 const browserAppFolder = path.join(__dirname, "..", "browser")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)

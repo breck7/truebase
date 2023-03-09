@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 7.0.1 2023-3-9
+- 🏥 cloud fix
+
 # 7.0.0 2023-3-9
 * Warning: TrueBase is still in an unstable beta state. This release likely has some bugs.
 - 🎉 TrueBase now ships with a browser app and a Scroll theme

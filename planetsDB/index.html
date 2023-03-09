@@ -19,9 +19,9 @@
  <form style="display:inline-block;" method="get" action="/fullTextSearch">
   <input type="search" id="trueBaseThemeHeaderSearch" name="q" placeholder="Search" autocomplete="off"></input>
 </form>
- <a href="./search.html?q=select+type">Everything</a>
+ <a href="./search.html">Everything</a>
  <a href="./pages/csvDocumentation.html">CSV</a>
- <a href="./about.html">Readme</a>
+ <a href="./readme.html">Readme</a>
  <a onclick="new TrueBaseBrowserApp().logoutCommand()" class="loggedIn" style="display:none;" id="logoutButton" href="#">Logout</a>
  <input class="notLoggedIn" type="email" id="loginEmail" style="display:none;" placeholder="Email"></input>
  <button style="display:none;" class="notLoggedIn" onclick="new TrueBaseBrowserApp().verifyEmailAndSendLoginLinkCommand()">Login/Join</button>
@@ -47,7 +47,7 @@
   <input class="searchButton" type="submit" value="Search">
  </form>
 </div>
-<script>document.addEventListener("DOMContentLoaded", evt => new TrueBaseBrowserApp().render())</script>
+<script>document.addEventListener("DOMContentLoaded", evt => new TrueBaseBrowserApp().render().initAutocomplete("searchFormInput"))</script>
 
 
 </center>

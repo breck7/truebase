@@ -47,7 +47,7 @@ testTree.toTypedMap = (equal: any) => {
   equal(typedMap.neptune.surfaceGravity, 11)
   equal(typedMap.mercury.moons, 0)
   equal(typedMap.earth.title, "Earth")
-  equal(typedMap.earth.neighbors.Mars, 110000000)
+  equal(typedMap.earth.neighbors.mars, 110000000)
   equal(typedMap.earth.hasLife, true)
   equal(typedMap.earth.aka.length, 2)
   equal(typedMap.earth.wikipedia.id, "Earth")
@@ -68,7 +68,7 @@ testTree.fileSystemEvents = async (equal: any) => {
   // Arrange
   let fileAdded = ""
   let waiting: any
-  waiting = new Promise((resolve) => {
+  waiting = new Promise(resolve => {
     folder.onChildAdded((event: any) => {
       fileAdded = event.targetNode.getLine()
       // Assert
@@ -82,7 +82,7 @@ testTree.fileSystemEvents = async (equal: any) => {
 
   // Arrange
   const expectedContent = "hello world"
-  waiting = new Promise((resolve) => {
+  waiting = new Promise(resolve => {
     folder.onDescendantChanged((event: any) => {
       const fileNode = event.targetNode.getAncestorByNodeConstructor(TrueBaseFile)
 
@@ -98,7 +98,7 @@ testTree.fileSystemEvents = async (equal: any) => {
 
   // Arrange
   let fileRemoved = ""
-  waiting = new Promise((resolve) => {
+  waiting = new Promise(resolve => {
     folder.onChildRemoved((event: any) => {
       fileRemoved = event.targetNode.getLine()
       // Assert

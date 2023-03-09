@@ -34,7 +34,6 @@ class TrueBaseServer {
   trueBaseId = "truebase"
   siteName = "TrueBase"
   siteDomain = "truebase.pub"
-  notFoundPage = "Not found"
   scrollFooter: string
   scrollHeader: string
 
@@ -43,8 +42,6 @@ class TrueBaseServer {
     this.siteFolder = siteFolder
     this.distFolder = path.join(this.siteFolder, "dist")
     this.ignoreFolder = ignoreFolder
-    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
-    this.scrollHeader = new ScrollFile(undefined, path.join(siteFolder, "header.scroll")).importResults.code
   }
 
   get folder() {
@@ -86,7 +83,9 @@ class TrueBaseServer {
   }
 
   _addNotFoundRoute() {
-    const { notFoundPage } = this
+    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
+    this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
+    const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => res.status(404).send(notFoundPage))
   }
@@ -406,6 +405,21 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 
     Disk.write(path.join(this.distFolder, "combined.js"), this.combinedJs)
     Disk.write(path.join(this.distFolder, "combined.css"), this.combinedCss)
+    Disk.write(path.join(this.distFolder, "autocomplete.json"), this.autocompleteJson)
+  }
+
+  get autocompleteJson() {
+    return JSON.stringify(
+      this.folder.map((file: any) => {
+        return {
+          label: file.get("title"),
+          id: file.id,
+          url: `/truebase/${file.id}.html`
+        }
+      }),
+      undefined,
+      2
+    )
   }
 
   buildCsvFilesCommand() {

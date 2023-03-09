@@ -60,10 +60,15 @@ testTree.toTypedMap = (equal: any) => {
 
 testTree.fileSystemEvents = async (equal: any) => {
   // Arrange
-  const folder = getFolder()
+  const ignoreFolder = path.join(__dirname, "..", "ignore")
+  const testDbIgnoreFolder = path.join(ignoreFolder, "testDb")
+  if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
+  if (!Disk.exists(testDbIgnoreFolder)) Disk.mkdir(testDbIgnoreFolder)
+
+  const folder = new TrueBaseFolder().setDir(testDbIgnoreFolder).setGrammarDir(testDbIgnoreFolder)
   folder.loadFolder()
   folder.startListeningForFileChanges()
-  const newFilePath = path.join(planetsFolderPath, "foobar.planet")
+  const newFilePath = path.join(testDbIgnoreFolder, "foobar.planet")
 
   // Arrange
   let fileAdded = ""

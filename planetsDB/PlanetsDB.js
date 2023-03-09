@@ -11,7 +11,6 @@ const browserFolder = path.join(__dirname, "..", "browser")
 class PlanetsDBServer extends TrueBaseServer {
   beforeListen() {
     this.buildScrollsCommand()
-    this.buildDistFolderCommand()
     super.beforeListen()
   }
 }

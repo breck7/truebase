@@ -53,9 +53,16 @@ class TrueBaseServer {
 
     const app = express()
     this._app = app
-    if (!Disk.exists(this.ignoreFolder)) Disk.mkdir(this.ignoreFolder)
+    const { ignoreFolder } = this
+    if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
-    this._initLogs()
+    const requestLog = path.join(ignoreFolder, "access.log")
+    Disk.touch(requestLog)
+    app.use(morgan("combined", { stream: fs.createWriteStream(requestLog, { flags: "a" }) }))
+
+    const requestTimesLog = path.join(ignoreFolder, "requestTimes.log")
+    Disk.touch(requestTimesLog)
+    app.use(morgan("tiny", { stream: fs.createWriteStream(requestTimesLog, { flags: "a" }) }))
 
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(bodyParser.json())
@@ -67,20 +74,11 @@ class TrueBaseServer {
       next()
     })
     this.serveFolder(this.siteFolder)
-    this.initSearch()
+    this._initSearch()
+    this._initUserAccounts()
+
     app.get(`/${this.trueBaseId}.json`, (req: any, res: any) => res.setHeader("content-type", "application/json").send(this.folder.typedMapJson))
     return this._app
-  }
-
-  _initLogs() {
-    const { ignoreFolder, app } = this
-    const requestLog = path.join(ignoreFolder, "access.log")
-    Disk.touch(requestLog)
-    app.use(morgan("combined", { stream: fs.createWriteStream(requestLog, { flags: "a" }) }))
-
-    const requestTimesLog = path.join(ignoreFolder, "requestTimes.log")
-    Disk.touch(requestTimesLog)
-    app.use(morgan("tiny", { stream: fs.createWriteStream(requestTimesLog, { flags: "a" }) }))
   }
 
   serveFolder(folder: string) {
@@ -147,7 +145,7 @@ class TrueBaseServer {
   userPasswordPath: string
   loginLogPath: string
   trueBaseUsers: any
-  initUserAccounts() {
+  _initUserAccounts() {
     this.userPasswordPath = path.join(this.ignoreFolder, "trueBaseUsers.tree")
     Disk.touch(this.userPasswordPath)
     this.loginLogPath = path.join(this.ignoreFolder, "trueBaseLogins.log")
@@ -181,7 +179,7 @@ class TrueBaseServer {
     })
   }
 
-  initSearch() {
+  _initSearch() {
     const { app } = this
     const searchServer = new SearchServer(this.folder, this.ignoreFolder)
     this.searchServer = searchServer
@@ -306,18 +304,25 @@ ${this.scrollFooter}`
   }
 
   beforeListen() {
+    this.buildDistFolderCommand() // todo: cleanup
     this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
     this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
     const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
-    this.initUserAccounts()
 
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => res.status(404).send(notFoundPage))
   }
 
+  stopListening() {
+    if (this.httpServer) this.httpServer.close()
+    if (this.httpsServer) this.httpServer.close()
+  }
+
+  httpServer: any
+  httpsServer: any
   listen(port = 4444) {
     this.beforeListen()
-    this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
+    this.httpServer = this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this
   }
 
@@ -325,7 +330,7 @@ ${this.scrollFooter}`
     this.beforeListen()
     const key = fs.readFileSync(path.join(this.ignoreFolder, "privkey.pem"))
     const cert = fs.readFileSync(path.join(this.ignoreFolder, "fullchain.pem"))
-    https
+    this.httpsServer = https
       .createServer(
         {
           key,
@@ -337,7 +342,7 @@ ${this.scrollFooter}`
 
     const redirectApp = express()
     redirectApp.use((req: any, res: any) => res.redirect(301, `https://${req.headers.host}${req.url}`))
-    redirectApp.listen(80, () => console.log(`Running redirect app`))
+    this.httpServer = redirectApp.listen(80, () => console.log(`Running redirect app`))
     return this
   }
 
@@ -378,8 +383,10 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const pagesFolder = path.join(this.siteFolder, "truebase")
     if (!Disk.exists(pagesFolder)) Disk.mkdir(pagesFolder)
     this.folder.forEach((file: any) => Disk.write(path.join(pagesFolder, file.id + ".scroll"), file.toScroll()))
-    const scrolls = new ScrollCli().findScrollsInDirRecursive(this.siteFolder)
-    Object.keys(scrolls).forEach(key => new ScrollCli().buildCommand(key))
+    const cli = new ScrollCli()
+    cli.verbose = false
+    const scrolls = cli.findScrollsInDirRecursive(this.siteFolder)
+    Object.keys(scrolls).forEach(key => cli.buildCommand(key))
   }
 
   buildDistFolderCommand() {
@@ -426,7 +433,11 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const { folder, trueBaseId } = this
     const mainCsvFilename = `${trueBaseId}.csv`
     Disk.writeIfChanged(path.join(this.siteFolder, mainCsvFilename), folder.makeCsv(mainCsvFilename))
-    Disk.writeIfChanged(path.join(this.siteFolder, "columns.csv"), folder.columnsCsvOutput.columnsCsv)
+    Disk.writeIfChanged(path.join(this.siteFolder, "columns.csv"), this.columnsCsv)
+  }
+
+  get columnsCsv() {
+    return this.folder.columnsCsvOutput.columnsCsv
   }
 
   formatCommand() {

@@ -56,11 +56,15 @@ import ../footer.scroll`
   }
 
   get webPermalink() {
-    return `${this.parent.baseUrl}/truebase/${this.permalink}`
+    return `/truebase/${this.permalink}`
   }
 
   get permalink() {
     return this.id + ".html"
+  }
+
+  get link() {
+    return `<a href="${this.webPermalink}">${this.get("title")}</a>`
   }
 
   get type() {

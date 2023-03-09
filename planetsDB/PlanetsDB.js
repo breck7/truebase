@@ -13,8 +13,8 @@ class PlanetsDBServer extends TrueBaseServer {
   siteName = "PlanetsDB"
   siteDomain = "planetsdb.truebase.pub"
   beforeListen() {
-    this.buildScrollsCommand()
     super.beforeListen()
+    this.buildScrollsCommand()
   }
 }
 

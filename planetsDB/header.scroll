@@ -12,7 +12,7 @@ stumpNoSnippet
   src BASE_URL/dist/combined.js
  div
   class trueBaseThemeHeader
-  a PlanetsDB
+  a SITE_NAME
    href BASE_URL/index.html
    class trueBaseThemeLogo
   form
@@ -28,7 +28,7 @@ stumpNoSnippet
   a Everything
    href BASE_URL/search.html
   a CSV
-   href BASE_URL/pages/csvDocumentation.html
+   href BASE_URL/csv.html
   a Logout
    onclick new TrueBaseBrowserApp().logoutCommand()
    class loggedIn

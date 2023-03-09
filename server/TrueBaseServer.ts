@@ -305,6 +305,7 @@ ${this.scrollFooter}`
 
   beforeListen() {
     this.buildDistFolderCommand() // todo: cleanup
+    this.buildCsvFilesCommand()
     this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
     this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
     const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
@@ -434,6 +435,40 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const mainCsvFilename = `${trueBaseId}.csv`
     Disk.writeIfChanged(path.join(this.siteFolder, mainCsvFilename), folder.makeCsv(mainCsvFilename))
     Disk.writeIfChanged(path.join(this.siteFolder, "columns.csv"), this.columnsCsv)
+    this.buildImportsFile(path.join(this.siteFolder, "csvDocumentationImports.scroll"), {
+      COL_COUNT: folder.colNamesForCsv.length,
+      ROW_COUNT: folder.length,
+      FILE_SIZE_UNCOMPRESSED: numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format("0.0b"),
+      COLUMN_METADATA_TABLE: {
+        header: folder.columnsCsvOutput.columnMetadataColumnNames,
+        rows: folder.columnsCsvOutput.columnsMetadataTree
+      }
+    })
+  }
+
+  // todo: remove
+  buildImportsFile(filepath: string, varMap: any) {
+    Disk.writeIfChanged(
+      filepath,
+      `importOnly\n\n` +
+        Object.keys(varMap)
+          .map(key => {
+            let value = varMap[key]
+
+            if (value.rows)
+              return `replace ${key}
+ pipeTable
+  ${value.rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
+
+            value = value.toString()
+
+            if (!value.includes("\n")) return `replace ${key} ${value}`
+
+            return `replace ${key}
+ ${value.replace(/\n/g, "\n ")}`
+          })
+          .join("\n\n")
+    )
   }
 
   get columnsCsv() {

@@ -1,11 +1,12 @@
 importOnly
+import settings.scroll
 
 viewSource
 
 stumpNoSnippet
  div
   class trueBaseThemeFooter
-  a PlanetsDB
+  a SITE_NAME
    href BASE_URL/index.html
    class trueBaseThemeLogo
   span ·

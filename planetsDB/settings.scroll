@@ -1,8 +1,11 @@
 importOnly
 
 replaceDefault BASE_URL 
+replace SITE_NAME PlanetsDB
+replace TRUEBASE_ID planetsdb
+replace DOMAIN_NAME planetsdb.truebase.pub
 
-description PlanetsDB: a demo TrueBase about the planets
+description SITE_NAME: a demo TrueBase about the planets
 git https://github.com/breck7/truebase
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email planetsDB@truebase.pub

@@ -5,9 +5,10 @@ replace SITE_NAME PlanetsDB
 replace SITE_DESCRIPTION PlanetsDB
 replace TRUEBASE_ID planetsdb
 replace DOMAIN_NAME planetsdb.truebase.pub
+replace GIT_URL https://github.com/breck7/pldb
 
 description SITE_NAME: SITE_DESCRIPTION
-git https://github.com/breck7/truebase
+git GIT_URL
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email planetsDB@truebase.pub
 baseUrl https://planetsdb.truebase.pub

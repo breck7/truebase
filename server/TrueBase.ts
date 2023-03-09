@@ -32,77 +32,31 @@ const nodeToFlatObject = (parentNode: treeNode) => {
   return newObject
 }
 
-class TrueBasePageTemplate {
-  constructor(file: TrueBaseFile) {
-    this.file = file
-  }
-
-  file: TrueBaseFile
-
-  toScroll() {
-    const { file, typeName, title } = this
-    const { id } = file
-
-    return `title ${title}
-
-import settings.scroll
-htmlTitle ${title} - ${typeName}
-
-html
- <a class="prevLang" href="${this.prevPage}">&lt;</a>
- <a class="nextLang" href="${this.nextPage}">&gt;</a>
-
-viewSourceUrl ${this.viewSourceUrl}
-
-html
- <div class="quickLinks">${this.quickLinks}</div>
-
-keyboardNav ${this.prevPage} ${this.nextPage}
-`.replace(/\n\n\n+/g, "\n\n")
-  }
-
-  get viewSourceUrl() {
-    return ``
-  }
-
-  get title() {
-    return this.file.get("title")
-  }
-
-  get typeName() {
-    return ""
-  }
-
-  get quickLinks() {
-    return ""
-  }
-
-  get prevPage() {
-    return ""
-  }
-
-  get nextPage() {
-    return ""
-  }
-}
-
-class TrueBaseBuilder {
-  constructor(folder: TrueBaseFolder) {
-    this.folder = folder
-  }
-
-  folder: TrueBaseFolder
-
-  compileTrueBaseFilesToScrollFiles(websiteFolder: string) {
-    this.folder.forEach((file: TrueBaseFile) => Disk.write(path.join(websiteFolder, `${file.id}.scroll`), new TrueBasePageTemplate(file).toScroll()))
-  }
-}
-
 class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
+  toScroll() {
+    const prevPage = this.getPrevious().permalink
+    const nextPage = this.getNext().permalink
+    const title = this.get("title")
+    const description = this.get("description")
+    return `import ../header.scroll
+viewSourceUrl ${this.sourceUrl}
+keyboardNav ${prevPage} ${nextPage}
+html <a class="trueBaseThemePreviousItem" href="${prevPage}">&lt;</a><a class="trueBaseThemeNextItem" href="${nextPage}">&gt;</a>
+
+title ${title}
+
+${description ? description : ""}
+
+code
+ ${this.childrenToString().replace(/\n/g, "\n ")}
+
+import ../footer.scroll`
+  }
+
   get webPermalink() {
-    return `${this.parent.baseUrl}${this.permalink}`
+    return `${this.parent.baseUrl}/truebase/${this.permalink}`
   }
 
   get permalink() {
@@ -652,4 +606,4 @@ class TrueBaseFolder extends TreeNode {
   }
 }
 
-export { TrueBaseFile, TrueBaseFolder, TrueBaseBuilder }
+export { TrueBaseFile, TrueBaseFolder }

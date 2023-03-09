@@ -375,6 +375,9 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   buildScrollsCommand() {
+    const pagesFolder = path.join(this.siteFolder, "truebase")
+    if (!Disk.exists(pagesFolder)) Disk.mkdir(pagesFolder)
+    this.folder.forEach((file: any) => Disk.write(path.join(pagesFolder, file.id + ".scroll"), file.toScroll()))
     const scrolls = new ScrollCli().findScrollsInDirRecursive(this.siteFolder)
     Object.keys(scrolls).forEach(key => new ScrollCli().buildCommand(key))
   }

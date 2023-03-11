@@ -6,7 +6,6 @@ const { TrueBaseFolder } = require("../server/TrueBase.js")
 const { TrueBaseServer } = require("../server/TrueBaseServer.js")
 
 const ignoreFolder = path.join(__dirname, "..", "ignore")
-const browserFolder = path.join(__dirname, "..", "browser")
 
 class PlanetsDBServer extends TrueBaseServer {
   trueBaseId = "planetsdb"

@@ -417,6 +417,8 @@ class TrueBaseFolder extends TreeNode {
         else Source = ""
 
         const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
+        if (!sourceLocation.filePath) throw new Error(`Could not find source file for column '${Column}'`)
+
         const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
         const DefinitionLink =
           colDefId !== "" && colDefId !== "errorNode"

@@ -11,10 +11,10 @@ trueBaseIdCell
  description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
  regex [a-z0-9\-]+
  highlightScope string
-planetNode
+planetsdbNode
  root
- string tableName planets
- string fileExtension planet
+ string tableName planetsdb
+ string fileExtension planetsdb
  inScope abstractPropertyNode
  catchAllNodeType errorNode
 errorNode

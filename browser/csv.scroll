@@ -1,6 +1,6 @@
 import header.scroll
 title SITE_NAME CSV File Documentation
-import csvDocumentationImports.scroll
+CSV_IMPORTS
 
 css
  .scrollTableComponent td {

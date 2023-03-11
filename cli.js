@@ -40,7 +40,7 @@ class TrueBaseCli {
 			if (!settingsPath) settingsPath = filename
 		})
 		if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
-		const tbServer = new TrueBaseServer(TreeNode.fromDisk(settingsPath).toObject())
+		const tbServer = new TrueBaseServer(settingsPath)
 		tbServer.startDevServerCommand()
 	}
 

@@ -27,24 +27,6 @@ interface ColumnInterface {
   Recommended: boolean
 }
 
-/*
-Flatten a tree node into an object like {twitter:"pldb", "twitter.followers":123}.
-Todo: upstream this to jtree and name it appropriately
-*/
-const nodeToFlatObject = (parentNode: treeNode) => {
-  const delimiter = "."
-  let newObject: stringMap = {}
-  parentNode.forEach((child: treeNode, index: number) => {
-    newObject[child.getWord(0)] = child.content
-    child.getTopDownArray().forEach((node: treeNode) => {
-      const newColumnName = node.getFirstWordPathRelativeTo(parentNode).replace(/ /g, delimiter)
-      const value = node.content
-      newObject[newColumnName] = value
-    })
-  })
-  return newObject
-}
-
 class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
@@ -302,7 +284,11 @@ class TrueBaseFolder extends TreeNode {
   }
 
   get objectsForCsv() {
-    if (!this.quickCache.objectsForCsv) this.quickCache.objectsForCsv = lodash.sortBy(this.nodesForCsv.map(nodeToFlatObject), this.globalSortFunction)
+    if (!this.quickCache.objectsForCsv)
+      this.quickCache.objectsForCsv = lodash.sortBy(
+        this.nodesForCsv.map((node: treeNode) => node.toFlatObject()),
+        this.globalSortFunction
+      )
     return this.quickCache.objectsForCsv
   }
 

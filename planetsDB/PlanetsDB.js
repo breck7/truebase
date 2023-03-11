@@ -2,21 +2,10 @@
 
 const path = require("path")
 const { Utils } = require("jtree/products/Utils.js")
-const { TrueBaseFolder } = require("../server/TrueBase.js")
+const { TreeNode } = require("jtree/products/TreeNode.js")
 const { TrueBaseServer } = require("../server/TrueBaseServer.js")
 
-const ignoreFolder = path.join(__dirname, "..", "ignore")
-const browserFolder = path.join(__dirname, "..", "browser")
-
-class PlanetsDBServer extends TrueBaseServer {
-  trueBaseId = "planetsdb"
-  siteName = "PlanetsDB"
-  siteDomain = "planetsdb.truebase.pub"
-  devPort = 5678
-}
-
-const PlanetsDB = new PlanetsDBServer(new TrueBaseFolder().setDir(__dirname).setGrammarDir(__dirname), ignoreFolder, __dirname)
-
+const PlanetsDB = new TrueBaseServer(TreeNode.fromDisk(path.join(__dirname, "planetsdb.truebase")).toObject())
 module.exports = { PlanetsDB }
 
 if (!module.parent) Utils.runCommand(PlanetsDB, process.argv[2], process.argv[3])

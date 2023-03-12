@@ -238,7 +238,7 @@ import ../footer.scroll`
 class TrueBaseFolder extends TreeNode {
   computedColumnNames: string[] = []
   globalSortFunction = (item: object) => -Object.keys(item).length // By default show the items with most cells filled up top.
-  githubRepoPath = "breck7/truebase"
+  gitRepoPath = "https://github.com/breck7/truebase"
   defaultColumnSortOrder = ["title"]
   dir = ""
   grammarDir = ""
@@ -391,7 +391,7 @@ class TrueBaseFolder extends TreeNode {
 
     // Return columns with documentation sorted in the most interesting order.
 
-    const { colNameToGrammarDefMap, objectsForCsv, githubRepoPath, defaultColumnSortOrder } = this
+    const { colNameToGrammarDefMap, objectsForCsv, gitRepoPath, defaultColumnSortOrder } = this
     const colNames = new TreeNode(objectsForCsv)
       .toCsv()
       .split("\n")[0]
@@ -421,9 +421,7 @@ class TrueBaseFolder extends TreeNode {
 
         const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
         const DefinitionLink =
-          colDefId !== "" && colDefId !== "errorNode"
-            ? `https://github.com/${githubRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}`
-            : `https://github.com/${githubRepoPath}/blob/main/code/${this.sourceFilename}#:~:text=get%20${Column}()`
+          colDefId !== "" && colDefId !== "errorNode" ? `${gitRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}` : `${gitRepoPath}/blob/main/code/${this.sourceFilename}#:~:text=get%20${Column}()`
         const SourceLink = Source ? `https://${Source}` : ""
         return {
           Column,

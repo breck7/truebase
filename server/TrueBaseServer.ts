@@ -606,15 +606,19 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     return path.join(this.settings.ignoreFolder, "grammar")
   }
 
+  get grammarId() {
+    return this.settings.trueBaseId
+  }
+
   // todo: this still builds files to ignore folder. cleanup.
   warmGrammarFiles() {
-    const { trueBaseId, ignoreFolder } = this.settings
-    const { folder, virtualFiles, grammarIgnoreFolder } = this
+    const { ignoreFolder } = this.settings
+    const { folder, virtualFiles, grammarIgnoreFolder, grammarId } = this
     if (!Disk.exists(grammarIgnoreFolder)) Disk.mkdir(grammarIgnoreFolder)
     const tqlPath = path.join(__dirname, "..", "tql", "tql.grammar")
     const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
     extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
-    const extendedTqlName = `${trueBaseId}Tql`
+    const extendedTqlName = `${grammarId}Tql`
     extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
     const extendedTqlFileName = `${extendedTqlName}.grammar`
     const extendedTqlPath = path.join(grammarIgnoreFolder, extendedTqlFileName)
@@ -629,11 +633,11 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
     const grammar = new TreeNode(folder.grammarCode)
     grammar.getNode("trueBaseIdCell").set("enum", ids)
-    const grammarFileName = `${trueBaseId}.grammar`
+    const grammarFileName = `${grammarId}.grammar`
 
     virtualFiles["/" + grammarFileName] = grammar.toString()
     // todo
-    const browserFileName = `${trueBaseId}.browser.js`
+    const browserFileName = `${grammarId}.browser.js`
     const grammarPath = path.join(grammarIgnoreFolder, grammarFileName)
     Disk.write(grammarPath, virtualFiles["/" + grammarFileName])
     GrammarCompiler.compileGrammarForBrowser(grammarPath, grammarIgnoreFolder + "/", false)

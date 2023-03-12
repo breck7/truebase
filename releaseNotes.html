@@ -291,6 +291,15 @@ code {
 
 <p class="scrollParagraphComponent">Here's a list of the notable changes in TrueBase.</p>
 
+<div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">8.0.0 2023-3-12</h3>
+<p class="scrollParagraphComponent">This is a <em>major</em> rewrite. The goals are to support: no build step, no Javascript code TrueBases, no delay in new data going live, better testing, and improved community features showing contributions. This release is <strong>not</strong> recommended. Wait for a few iterations for bugs to get ironed out.</p>
+<ul style="text-indent:0px;"><li >🎉 <code>truebase</code> command line app with commands <code>create</code>, <code>delete</code>, <code>list</code>, <code>serve</code>, <code>test</code> and <code>help</code></li>
+<li >🎉 Ability to create and run TrueBases using just <code>.truebase</code> settings file.</li>
+<li >🎉 New <code>dumpStaticSiteCommand</code> for dumping static site since it is not built by default anymore.</li>
+<li >⚠️ BREAKING: <code>TrueBaseServer</code> now takes a path to a <code>.truebase</code> settings file. If overriding <code>TrueBaseFolder</code>, that should be the 2nd parameter.</li>
+<li >⚠️ BREAKING: No more build step. Instead the site is built in memory only. Use the <code>dumpStaticSiteCommand</code> to get a static site.</li>
+<li >⚠️ BREAKING: No more <code>dist</code> folder.</li></ul>
+</div>
 <div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">7.2.1 2023-3-9</h3>
 <ul style="text-indent:0px;"><li >🏥 minor fixes to editing page</li></ul>
 </div>

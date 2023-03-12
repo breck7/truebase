@@ -754,6 +754,62 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   searchCommand() {
     console.log(new SearchServer(this.folder, this.settings.ignoreFolder).csv(process.argv.slice(3).join(" ")))
   }
+
+  async testCommand() {
+    const tap = require("tap")
+    const { TestRacer } = require("jtree/products/TestRacer.js")
+    const { siteFolder, trueBaseId } = this.settings
+
+    const testTree: any = {}
+
+    testTree.ensureNoErrorsInScrollExtensions = (areEqual: any) => {
+      const scrollFolder = new ScrollFolder(siteFolder)
+      const { grammarErrors } = scrollFolder
+      if (grammarErrors.length) console.log(grammarErrors)
+      areEqual(grammarErrors.length, 0, "no errors in scroll extensions")
+    }
+
+    testTree.ensureGoodFilenames = (areEqual: any) => {
+      areEqual(this.folder.filesWithInvalidFilenames.length, 0, `all ${this.folder.length} filenames are valid`)
+    }
+
+    testTree.ensureNoErrorsInBlog = (areEqual: any) => {
+      const checkScroll = (folderPath: string) => {
+        // Do not check all ~5K generated scroll files for errors b/c redundant and wastes time.
+        // Just check the Javascript one below.
+        if (folderPath.includes("truebase")) return
+        const folder = new ScrollFolder(folderPath)
+        areEqual(folder.grammarErrors.length + folder.errors.length, 0, `no scroll errors in ${folderPath}`)
+        //areEqual(folder.errors.length, 0, `no errors in ${folderPath}`)
+      }
+
+      const cli = new ScrollCli()
+      cli.verbose = false
+      Object.keys(cli.findScrollsInDirRecursive(siteFolder)).map(checkScroll)
+    }
+
+    testTree.ensureNoErrorsInDb = (areEqual: any) => {
+      const { errors } = this.folder
+      if (errors.length) errors.forEach(err => console.log(err._node.root.get("title"), err._node.getFirstWordPath(), err))
+      areEqual(errors.length, 0, "no errors in db")
+    }
+
+    testTree.ensureFieldsAreTrimmed = (areEqual: any) => {
+      const scrollFolder = new ScrollFolder(siteFolder)
+      const { grammarErrors } = scrollFolder
+      if (grammarErrors.length) console.log(grammarErrors)
+      areEqual(grammarErrors.length, 0, "no errors in scroll extensions")
+    }
+
+    const testAll = async () => {
+      const fileTree: any = {}
+      fileTree[`${trueBaseId}.truebase`] = testTree
+      const runner = new TestRacer(fileTree)
+      await runner.execute()
+      runner.finish()
+    }
+    testAll()
+  }
 }
 
 class SearchServer {

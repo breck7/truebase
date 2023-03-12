@@ -248,6 +248,10 @@ class TrueBaseFolder extends TreeNode {
   baseUrl = ""
   sourceFilename = Utils.getFileName(__filename)
 
+  get filesWithInvalidFilenames() {
+    return this.filter((file: TrueBaseFile) => file.id !== Utils.titleToPermalink(file.id))
+  }
+
   get searchIndex() {
     if (!this.quickCache.searchIndex) this.quickCache.searchIndex = this.makeNameSearchIndex(this)
     return this.quickCache.searchIndex

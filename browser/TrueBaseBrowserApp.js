@@ -71,7 +71,7 @@ class TrueBaseBrowserApp {
         // you can also use AJAX requests instead of preloaded data
         if (!this.searchIndexRequestMade) {
           this.searchIndexRequestMade = true
-          let response = await fetch("/dist/autocomplete.json")
+          let response = await fetch("/autocomplete.json")
           if (response.ok) this.searchIndex = await response.json()
         }
 

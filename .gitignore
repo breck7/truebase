@@ -1,10 +1,8 @@
-*.html
 node_modules/
 package-lock.json
 ignore/
 .DS_Store
 *.js
-*.css
-dist/
 .nyc_output/
 coverage/
+*.html

@@ -13,7 +13,7 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
-const { ScrollCli, ScrollFile } = require("scroll-cli")
+const { ScrollCli, ScrollFile, ScrollFolder } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
 let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
@@ -27,26 +27,36 @@ const delimiter = " DeLiM "
 
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
+interface TrueBaseSettingsObject {
+  trueBaseId: string
+  name: string
+  domain: string
+  grammarFolder: string
+  thingsFolder: string
+  ignoreFolder: string
+  siteFolder: string
+  devPort: number
+}
+
+const resolvePath = (folder: string, baseDir: string) => (path.isAbsolute(folder) ? path.normalize(folder) : path.resolve(path.join(baseDir, folder)))
+
 class TrueBaseServer {
   _folder: TrueBaseFolder
   _app: any
   searchServer: SearchServer
-  ignoreFolder = ""
   editLogPath: string
-  siteFolder: string
-  distFolder: string
-  trueBaseId = "truebase"
-  siteName = "TrueBase"
-  siteDomain = "truebase.pub"
-  scrollFooter: string
-  scrollHeader: string
+  settings: TrueBaseSettingsObject
 
-  constructor(folder: TrueBaseFolder, ignoreFolder: string, siteFolder: string) {
-    this._folder = folder
-    this.siteFolder = siteFolder
-    this.distFolder = path.join(this.siteFolder, "dist")
-    this.ignoreFolder = ignoreFolder
-    this.editLogPath = path.join(ignoreFolder, "trueBaseServerLog.tree")
+  constructor(settingsFilepath: string, folder?: TrueBaseFolder) {
+    const settings = TreeNode.fromDisk(settingsFilepath).toObject()
+    const dirname = path.dirname(settingsFilepath)
+    settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
+    settings.thingsFolder = resolvePath(settings.thingsFolder, dirname)
+    settings.ignoreFolder = resolvePath(settings.ignoreFolder, dirname)
+    settings.siteFolder = resolvePath(settings.siteFolder, dirname)
+    this.settings = settings
+    this._folder = folder ? folder : new TrueBaseFolder().setDir(settings.thingsFolder).setGrammarDir(settings.grammarFolder)
+    this.editLogPath = path.join(settings.ignoreFolder, "trueBaseServerLog.tree")
   }
 
   get folder() {
@@ -58,7 +68,7 @@ class TrueBaseServer {
 
     const app = express()
     this._app = app
-    const { ignoreFolder } = this
+    const { ignoreFolder, siteFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
     const requestLog = path.join(ignoreFolder, "access.log")
@@ -79,7 +89,7 @@ class TrueBaseServer {
       next()
     })
     this.serveFolder(browserAppFolder)
-    this.serveFolder(this.siteFolder)
+    this.serveFolder(siteFolder)
     this._initSearch()
     this._initUserAccounts()
 
@@ -112,7 +122,7 @@ class TrueBaseServer {
           authorName,
           authorEmail
         )
-        changedFiles.forEach(file => file.writeScrollFileIfChanged(path.join(this.siteFolder, "truebase")))
+        changedFiles.forEach(file => file.writeScrollFileIfChanged(path.join(this.settings.siteFolder, "truebase")))
 
         res.redirect(`/thankYou.html?commit=${hash}`)
       } catch (error) {
@@ -124,7 +134,7 @@ class TrueBaseServer {
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/truebase/${req.params.id.toLowerCase()}.html`) : next()))
 
-    app.get(`/${this.trueBaseId}.json`, (req: any, res: any) => res.setHeader("content-type", "application/json").send(this.folder.typedMapJson))
+    app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.setHeader("content-type", "application/json").send(this.folder.typedMapJson))
     return this._app
   }
 
@@ -209,7 +219,7 @@ class TrueBaseServer {
       // todo: verify that this is the users commit
       const commitHash = require("child_process")
         .execSync("git rev-parse HEAD", {
-          cwd: this.siteFolder
+          cwd: this.settings.siteFolder
         })
         .toString()
         .trim()
@@ -249,9 +259,8 @@ class TrueBaseServer {
   emailConfigPath: string
   emailConfig: any
   async sendEmail(to: string, from: string, subject: string, link: string) {
-    const { siteName } = this
     if (!this.emailConfig) {
-      this.emailConfigPath = path.join(this.ignoreFolder, "emailConfig.tree")
+      this.emailConfigPath = path.join(this.settings.ignoreFolder, "emailConfig.tree")
       if (!Disk.exists(this.emailConfigPath)) await this.createEmailConfig()
       this.emailConfig = new TreeNode(Disk.read(this.emailConfigPath)).toObject()
     }
@@ -284,7 +293,7 @@ class TrueBaseServer {
     if (!this.trueBaseUsers.has(email)) {
       const password = Utils.getRandomCharacters(16)
       const created = new Date().toString()
-      const loginLink = `https://${this.siteDomain}/login.html?email=${email}&password=${password}`
+      const loginLink = `https://${this.settings.domain}/login.html?email=${email}&password=${password}`
       Disk.append(this.userPasswordPath, `${email}\n password ${password}\n created ${created}\n loginLink ${loginLink}\n`)
       this.trueBaseUsers.appendLineAndChildren(email, {
         password,
@@ -299,9 +308,10 @@ class TrueBaseServer {
   loginLogPath: string
   trueBaseUsers: any
   _initUserAccounts() {
-    this.userPasswordPath = path.join(this.ignoreFolder, "trueBaseUsers.tree")
+    const { ignoreFolder, name, domain } = this.settings
+    this.userPasswordPath = path.join(ignoreFolder, "trueBaseUsers.tree")
     Disk.touch(this.userPasswordPath)
-    this.loginLogPath = path.join(this.ignoreFolder, "trueBaseLogins.log")
+    this.loginLogPath = path.join(ignoreFolder, "trueBaseLogins.log")
     Disk.touch(this.loginLogPath)
 
     this.trueBaseUsers = new TreeNode(Disk.read(this.userPasswordPath))
@@ -312,9 +322,8 @@ class TrueBaseServer {
         if (!Utils.isValidEmail(email)) throw new Error(`"${email}" is not a valid email.`)
 
         const link = this.getOrCreateLoginLink(email)
-        const { siteName, siteDomain } = this
-        const from = `"${siteName}" <feedbackwelcome@${siteDomain}>`
-        await this.sendEmail(email, from, `Your ${siteName} login link`, link)
+        const from = `"${name}" <feedbackwelcome@${domain}>`
+        await this.sendEmail(email, from, `Your ${name} login link`, link)
         return res.send("OK")
       } catch (err) {
         console.error(err)
@@ -334,7 +343,7 @@ class TrueBaseServer {
 
   _initSearch() {
     const { app } = this
-    const searchServer = new SearchServer(this.folder, this.ignoreFolder)
+    const searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
     this.searchServer = searchServer
     app.get("/search.json", (req: any, res: any) => res.setHeader("content-type", "application/json").send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
     app.get("/search.csv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
@@ -366,9 +375,7 @@ class TrueBaseServer {
     const encodedTitle = Utils.escapeScrollAndHtml(title)
     const encodedDescription = Utils.escapeScrollAndHtml(description)
     const encodedQuery = encodeURIComponent(originalQuery)
-
-    return new ScrollFile(
-      `${this.scrollHeader}
+    const page = `import header.scroll
 
 title Search Results
  hidden
@@ -393,8 +400,14 @@ table ${delimiter}
 
 html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().renderSearchPage())</script>
 
-${this.scrollFooter}`
-    ).html
+import footer.scroll`
+
+    this.virtualFiles["/search.html"] = page
+    return new ScrollFile(page, "/search.html", this.scrollFolder).html
+  }
+
+  get scrollFolder() {
+    return new ScrollFolder("", this.virtualFiles)
   }
 
   extendedTqlParser: any
@@ -456,25 +469,42 @@ ${this.scrollFooter}`
     }
   }
 
-  initSiteCommand() {
-    const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
-    defaultScrollFiles.forEach((file: string) => {
-      const newPath = path.join(this.siteFolder, path.basename(file))
-      if (!Disk.exists(newPath)) Disk.write(newPath, Disk.read(file))
-    })
+  virtualFiles: { [firstWord: string]: string } = {}
+  dumpStaticSiteCommand() {
+    this.warmAll()
+    const basePath = path.join(this.settings.ignoreFolder, "staticSite")
+    Disk.mkdir(basePath)
+    Disk.writeObjectToDisk(basePath, this.virtualFiles)
+  }
+
+  warmAll() {
+    this.warmGrammarFiles()
+    this.warmJsAndCss()
+    this.warmSiteFolder()
+    this.warmCsvFiles()
+    this.warmTrueBasePages()
+    this.compileScrollFiles()
   }
 
   beforeListen() {
-    this.initSiteCommand()
-    this.buildDistFolderCommand() // todo: cleanup
-    this.buildCsvFilesCommand()
-    this.buildScrollsCommand()
-    this.scrollFooter = Disk.read(path.join(this.siteFolder, "footer.scroll"))
-    this.scrollHeader = new ScrollFile(undefined, path.join(this.siteFolder, "header.scroll")).importResults.code
-    const notFoundPage = Disk.read(path.join(this.siteFolder, "custom_404.html"))
+    this.warmAll()
 
+    const { virtualFiles } = this
+
+    const notFoundPage = virtualFiles["/custom_404.html"]
     //The 404 Route (ALWAYS Keep this as the last route)
-    this.app.get("*", (req: any, res: any) => res.status(404).send(notFoundPage))
+    this.app.get("*", (req: any, res: any) => {
+      const url = req.url.endsWith("/") ? req.url + "index.html" : req.url
+      const content = virtualFiles[url]
+      if (content) return res.send(content)
+      res.status(404).send(notFoundPage)
+    })
+  }
+
+  compileScrollFiles() {
+    const { virtualFiles } = this
+    const folders = lodash.uniq(Object.keys(virtualFiles).map(filename => path.dirname(filename))).map((filename: string) => (filename.endsWith("/") ? filename : filename + "/"))
+    folders.forEach((folder: string) => new ScrollFolder(folder, virtualFiles).silence().buildFiles())
   }
 
   stopListening() {
@@ -493,8 +523,9 @@ ${this.scrollFooter}`
 
   listenProd() {
     this.beforeListen()
-    const key = fs.readFileSync(path.join(this.ignoreFolder, "privkey.pem"))
-    const cert = fs.readFileSync(path.join(this.ignoreFolder, "fullchain.pem"))
+    const { ignoreFolder } = this.settings
+    const key = fs.readFileSync(path.join(ignoreFolder, "privkey.pem"))
+    const cert = fs.readFileSync(path.join(ignoreFolder, "fullchain.pem"))
     this.httpsServer = https
       .createServer(
         {
@@ -520,64 +551,97 @@ ${this.scrollFooter}`
   }
 
   get jsFiles() {
+    const { grammarIgnoreFolder } = this
     return `${jtreeFolder}/products/Utils.browser.js
 ${jtreeFolder}/products/TreeNode.browser.js
 ${jtreeFolder}/products/GrammarLanguage.browser.js
 ${jtreeFolder}/products/GrammarCodeMirrorMode.browser.js
 ${jtreeFolder}/sandbox/lib/codemirror.js
 ${jtreeFolder}/sandbox/lib/show-hint.js
-${this.distFolder}/${this.folder.fileExtension}.browser.js
-${this.distFolder}/tql.browser.js
+${grammarIgnoreFolder}/${this.folder.fileExtension}.browser.js
+${grammarIgnoreFolder}/tql.browser.js
 ${browserAppFolder}/libs.js
 ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   get cssFiles() {
-    return [path.join(jtreeFolder, "sandbox/lib/codemirror.css"), path.join(jtreeFolder, "sandbox/lib/codemirror.show-hint.css"), path.join(this.siteFolder, "scroll.css"), path.join(browserAppFolder, "TrueBaseTheme.css")]
+    return [path.join(jtreeFolder, "sandbox/lib/codemirror.css"), path.join(jtreeFolder, "sandbox/lib/codemirror.show-hint.css"), path.join(browserAppFolder, "TrueBaseTheme.css")]
   }
 
   get combinedCss() {
-    return this.cssFiles.map(Disk.read).join(`\n\n`)
+    return new ScrollFile().SCROLL_CSS + "\n" + this.cssFiles.map(Disk.read).join(`\n\n`)
   }
 
   get combinedJs() {
     return this.jsFiles.map(filename => Disk.read(filename)).join(`;\n\n`)
   }
 
-  buildScrollsCommand() {
-    const pagesFolder = path.join(this.siteFolder, "truebase")
-    if (!Disk.exists(pagesFolder)) Disk.mkdir(pagesFolder)
-    this.folder.forEach((file: any) => Disk.write(path.join(pagesFolder, file.id + ".scroll"), file.toScroll()))
-    const cli = new ScrollCli()
-    cli.verbose = false
-    const scrolls = cli.findScrollsInDirRecursive(this.siteFolder)
-    Object.keys(scrolls).forEach(key => cli.buildCommand(key))
+  warmJsAndCss() {
+    const { virtualFiles } = this
+    virtualFiles["/combined.js"] = this.combinedJs
+    virtualFiles["/combined.css"] = this.combinedCss
+    virtualFiles["/autocomplete.json"] = this.autocompleteJson
   }
 
-  buildDistFolderCommand() {
-    const { distFolder, folder, trueBaseId } = this
-    if (!Disk.exists(distFolder)) Disk.mkdir(distFolder)
+  warmSiteFolder() {
+    // todo: turn scroll files into html files
+    const { virtualFiles } = this
+    const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
+    const defaultHeaderPath = path.join(browserAppFolder, "header.scroll")
+    defaultScrollFiles.forEach((file: string) => (virtualFiles["/" + path.basename(file)] = Disk.read(file)))
+    const { siteFolder } = this.settings
+
+    Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
+      if (!filename.endsWith(".scroll")) return
+      virtualFiles[filename.replace(siteFolder, "")] = Disk.read(filename)
+    })
+  }
+
+  warmTrueBasePages() {
+    const { virtualFiles } = this
+    this.folder.forEach((file: any) => (virtualFiles[`/truebase/${file.id}.scroll`] = file.toScroll()))
+  }
+
+  get grammarIgnoreFolder() {
+    return path.join(this.settings.ignoreFolder, "grammar")
+  }
+
+  get grammarId() {
+    return this.settings.trueBaseId
+  }
+
+  // todo: this still builds files to ignore folder. cleanup.
+  warmGrammarFiles() {
+    const { ignoreFolder } = this.settings
+    const { folder, virtualFiles, grammarIgnoreFolder, grammarId } = this
+    if (!Disk.exists(grammarIgnoreFolder)) Disk.mkdir(grammarIgnoreFolder)
     const tqlPath = path.join(__dirname, "..", "tql", "tql.grammar")
     const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
     extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
-    const extendedTqlName = `${trueBaseId}Tql`
+    const extendedTqlName = `${grammarId}Tql`
     extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
-    const extendedTqlPath = path.join(distFolder, `${extendedTqlName}.grammar`)
-    Disk.write(extendedTqlPath, extendedTqlGrammar.toString())
-    GrammarCompiler.compileGrammarForBrowser(extendedTqlPath, distFolder + "/", false)
-    const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, distFolder + "/", true)
+    const extendedTqlFileName = `${extendedTqlName}.grammar`
+    const extendedTqlPath = path.join(grammarIgnoreFolder, extendedTqlFileName)
+    virtualFiles["/" + extendedTqlFileName] = extendedTqlGrammar.toString()
+
+    // todo
+    Disk.write(extendedTqlPath, virtualFiles["/" + extendedTqlFileName])
+    GrammarCompiler.compileGrammarForBrowser(extendedTqlPath, grammarIgnoreFolder + "/", false)
+    const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, grammarIgnoreFolder + "/", true)
     this.extendedTqlParser = require(jsPath)
 
     const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
     const grammar = new TreeNode(folder.grammarCode)
     grammar.getNode("trueBaseIdCell").set("enum", ids)
-    const grammarFileName = `${trueBaseId}.grammar`
-    Disk.write(path.join(distFolder, grammarFileName), grammar.toString())
-    GrammarCompiler.compileGrammarForBrowser(path.join(distFolder, grammarFileName), distFolder + "/", false)
+    const grammarFileName = `${grammarId}.grammar`
 
-    Disk.write(path.join(this.distFolder, "combined.js"), this.combinedJs)
-    Disk.write(path.join(this.distFolder, "combined.css"), this.combinedCss)
-    Disk.write(path.join(this.distFolder, "autocomplete.json"), this.autocompleteJson)
+    virtualFiles["/" + grammarFileName] = grammar.toString()
+    // todo
+    const browserFileName = `${grammarId}.browser.js`
+    const grammarPath = path.join(grammarIgnoreFolder, grammarFileName)
+    Disk.write(grammarPath, virtualFiles["/" + grammarFileName])
+    GrammarCompiler.compileGrammarForBrowser(grammarPath, grammarIgnoreFolder + "/", false)
+    virtualFiles["/" + browserFileName] = Disk.read(path.join(grammarIgnoreFolder, browserFileName))
   }
 
   get autocompleteJson() {
@@ -594,12 +658,15 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     )
   }
 
-  buildCsvFilesCommand() {
-    const { folder, trueBaseId } = this
+  warmCsvFiles() {
+    const { trueBaseId, siteFolder } = this.settings
+    const { folder, virtualFiles } = this
     const mainCsvFilename = `${trueBaseId}.csv`
-    Disk.writeIfChanged(path.join(this.siteFolder, mainCsvFilename), folder.makeCsv(mainCsvFilename))
-    Disk.writeIfChanged(path.join(this.siteFolder, "columns.csv"), this.columnsCsv)
-    this.buildImportsFile(path.join(this.siteFolder, "csvDocumentationImports.scroll"), {
+    virtualFiles["/" + mainCsvFilename] = folder.makeCsv(mainCsvFilename)
+    virtualFiles["/columns.csv"] = this.columnsCsv
+
+    // todo: cleanup
+    const csvImports = this.makeVarSection({
       COL_COUNT: folder.colNamesForCsv.length,
       ROW_COUNT: folder.length,
       FILE_SIZE_UNCOMPRESSED: numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format("0.0b"),
@@ -608,33 +675,31 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
         rows: folder.columnsCsvOutput.columnsMetadataTree
       }
     })
+
+    virtualFiles["/csv.scroll"] = virtualFiles["/csv.scroll"].replace("CSV_IMPORTS", csvImports)
   }
 
   // todo: remove
-  buildImportsFile(filepath: string, varMap: any) {
-    Disk.writeIfChanged(
-      filepath,
-      `importOnly\n\n` +
-        Object.keys(varMap)
-          .map(key => {
-            let value = varMap[key]
+  makeVarSection(varMap: any) {
+    return Object.keys(varMap)
+      .map(key => {
+        let value = varMap[key]
 
-            if (value.rows) {
-              const rows = value.rows instanceof TreeNode ? value.rows : new TreeNode(value.rows)
-              return `replace ${key}
+        if (value.rows) {
+          const rows = value.rows instanceof TreeNode ? value.rows : new TreeNode(value.rows)
+          return `replace ${key}
  pipeTable
   ${rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
-            }
+        }
 
-            value = value.toString()
+        value = value.toString()
 
-            if (!value.includes("\n")) return `replace ${key} ${value}`
+        if (!value.includes("\n")) return `replace ${key} ${value}`
 
-            return `replace ${key}
+        return `replace ${key}
  ${value.replace(/\n/g, "\n ")}`
-          })
-          .join("\n\n")
-    )
+      })
+      .join("\n\n")
   }
 
   get columnsCsv() {
@@ -646,15 +711,15 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   createFromTreeCommand() {
-    TreeNode.fromDisk(path.join(this.ignoreFolder, "create.tree")).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+    TreeNode.fromDisk(path.join(this.settings.ignoreFolder, "create.tree")).forEach((node: any) => this.folder.createFile(node.childrenToString()))
   }
 
   createFromCsvCommand() {
-    TreeNode.fromCsv(Disk.read(path.join(this.ignoreFolder, "create.csv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+    TreeNode.fromCsv(Disk.read(path.join(this.settings.ignoreFolder, "create.csv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
   }
 
   createFromTsvCommand() {
-    TreeNode.fromTsv(Disk.read(path.join(this.ignoreFolder, "create.tsv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
+    TreeNode.fromTsv(Disk.read(path.join(this.settings.ignoreFolder, "create.tsv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
   }
   // Example: new PlanetsDB().changeListDelimiterCommand("originCommunity", " && ")
   changeListDelimiterCommand(field: string, newDelimiter: string) {
@@ -687,7 +752,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   searchCommand() {
-    console.log(new SearchServer(this.folder, this.ignoreFolder).csv(process.argv.slice(3).join(" ")))
+    console.log(new SearchServer(this.folder, this.settings.ignoreFolder).csv(process.argv.slice(3).join(" ")))
   }
 }
 

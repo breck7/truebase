@@ -13,7 +13,7 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
-const { ScrollCli, ScrollFile } = require("scroll-cli")
+const { ScrollCli, ScrollFile, ScrollFolder } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
 let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
@@ -45,8 +45,6 @@ class TrueBaseServer {
   _app: any
   searchServer: SearchServer
   editLogPath: string
-  scrollFooter: string
-  scrollHeader: string
   settings: TrueBaseSettingsObject
 
   constructor(settingsFilepath: string, folder?: TrueBaseFolder) {
@@ -377,9 +375,7 @@ class TrueBaseServer {
     const encodedTitle = Utils.escapeScrollAndHtml(title)
     const encodedDescription = Utils.escapeScrollAndHtml(description)
     const encodedQuery = encodeURIComponent(originalQuery)
-
-    return new ScrollFile(
-      `${this.scrollHeader}
+    const page = `import header.scroll
 
 title Search Results
  hidden
@@ -404,8 +400,14 @@ table ${delimiter}
 
 html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().renderSearchPage())</script>
 
-${this.scrollFooter}`
-    ).html
+import footer.scroll`
+
+    this.virtualFiles["/search.html"] = page
+    return new ScrollFile(page, "/search.html", this.scrollFolder).html
+  }
+
+  get scrollFolder() {
+    return new ScrollFolder("", this.virtualFiles)
   }
 
   extendedTqlParser: any
@@ -468,35 +470,41 @@ ${this.scrollFooter}`
   }
 
   virtualFiles: { [firstWord: string]: string } = {}
-  dumpStaticSite(destination: string) {
-    // todo: write this method
+  dumpStaticSiteCommand() {
+    this.warmAll()
+    const basePath = path.join(this.settings.ignoreFolder, "staticSite")
+    Disk.mkdir(basePath)
+    Disk.writeObjectToDisk(basePath, this.virtualFiles)
   }
 
-  beforeListen() {
+  warmAll() {
     this.warmGrammarFiles()
     this.warmJsAndCss()
     this.warmSiteFolder()
     this.warmCsvFiles()
     this.warmTrueBasePages()
-
     this.compileScrollFiles()
+  }
+
+  beforeListen() {
+    this.warmAll()
 
     const { virtualFiles } = this
+
+    const notFoundPage = virtualFiles["/custom_404.html"]
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => {
-      const content = virtualFiles[req.url]
+      const url = req.url.endsWith("/") ? req.url + "index.html" : req.url
+      const content = virtualFiles[url]
       if (content) return res.send(content)
-      res.status(404).send(this.notFoundPage)
+      res.status(404).send(notFoundPage)
     })
   }
 
   compileScrollFiles() {
     const { virtualFiles } = this
-    Object.keys(virtualFiles)
-      .filter(file => file.endsWith(".scroll"))
-      .forEach(file => {
-        //virtualFiles[file.replace(".scroll", ".html")] = new ScrollFile()
-      })
+    const folders = lodash.uniq(Object.keys(virtualFiles).map(filename => path.dirname(filename))).map((filename: string) => (filename.endsWith("/") ? filename : filename + "/"))
+    folders.forEach((folder: string) => new ScrollFolder(folder, virtualFiles).silence().buildFiles())
   }
 
   stopListening() {
@@ -504,7 +512,6 @@ ${this.scrollFooter}`
     if (this.httpsServer) this.httpServer.close()
   }
 
-  notFoundPage = ""
   httpServer: any
   httpsServer: any
   devPort = 4444
@@ -571,9 +578,9 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 
   warmJsAndCss() {
     const { virtualFiles } = this
-    virtualFiles["combined.js"] = this.combinedJs
-    virtualFiles["combined.css"] = this.combinedCss
-    virtualFiles["autocomplete.json"] = this.autocompleteJson
+    virtualFiles["/combined.js"] = this.combinedJs
+    virtualFiles["/combined.css"] = this.combinedCss
+    virtualFiles["/autocomplete.json"] = this.autocompleteJson
   }
 
   warmSiteFolder() {
@@ -581,24 +588,18 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const { virtualFiles } = this
     const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
     const defaultHeaderPath = path.join(browserAppFolder, "header.scroll")
-    defaultScrollFiles.forEach((file: string) => (virtualFiles[path.basename(file)] = Disk.read(file)))
+    defaultScrollFiles.forEach((file: string) => (virtualFiles["/" + path.basename(file)] = Disk.read(file)))
     const { siteFolder } = this.settings
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return
       virtualFiles[filename.replace(siteFolder, "")] = Disk.read(filename)
     })
-
-    this.scrollFooter = virtualFiles["footer.scroll"]
-    const scrollHeaderPath = path.join(siteFolder, "header.scroll")
-    this.scrollHeader = new ScrollFile(undefined, Disk.exists(scrollHeaderPath) ? scrollHeaderPath : defaultHeaderPath).importResults.code
-    const customNotFoundFile = path.join(siteFolder, "custom_404.scroll")
-    this.notFoundPage = Disk.exists(customNotFoundFile) ? Disk.read(customNotFoundFile) : virtualFiles["custom_404.scroll"]
   }
 
   warmTrueBasePages() {
     const { virtualFiles } = this
-    this.folder.forEach((file: any) => (virtualFiles[`truebase/${file.id}.scroll`] = file.toScroll()))
+    this.folder.forEach((file: any) => (virtualFiles[`/truebase/${file.id}.scroll`] = file.toScroll()))
   }
 
   get grammarIgnoreFolder() {
@@ -617,10 +618,10 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
     const extendedTqlFileName = `${extendedTqlName}.grammar`
     const extendedTqlPath = path.join(grammarIgnoreFolder, extendedTqlFileName)
-    virtualFiles[extendedTqlFileName] = extendedTqlGrammar.toString()
+    virtualFiles["/" + extendedTqlFileName] = extendedTqlGrammar.toString()
 
     // todo
-    Disk.write(extendedTqlPath, virtualFiles[extendedTqlFileName])
+    Disk.write(extendedTqlPath, virtualFiles["/" + extendedTqlFileName])
     GrammarCompiler.compileGrammarForBrowser(extendedTqlPath, grammarIgnoreFolder + "/", false)
     const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, grammarIgnoreFolder + "/", true)
     this.extendedTqlParser = require(jsPath)
@@ -630,13 +631,13 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     grammar.getNode("trueBaseIdCell").set("enum", ids)
     const grammarFileName = `${trueBaseId}.grammar`
 
-    virtualFiles[grammarFileName] = grammar.toString()
+    virtualFiles["/" + grammarFileName] = grammar.toString()
     // todo
     const browserFileName = `${trueBaseId}.browser.js`
     const grammarPath = path.join(grammarIgnoreFolder, grammarFileName)
-    Disk.write(grammarPath, virtualFiles[grammarFileName])
+    Disk.write(grammarPath, virtualFiles["/" + grammarFileName])
     GrammarCompiler.compileGrammarForBrowser(grammarPath, grammarIgnoreFolder + "/", false)
-    virtualFiles[browserFileName] = Disk.read(path.join(grammarIgnoreFolder, browserFileName))
+    virtualFiles["/" + browserFileName] = Disk.read(path.join(grammarIgnoreFolder, browserFileName))
   }
 
   get autocompleteJson() {
@@ -657,8 +658,8 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const { trueBaseId, siteFolder } = this.settings
     const { folder, virtualFiles } = this
     const mainCsvFilename = `${trueBaseId}.csv`
-    virtualFiles[mainCsvFilename] = folder.makeCsv(mainCsvFilename)
-    virtualFiles["columns.csv"] = this.columnsCsv
+    virtualFiles["/" + mainCsvFilename] = folder.makeCsv(mainCsvFilename)
+    virtualFiles["/columns.csv"] = this.columnsCsv
 
     // todo: cleanup
     const csvImports = this.makeVarSection({
@@ -671,7 +672,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
       }
     })
 
-    virtualFiles["csv.scroll"] = virtualFiles["csv.scroll"].replace("CSV_IMPORTS", csvImports)
+    virtualFiles["/csv.scroll"] = virtualFiles["/csv.scroll"].replace("CSV_IMPORTS", csvImports)
   }
 
   // todo: remove

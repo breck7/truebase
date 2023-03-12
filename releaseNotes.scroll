@@ -4,6 +4,10 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 9.0.0 2023-3-12
+- ⚠️ BREAKING: `truebase serve` is now `truebase start` and `truebase create` is now `truebase init` and takes zero params.
+- 🏥 init site now works.
+
 # 8.0.0 2023-3-12
 * This is a _major_ rewrite. The goals are to support: no build step, no Javascript code TrueBases, no delay in new data going live, better testing, and improved community features showing contributions. This release is *not* recommended. Wait for a few iterations for bugs to get ironed out.
 - 🎉 `truebase` command line app with commands `create`, `delete`, `list`, `serve`, `test` and `help`

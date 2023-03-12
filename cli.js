@@ -15,7 +15,8 @@ class TrueBaseCli {
   executeUsersInstructionsFromShell(args = []) {
     const command = args[0]
     const commandName = `${command}${CommandFnDecoratorSuffix}`
-    if (this[commandName]) return this[commandName](process.cwd(), args[1], args[2])
+    // No params on purpose. This is a design decision to keep the CLI simple.
+    if (this[commandName]) return this[commandName](process.cwd())
     else if (command) this.log(`No command '${command}'. Running help command.`)
     else this.log(`No command provided. Running help command.`)
     return this.helpCommand()
@@ -42,7 +43,7 @@ class TrueBaseCli {
     return settingsPath
   }
 
-  serveCommand(cwd) {
+  startCommand(cwd) {
     const settingsPath = this.firstSettingsPath(cwd)
     if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
     const tbServer = new TrueBaseServer(settingsPath)
@@ -56,28 +57,67 @@ class TrueBaseCli {
     tbServer.testCommand()
   }
 
-  async createCommand(cwd, id) {
-    if (!id) return this.log(`❌ You must provide a name: truebase create [folderName]`)
-    this.log(`Initializing TrueBase in "${cwd}"`)
-    const fullPath = path.join(cwd, id)
-    if (Disk.exists(fullPath)) throw new Error(`${fullPath} already exists`)
-    Disk.mkdir(fullPath)
-    Disk.mkdir(path.join(fullPath, "grammar"))
-    Disk.mkdir(path.join(fullPath, "things"))
+  async initCommand(cwd) {
+    const trueBaseId = cwd.split("/").pop()
+    if (!trueBaseId) return this.log(`❌ cannot make a truebase in top folder`)
     const initFolder = {}
-    initFolder[`${id}${SETTINGS_EXTENSION}`] = `id ${id}
-siteName ${id}
-siteDomain ${id}.truebase.pub
-grammarFolder .
-thingsFolder .
+    initFolder[`${trueBaseId}${SETTINGS_EXTENSION}`] = `trueBaseId ${trueBaseId}
+siteName ${trueBaseId}
+siteDomain ${trueBaseId}.truebase.pub
+grammarFolder ./grammar
+thingsFolder ./things
 ignoreFolder ./ignore
-siteFolder .
+siteFolder ./site
 devPort 5678`
+    initFolder[`/grammar/${trueBaseId}.grammar`] = `stringCell
+intCell
+ highlightScope constant.numeric.integer
+keywordCell
+ highlightScope keyword
+trueBaseIdCell
+ description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
+ regex [a-z0-9\-]+
+ highlightScope string
+${trueBaseId}Node
+ root
+ string tableName ${trueBaseId}
+ string fileExtension ${trueBaseId}
+ inScope abstractPropertyNode
+ catchAllNodeType errorNode
+errorNode
+ baseNodeType errorNode
+abstractPropertyNode
+ cruxFromId
+ single
+abstractStringPropertyNode
+ cells keywordCell
+ catchAllCellType stringCell
+ extends abstractPropertyNode
+abstractIntPropertyNode
+ cells keywordCell intCell
+ extends abstractPropertyNode
+titleNode
+ extends abstractStringPropertyNode
+diameterNode
+ extends abstractIntPropertyNode`
+    initFolder[`/things/earth.${trueBaseId}`] = `title Earth
+diameter 12756`
+    initFolder[`/site/settings.scroll`] = `importOnly
 
-    Object.keys(initFolder).forEach(filename => {
-      const filePath = path.join(fullPath, filename)
-      if (!fs.existsSync(filePath)) Disk.writeIfChanged(filePath, initFolder[filename])
-    })
+replaceDefault BASE_URL 
+replace SITE_NAME ${trueBaseId}
+replace SITE_DESCRIPTION A truebase
+replace TRUEBASE_ID ${trueBaseId}
+replace DOMAIN_NAME ${trueBaseId}.truebase.pub
+replace GIT_URL https://github.com/breck7/truebase
+
+description SITE_NAME: SITE_DESCRIPTION
+git GIT_URL
+viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
+email feedback@DOMAIN_NAME
+baseUrl https://DOMAIN_NAME`
+    Disk.writeObjectToDisk(cwd, initFolder)
+    require("child_process").execSync("git init", { cwd })
     return this.log(`\n👍 Initialized new TrueBase in '${cwd}'.`)
   }
 
@@ -87,7 +127,7 @@ devPort 5678`
 
   helpCommand() {
     this.log(`\n🛰🛰🛰  WELCOME TO TrueBase (v${packageJson.version}) 🛰🛰🛰`)
-    return this.log(`\nThis is the TrueBase help page.\n\nCommands you can run from your TrueBase's folder:\n\n${this._allCommands.map(comm => `- ` + comm.replace(CommandFnDecoratorSuffix, "")).join("\n")}\n`)
+    return this.log(`\nThis is the TrueBase help page.\n\nCommands you can run from your TrueBase's folder:\n\n${this._allCommands.map(comm => `🔘 ` + comm.replace(CommandFnDecoratorSuffix, "")).join("\n")}\n`)
   }
 
   listCommand(cwd) {

@@ -33,15 +33,27 @@ class TrueBaseCli {
       .sort()
   }
 
-  serveCommand(cwd) {
+  firstSettingsPath(cwd) {
     let settingsPath
     Disk.recursiveReaddirSync(cwd, filename => {
       if (!filename.endsWith(SETTINGS_EXTENSION)) return
       if (!settingsPath) settingsPath = filename
     })
+    return settingsPath
+  }
+
+  serveCommand(cwd) {
+    const settingsPath = this.firstSettingsPath(cwd)
     if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
     const tbServer = new TrueBaseServer(settingsPath)
     tbServer.startDevServerCommand()
+  }
+
+  testCommand(cwd) {
+    const settingsPath = this.firstSettingsPath(cwd)
+    if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
+    const tbServer = new TrueBaseServer(settingsPath)
+    tbServer.testCommand()
   }
 
   async createCommand(cwd, id) {

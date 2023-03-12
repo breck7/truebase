@@ -4,6 +4,15 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 8.0.0 2023-3-12
+* This is a _major_ rewrite. The goals are to support: no build step, no Javascript code TrueBases, no delay in new data going live, better testing, and improved community features showing contributions. This release is *not* recommended. Wait for a few iterations for bugs to get ironed out.
+- 🎉 `truebase` command line app with commands `create`, `delete`, `list`, `serve`, `test` and `help`
+- 🎉 Ability to create and run TrueBases using just `.truebase` settings file.
+- 🎉 New `dumpStaticSiteCommand` for dumping static site since it is not built by default anymore.
+- ⚠️ BREAKING: `TrueBaseServer` now takes a path to a `.truebase` settings file. If overriding `TrueBaseFolder`, that should be the 2nd parameter.
+- ⚠️ BREAKING: No more build step. Instead the site is built in memory only. Use the `dumpStaticSiteCommand` to get a static site.
+- ⚠️ BREAKING: No more `dist` folder.
+
 # 7.2.1 2023-3-9
 - 🏥 minor fixes to editing page
 

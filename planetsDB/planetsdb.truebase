@@ -1,0 +1,8 @@
+trueBaseId planetsdb
+siteName PlanetsDB
+siteDomain planetsdb.truebase.pub
+grammarFolder .
+thingsFolder .
+ignoreFolder ../ignore
+siteFolder .
+devPort 5678

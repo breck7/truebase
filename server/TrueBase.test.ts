@@ -34,7 +34,7 @@ testTree.sqlLite = (equal: any) => {
   // Arrange
   const folder = getFolder()
   // Act/Assert
-  equal(folder.toSQLite(), Disk.read(path.join(planetsFolderPath, "planets.sql")), "sqlite works")
+  equal(folder.toSQLite(), Disk.read(path.join(planetsFolderPath, "planetsdb.sql")), "sqlite works")
 }
 
 testTree.toTypedMap = (equal: any) => {
@@ -68,7 +68,7 @@ testTree.fileSystemEvents = async (equal: any) => {
   const folder = new TrueBaseFolder().setDir(testDbIgnoreFolder).setGrammarDir(testDbIgnoreFolder)
   folder.loadFolder()
   folder.startListeningForFileChanges()
-  const newFilePath = path.join(testDbIgnoreFolder, "foobar.planet")
+  const newFilePath = path.join(testDbIgnoreFolder, "foobar.planetsdb")
 
   // Arrange
   let fileAdded = ""

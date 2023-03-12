@@ -27,24 +27,6 @@ interface ColumnInterface {
   Recommended: boolean
 }
 
-/*
-Flatten a tree node into an object like {twitter:"pldb", "twitter.followers":123}.
-Todo: upstream this to jtree and name it appropriately
-*/
-const nodeToFlatObject = (parentNode: treeNode) => {
-  const delimiter = "."
-  let newObject: stringMap = {}
-  parentNode.forEach((child: treeNode, index: number) => {
-    newObject[child.getWord(0)] = child.content
-    child.getTopDownArray().forEach((node: treeNode) => {
-      const newColumnName = node.getFirstWordPathRelativeTo(parentNode).replace(/ /g, delimiter)
-      const value = node.content
-      newObject[newColumnName] = value
-    })
-  })
-  return newObject
-}
-
 class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
@@ -256,7 +238,7 @@ import ../footer.scroll`
 class TrueBaseFolder extends TreeNode {
   computedColumnNames: string[] = []
   globalSortFunction = (item: object) => -Object.keys(item).length // By default show the items with most cells filled up top.
-  githubRepoPath = "breck7/truebase"
+  gitRepoPath = "https://github.com/breck7/truebase"
   defaultColumnSortOrder = ["title"]
   dir = ""
   grammarDir = ""
@@ -302,7 +284,11 @@ class TrueBaseFolder extends TreeNode {
   }
 
   get objectsForCsv() {
-    if (!this.quickCache.objectsForCsv) this.quickCache.objectsForCsv = lodash.sortBy(this.nodesForCsv.map(nodeToFlatObject), this.globalSortFunction)
+    if (!this.quickCache.objectsForCsv)
+      this.quickCache.objectsForCsv = lodash.sortBy(
+        this.nodesForCsv.map((node: treeNode) => node.toFlatObject()),
+        this.globalSortFunction
+      )
     return this.quickCache.objectsForCsv
   }
 
@@ -405,7 +391,7 @@ class TrueBaseFolder extends TreeNode {
 
     // Return columns with documentation sorted in the most interesting order.
 
-    const { colNameToGrammarDefMap, objectsForCsv, githubRepoPath, defaultColumnSortOrder } = this
+    const { colNameToGrammarDefMap, objectsForCsv, gitRepoPath, defaultColumnSortOrder } = this
     const colNames = new TreeNode(objectsForCsv)
       .toCsv()
       .split("\n")[0]
@@ -431,11 +417,11 @@ class TrueBaseFolder extends TreeNode {
         else Source = ""
 
         const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
+        if (!sourceLocation.filePath) throw new Error(`Could not find source file for column '${Column}'`)
+
         const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
         const DefinitionLink =
-          colDefId !== "" && colDefId !== "errorNode"
-            ? `https://github.com/${githubRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}`
-            : `https://github.com/${githubRepoPath}/blob/main/code/${this.sourceFilename}#:~:text=get%20${Column}()`
+          colDefId !== "" && colDefId !== "errorNode" ? `${gitRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}` : `${gitRepoPath}/blob/main/code/${this.sourceFilename}#:~:text=get%20${Column}()`
         const SourceLink = Source ? `https://${Source}` : ""
         return {
           Column,

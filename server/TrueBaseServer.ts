@@ -514,8 +514,7 @@ import footer.scroll`
 
   httpServer: any
   httpsServer: any
-  devPort = 4444
-  listen(port = this.devPort) {
+  listen(port = this.settings.devPort) {
     this.beforeListen()
     this.httpServer = this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this

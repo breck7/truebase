@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 9.0.2 2023-3-13
+- 🏥 path fixes
+
 # 9.0.1 2023-3-13
 - 🏥 upgrade scroll for bug fixes and port fix
 

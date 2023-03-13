@@ -402,8 +402,9 @@ html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBro
 
 import footer.scroll`
 
-    this.virtualFiles["/search.html"] = page
-    return new ScrollFile(page, "/search.html", this.scrollFolder).html
+    const virtualFilePath = this.settings.siteFolder + "/search.html"
+    this.virtualFiles[virtualFilePath] = page
+    return new ScrollFile(page, virtualFilePath, this.scrollFolder).html
   }
 
   get scrollFolder() {
@@ -491,12 +492,14 @@ import footer.scroll`
 
     const { virtualFiles } = this
 
+    const { siteFolder } = this.settings
+
     const notFoundPage = virtualFiles["/custom_404.html"]
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => {
       const url = req.url.endsWith("/") ? req.url + "index.html" : req.url
-      const content = virtualFiles[url]
-      if (content) return res.send(content)
+      if (virtualFiles[siteFolder + url]) return res.send(virtualFiles[siteFolder + url])
+      else if (virtualFiles[url]) return res.send(virtualFiles[url])
       res.status(404).send(notFoundPage)
     })
   }
@@ -585,20 +588,20 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   warmSiteFolder() {
     // todo: turn scroll files into html files
     const { virtualFiles } = this
-    const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
-    const defaultHeaderPath = path.join(browserAppFolder, "header.scroll")
-    defaultScrollFiles.forEach((file: string) => (virtualFiles["/" + path.basename(file)] = Disk.read(file)))
     const { siteFolder } = this.settings
+    const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
+    defaultScrollFiles.forEach((file: string) => (virtualFiles[siteFolder + "/" + path.basename(file)] = Disk.read(file)))
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return
-      virtualFiles[filename.replace(siteFolder, "")] = Disk.read(filename)
+      virtualFiles[filename] = Disk.read(filename)
     })
   }
 
   warmTrueBasePages() {
     const { virtualFiles } = this
-    this.folder.forEach((file: any) => (virtualFiles[`/truebase/${file.id}.scroll`] = file.toScroll()))
+    const { siteFolder } = this.settings
+    this.folder.forEach((file: any) => (virtualFiles[siteFolder + `/truebase/${file.id}.scroll`] = file.toScroll()))
   }
 
   get grammarIgnoreFolder() {
@@ -675,7 +678,8 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
       }
     })
 
-    virtualFiles["/csv.scroll"] = virtualFiles["/csv.scroll"].replace("CSV_IMPORTS", csvImports)
+    const csvDocsPath = siteFolder + "/csv.scroll"
+    virtualFiles[csvDocsPath] = virtualFiles[csvDocsPath].replace("CSV_IMPORTS", csvImports)
   }
 
   // todo: remove

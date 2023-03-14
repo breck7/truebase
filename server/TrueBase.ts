@@ -7,6 +7,7 @@ const { HandGrammarProgram, GrammarConstants } = require("jtree/products/Grammar
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { Table } = require("jtree/products/jtable.node.js")
+import { TrueBaseSettingsObject } from "./TrueBaseSettings"
 const grammarNode = require("jtree/products/grammar.nodejs.js")
 
 declare type stringMap = { [firstWord: string]: any }
@@ -29,6 +30,10 @@ interface ColumnInterface {
 
 class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
+
+  get sourceUrl() {
+    return this.parent.thingsViewSourcePath + this.filename
+  }
 
   toScroll() {
     const prevPage = this.getPrevious().permalink
@@ -178,7 +183,7 @@ import ../footer.scroll`
     return this.parent.makeFilePath(this.id)
   }
 
-  getFileName() {
+  get filename() {
     return Disk.getFileName(this._getFilePath())
   }
 
@@ -236,17 +241,32 @@ import ../footer.scroll`
 }
 
 class TrueBaseFolder extends TreeNode {
-  computedColumnNames: string[] = []
   globalSortFunction = (item: object) => -Object.keys(item).length // By default show the items with most cells filled up top.
-  gitRepoPath = "https://github.com/breck7/truebase"
-  defaultColumnSortOrder = ["title"]
+  grammarProgramConstructor: any = undefined
+
   dir = ""
   grammarDir = ""
   grammarCode = ""
-  grammarProgramConstructor: any = undefined
   fileExtension = ""
-  baseUrl = ""
-  sourceFilename = Utils.getFileName(__filename)
+
+  // todo: move these to .truebase settings file
+  computedColumnNames: string[] = []
+  defaultColumnSortOrder = ["title"]
+  thingsViewSourcePath = `/things/`
+  grammarViewSourcePath = `/grammar/`
+  computedsViewSourcePath = ``
+
+  settings: TrueBaseSettingsObject
+  setSettings(settings: TrueBaseSettingsObject) {
+    this.settings = settings
+    this.dir = settings.thingsFolder
+    this.grammarDir = settings.grammarFolder
+    const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
+    this.grammarCode = new grammarNode(rawCode).format().toString()
+    this.grammarProgramConstructor = new HandGrammarProgram(this.grammarCode).compileAndReturnRootConstructor()
+    this.fileExtension = new this.grammarProgramConstructor().fileExtension
+    return this
+  }
 
   get filesWithInvalidFilenames() {
     return this.filter((file: TrueBaseFile) => file.id !== Utils.titleToPermalink(file.id))
@@ -395,7 +415,7 @@ class TrueBaseFolder extends TreeNode {
 
     // Return columns with documentation sorted in the most interesting order.
 
-    const { colNameToGrammarDefMap, objectsForCsv, gitRepoPath, defaultColumnSortOrder } = this
+    const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
     const colNames = new TreeNode(objectsForCsv)
       .toCsv()
       .split("\n")[0]
@@ -424,8 +444,7 @@ class TrueBaseFolder extends TreeNode {
         if (!sourceLocation.filePath) throw new Error(`Could not find source file for column '${Column}'`)
 
         const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
-        const DefinitionLink =
-          colDefId !== "" && colDefId !== "errorNode" ? `${gitRepoPath}/blob/main/truebase/grammar/${Definition}#L${sourceLocation.lineNumber + 1}` : `${gitRepoPath}/blob/main/code/${this.sourceFilename}#:~:text=get%20${Column}()`
+        const DefinitionLink = colDefId !== "" && colDefId !== "errorNode" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
         const SourceLink = Source ? `https://${Source}` : ""
         return {
           Column,
@@ -559,21 +578,6 @@ class TrueBaseFolder extends TreeNode {
     return this
   }
 
-  // todo: need to RAII this. Likely just not have TrueBaseFolder extend TreeNode
-  setDir(dir: string, fileExtension = "") {
-    this.dir = dir
-    return this
-  }
-
-  setGrammarDir(dir: string) {
-    this.grammarDir = dir
-    const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
-    this.grammarCode = new grammarNode(rawCode).format().toString()
-    this.grammarProgramConstructor = new HandGrammarProgram(this.grammarCode).compileAndReturnRootConstructor()
-    this.fileExtension = new this.grammarProgramConstructor().fileExtension
-    return this
-  }
-
   get grammarFilePaths() {
     return Disk.getFiles(this.grammarDir).filter((file: string) => file.endsWith(GrammarConstants.grammarFileExtension))
   }
@@ -657,4 +661,4 @@ class TrueBaseFolder extends TreeNode {
   }
 }
 
-export { TrueBaseFile, TrueBaseFolder }
+export { TrueBaseFile, TrueBaseFolder, TrueBaseSettingsObject }

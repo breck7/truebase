@@ -291,6 +291,15 @@ code {
 
 <p class="scrollParagraphComponent">Here's a list of the notable changes in TrueBase.</p>
 
+<div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">11.0.0 2023-3-14</h3>
+<ul style="text-indent:0px;"><li >🎉 added <code>testPerfCommand</code> for easier perf testing</li>
+<li >🎉 serve <code>grammar</code> and <code>things</code> folders by default</li>
+<li >🏥 mime type fixes on urls with query strings</li>
+<li >🏥 fix broken view source links on things pages and CSV documentation pages</li>
+<li >⚠️ BREAKING: removed <code>setDir</code> and <code>setGrammarDir</code> methods on <code>TrueBaseFolder</code>. Use <code>setSettings</code> instead.</li>
+<li >⚠️ BREAKING: removed <code>getFileName</code> method on <code>TrueBaseFile</code>. Use new <code>filename</code> getter instead.</li>
+<li >⚠️ BREAKING: use <code>thingsViewSourcePath</code> <code>grammarViewSourcePath</code> <code>computedsViewSourcePath</code> props for correctly setting source urls</li></ul>
+</div>
 <div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">10.0.0 2023-3-13</h3>
 <ul style="text-indent:0px;"><li >⚠️ BREAKING: removed <code>makeVarSection</code> method.</li>
 <li >🎉 upgraded Scroll to get <code>nodejs</code> keyword</li>

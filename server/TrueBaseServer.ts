@@ -88,6 +88,14 @@ class TrueBaseServer {
       res.setHeader("Access-Control-Allow-Credentials", true)
       next()
     })
+    app.use((req: any, res: any, next: any) => {
+      const url = req.url
+      if (url.endsWith(".json")) res.setHeader("content-type", "application/json")
+      else if (url.endsWith(".csv") || url.endsWith(".tsv") || url.endsWith(".tree")) res.setHeader("content-type", "text/plain")
+      else if (url.endsWith(".css")) res.setHeader("content-type", "text/css")
+      else if (url.endsWith(".js")) res.setHeader("content-type", "text/javascript")
+      next()
+    })
     this.serveFolder(browserAppFolder)
     this.serveFolder(siteFolder)
     this._initSearch()
@@ -134,7 +142,7 @@ class TrueBaseServer {
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/truebase/${req.params.id.toLowerCase()}.html`) : next()))
 
-    app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.setHeader("content-type", "application/json").send(this.folder.typedMapJson))
+    app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.send(this.folder.typedMapJson))
     return this._app
   }
 
@@ -345,10 +353,10 @@ class TrueBaseServer {
     const { app } = this
     const searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
     this.searchServer = searchServer
-    app.get("/search.json", (req: any, res: any) => res.setHeader("content-type", "application/json").send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
-    app.get("/search.csv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
-    app.get("/search.tsv", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
-    app.get("/search.tree", (req: any, res: any) => res.setHeader("content-type", "text/plain").send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
+    app.get("/search.json", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
+    app.get("/search.csv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
+    app.get("/search.tsv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
+    app.get("/search.tree", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "tree", req.ip)))
 
     const searchCache: any = {}
     app.get("/search.html", (req: any, res: any) => {
@@ -482,7 +490,6 @@ import footer.scroll`
     this.warmGrammarFiles()
     this.warmJsAndCss()
     this.warmSiteFolder()
-    this.warmCsvFiles()
     this.warmTrueBasePages()
     this.compileScrollFiles()
   }
@@ -591,6 +598,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const { siteFolder } = this.settings
     const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
     defaultScrollFiles.forEach((file: string) => (virtualFiles[siteFolder + "/" + path.basename(file)] = Disk.read(file)))
+    this.warmCsvFiles()
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return
@@ -663,46 +671,42 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   warmCsvFiles() {
     const { trueBaseId, siteFolder } = this.settings
     const { folder, virtualFiles } = this
+    const { columnsCsvOutput } = folder
     const mainCsvFilename = `${trueBaseId}.csv`
     virtualFiles["/" + mainCsvFilename] = folder.makeCsv(mainCsvFilename)
     virtualFiles["/columns.csv"] = this.columnsCsv
 
-    // todo: cleanup
-    const csvImports = this.makeVarSection({
-      COL_COUNT: folder.colNamesForCsv.length,
-      ROW_COUNT: folder.length,
-      FILE_SIZE_UNCOMPRESSED: numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format("0.0b"),
-      COLUMN_METADATA_TABLE: {
-        header: folder.columnsCsvOutput.columnMetadataColumnNames,
-        rows: folder.columnsCsvOutput.columnsMetadataTree
-      }
-    })
+    const csvTemplate = `import header.scroll
+title SITE_NAME CSV File Documentation
 
-    const csvDocsPath = siteFolder + "/csv.scroll"
-    virtualFiles[csvDocsPath] = virtualFiles[csvDocsPath].replace("CSV_IMPORTS", csvImports)
-  }
+css
+ .scrollTableComponent td {
+   max-width: 30ch;
+ }
+ .scrollTableComponent td:nth-child(5) {
+   max-width: 20ch;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+ }
 
-  // todo: remove
-  makeVarSection(varMap: any) {
-    return Object.keys(varMap)
-      .map(key => {
-        let value = varMap[key]
+* Download TRUEBASE_ID.csv
+ link TRUEBASE_ID.csv
 
-        if (value.rows) {
-          const rows = value.rows instanceof TreeNode ? value.rows : new TreeNode(value.rows)
-          return `replace ${key}
- pipeTable
-  ${rows.toDelimited("|", value.header, false).replace(/\n/g, "\n  ")}`
-        }
+* SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format(
+      "0.0b"
+    )} uncompressed. Every row is an entity and every entity is one row.
 
-        value = value.toString()
+# Column Documentation
 
-        if (!value.includes("\n")) return `replace ${key} ${value}`
+pipeTable
+ ${columnsCsvOutput.columnsMetadataTree.toDelimited("|", columnsCsvOutput.columnMetadataColumnNames, false).replace(/\n/g, "\n  ")}
 
-        return `replace ${key}
- ${value.replace(/\n/g, "\n ")}`
-      })
-      .join("\n\n")
+* The table above is also available as csv.
+ link BASE_URL/columns.csv csv
+
+import footer.scroll`
+
+    this.virtualFiles[siteFolder + "/csv.scroll"] = csvTemplate
   }
 
   get columnsCsv() {

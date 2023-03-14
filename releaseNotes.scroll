@@ -4,6 +4,11 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 10.0.0 2023-3-13
+- ⚠️ BREAKING: removed `makeVarSection` method.
+- 🎉 upgraded Scroll to get `nodejs` keyword
+- 🏥 mime type fixes
+
 # 9.0.2 2023-3-13
 - 🏥 path fixes
 

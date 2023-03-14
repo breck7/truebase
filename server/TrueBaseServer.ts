@@ -27,16 +27,9 @@ const delimiter = " DeLiM "
 
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
-interface TrueBaseSettingsObject {
-  trueBaseId: string
-  name: string
-  domain: string
-  grammarFolder: string
-  thingsFolder: string
-  ignoreFolder: string
-  siteFolder: string
-  devPort: number
-}
+import { TrueBaseServerSettingsObject } from "./TrueBaseSettings"
+
+declare type stringMap = { [firstWord: string]: string }
 
 const resolvePath = (folder: string, baseDir: string) => (path.isAbsolute(folder) ? path.normalize(folder) : path.resolve(path.join(baseDir, folder)))
 
@@ -45,7 +38,7 @@ class TrueBaseServer {
   _app: any
   searchServer: SearchServer
   editLogPath: string
-  settings: TrueBaseSettingsObject
+  settings: TrueBaseServerSettingsObject
 
   constructor(settingsFilepath: string, folder?: TrueBaseFolder) {
     const settings = TreeNode.fromDisk(settingsFilepath).toObject()
@@ -55,7 +48,7 @@ class TrueBaseServer {
     settings.ignoreFolder = resolvePath(settings.ignoreFolder, dirname)
     settings.siteFolder = resolvePath(settings.siteFolder, dirname)
     this.settings = settings
-    this._folder = folder ? folder : new TrueBaseFolder().setDir(settings.thingsFolder).setGrammarDir(settings.grammarFolder)
+    this._folder = folder ? folder : new TrueBaseFolder().setSettings(settings)
     this.editLogPath = path.join(settings.ignoreFolder, "trueBaseServerLog.tree")
   }
 
@@ -68,7 +61,7 @@ class TrueBaseServer {
 
     const app = express()
     this._app = app
-    const { ignoreFolder, siteFolder } = this.settings
+    const { ignoreFolder, siteFolder, grammarFolder, thingsFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
     const requestLog = path.join(ignoreFolder, "access.log")
@@ -88,16 +81,22 @@ class TrueBaseServer {
       res.setHeader("Access-Control-Allow-Credentials", true)
       next()
     })
+    const mimeTypes: stringMap = {
+      json: "application/json",
+      css: "text/css",
+      js: "text/javascript"
+    }
+    const plainTypes = `csv tsv tree scroll grammar ${this.folder.fileExtension}`.split(" ")
+    plainTypes.forEach(type => (mimeTypes[type] = "text/plain"))
     app.use((req: any, res: any, next: any) => {
-      const url = req.url
-      if (url.endsWith(".json")) res.setHeader("content-type", "application/json")
-      else if (url.endsWith(".csv") || url.endsWith(".tsv") || url.endsWith(".tree")) res.setHeader("content-type", "text/plain")
-      else if (url.endsWith(".css")) res.setHeader("content-type", "text/css")
-      else if (url.endsWith(".js")) res.setHeader("content-type", "text/javascript")
+      const mimeType = mimeTypes[req.path.split(".").pop()]
+      if (mimeType) res.setHeader("content-type", mimeType)
       next()
     })
     this.serveFolder(browserAppFolder)
     this.serveFolder(siteFolder)
+    this.serveFolderNested("/grammar/", grammarFolder)
+    this.serveFolderNested("/things/", thingsFolder)
     this._initSearch()
     this._initUserAccounts()
 
@@ -504,7 +503,7 @@ import footer.scroll`
     const notFoundPage = virtualFiles["/custom_404.html"]
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => {
-      const url = req.url.endsWith("/") ? req.url + "index.html" : req.url
+      const url = req.path.endsWith("/") ? req.path + "index.html" : req.path
       if (virtualFiles[siteFolder + url]) return res.send(virtualFiles[siteFolder + url])
       else if (virtualFiles[url]) return res.send(virtualFiles[url])
       res.status(404).send(notFoundPage)
@@ -524,7 +523,7 @@ import footer.scroll`
 
   httpServer: any
   httpsServer: any
-  listen(port = this.settings.devPort) {
+  listen(port: number) {
     this.beforeListen()
     this.httpServer = this.app.listen(port, () => console.log(`TrueBase server running: \ncmd+dblclick: http://localhost:${port}/`))
     return this
@@ -551,7 +550,12 @@ import footer.scroll`
     return this
   }
 
-  startDevServerCommand(port: number) {
+  testPerfCommand() {
+    this.startDevServerCommand()
+    this.stopListening()
+  }
+
+  startDevServerCommand(port = this.settings.devPort) {
     this.listen(port)
   }
 

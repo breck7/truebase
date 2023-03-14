@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node
 
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
+import { TrueBaseSettingsObject } from "./TrueBaseSettings"
 
 const path = require("path")
 const { TestRacer } = require("jtree/products/TestRacer.js")
@@ -9,7 +10,12 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const planetsFolderPath = path.join(__dirname, "..", "planetsDB")
 const testTree: any = {}
 
-const getFolder = () => new TrueBaseFolder().setDir(planetsFolderPath).setGrammarDir(planetsFolderPath)
+const settings: TrueBaseSettingsObject = {
+  grammarFolder: planetsFolderPath,
+  thingsFolder: planetsFolderPath
+}
+
+const getFolder = () => new TrueBaseFolder().setSettings(settings)
 
 testTree.errorChecking = (equal: any) => {
   const folder = getFolder().loadFolder()
@@ -65,7 +71,12 @@ testTree.fileSystemEvents = async (equal: any) => {
   if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
   if (!Disk.exists(testDbIgnoreFolder)) Disk.mkdir(testDbIgnoreFolder)
 
-  const folder = new TrueBaseFolder().setDir(testDbIgnoreFolder).setGrammarDir(testDbIgnoreFolder)
+  const settings: TrueBaseSettingsObject = {
+    grammarFolder: testDbIgnoreFolder,
+    thingsFolder: testDbIgnoreFolder
+  }
+
+  const folder = new TrueBaseFolder().setSettings(settings)
   folder.loadFolder()
   folder.startListeningForFileChanges()
   const newFilePath = path.join(testDbIgnoreFolder, "foobar.planetsdb")

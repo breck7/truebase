@@ -4,6 +4,15 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.0.0 2023-3-14
+- 🎉 added `testPerfCommand` for easier perf testing
+- 🎉 serve `grammar` and `things` folders by default
+- 🏥 mime type fixes on urls with query strings
+- 🏥 fix broken view source links on things pages and CSV documentation pages
+- ⚠️ BREAKING: removed `setDir` and `setGrammarDir` methods on `TrueBaseFolder`. Use `setSettings` instead.
+- ⚠️ BREAKING: removed `getFileName` method on `TrueBaseFile`. Use new `filename` getter instead.
+- ⚠️ BREAKING: use `thingsViewSourcePath` `grammarViewSourcePath` `computedsViewSourcePath` props for correctly setting source urls
+
 # 10.0.0 2023-3-13
 - ⚠️ BREAKING: removed `makeVarSection` method.
 - 🎉 upgraded Scroll to get `nodejs` keyword

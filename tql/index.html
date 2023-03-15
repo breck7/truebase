@@ -311,6 +311,17 @@ code {
 </div>
 
 
+    <script>document.addEventListener("DOMContentLoaded", () => document.querySelectorAll(".scrollCodeBlockComponent").forEach(block => {
+ if (!navigator.clipboard) return
+ const button = document.createElement("span")
+ button.classList.add("scrollCopyButton")
+ block.appendChild(button)
+ button.addEventListener("click", async () => {
+   await navigator.clipboard.writeText(block.innerText)
+   button.classList.add("scrollCopied")
+ })
+ }))</script>
+
 
 <div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">TQL: A plain text language for querying plain text databases</h3>
 </div>

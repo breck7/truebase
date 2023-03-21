@@ -31,6 +31,7 @@
     "url": "git://github.com/breck7/truebase"
   },
   "dependencies": {
+    "autocompleter": "^8.0.3",
     "express": "*",
     "jtree": "^69.4.1",
     "lodash": "^4.17.21",

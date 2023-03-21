@@ -574,6 +574,7 @@ ${jtreeFolder}/sandbox/lib/show-hint.js
 ${grammarIgnoreFolder}/${this.folder.fileExtension}.browser.js
 ${grammarIgnoreFolder}/tql.browser.js
 ${browserAppFolder}/libs.js
+${browserAppFolder}/autocompleter.js
 ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 

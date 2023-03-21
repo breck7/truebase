@@ -4,6 +4,10 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.0.1 2023-3-21
+- 🏥 fix search submission bugs
+- 🏥 improve error messages
+
 # 11.0.0 2023-3-14
 - 🎉 added `testPerfCommand` for easier perf testing
 - 🎉 serve `grammar` and `things` folders by default

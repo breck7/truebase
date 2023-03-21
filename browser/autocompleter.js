@@ -286,7 +286,8 @@
         settings.onSelect(selected, input)
         clear()
       }
-      if (preventSubmit) {
+      if (preventSubmit && input.value) {
+        // Monkey patched this line. If someone hits enter and the form is blank, do not prevent default=> submit form
         ev.preventDefault()
       }
     }

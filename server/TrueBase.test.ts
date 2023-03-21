@@ -76,7 +76,7 @@ testTree.fileSystemEvents = async (equal: any) => {
     thingsFolder: testDbIgnoreFolder
   }
 
-  const folder = new TrueBaseFolder().setSettings(settings)
+  const folder = new TrueBaseFolder().setSettings(settings).silence()
   folder.loadFolder()
   folder.startListeningForFileChanges()
   const newFilePath = path.join(testDbIgnoreFolder, "foobar.planetsdb")

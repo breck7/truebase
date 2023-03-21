@@ -28,6 +28,20 @@ interface ColumnInterface {
   Recommended: boolean
 }
 
+const UserFacingWarningMessages = {
+  noFiles: (folderName: string) => `No files found in '${folderName}' folder`,
+  noFilesWithRightExtension: (extName: string) => `No files found with extension '${extName}'.`
+}
+
+const UserFacingErrorMessages = {
+  brokenPermalink: (subjectId: string, targetId: string) => `Broken permalink in '${subjectId}': No file '${targetId}' found`,
+  missingColumnSourceFile: (filePath: string) => `Could not find grammar file '${filePath}'`,
+  missingColumn: (colName: string) => `No column found for '${colName}'`,
+  titleRequired: (content: string) => `A "title" must be provided when creating a new file. Content provided:\n ${content.replace(/\n/g, "\n ")}`,
+  duplicateId: (id: string) => `Already file with id: "${id}". Are you sure the database doesn't have this already? Perhaps update the title to something more unique for now.`,
+  returnCharFound: (fullPath: string) => `Return character '\\r' found in '${fullPath}'. Return chars are unneeded.`
+}
+
 class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
@@ -335,7 +349,7 @@ class TrueBaseFolder extends TreeNode {
 
     this.forEach((file: any) => {
       file.linksToOtherFiles.forEach((link: any) => {
-        if (!pageRankLinks[link]) throw new Error(`Broken permalink in '${file.id}': No language "${link}" found`)
+        if (!pageRankLinks[link]) throw new Error(UserFacingErrorMessages.brokenPermalink(file.id, link))
 
         pageRankLinks[link].push(file.id)
       })
@@ -441,7 +455,7 @@ class TrueBaseFolder extends TreeNode {
         else Source = ""
 
         const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
-        if (!sourceLocation.filePath) throw new Error(`Could not find source file for column '${Column}'`)
+        if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
         const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
         const DefinitionLink = colDefId !== "" && colDefId !== "errorNode" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
@@ -464,6 +478,7 @@ class TrueBaseFolder extends TreeNode {
     const sortedCols: any[] = []
     defaultColumnSortOrder.forEach(colName => {
       const hit = cols.find((col: any) => col.Column === colName)
+      if (!hit) throw new Error(UserFacingErrorMessages.missingColumn(colName))
       sortedCols.push(hit)
     })
 
@@ -497,7 +512,7 @@ class TrueBaseFolder extends TreeNode {
   createFile(content: string, id?: string) {
     if (id === undefined) {
       const title = new TreeNode(content).get("title")
-      if (!title) throw new Error(`A "title" must be provided when creating a new file`)
+      if (!title) throw new Error(UserFacingErrorMessages.titleRequired(content))
 
       id = this.makeId(title)
     }
@@ -525,7 +540,7 @@ class TrueBaseFolder extends TreeNode {
     let newId = id
     if (!this.getFile(newId)) return newId
 
-    throw new Error(`Already file with id: "${id}". Are you sure the database doesn't have this already? Perhaps update the title to something more unique for now.`)
+    throw new Error(UserFacingErrorMessages.duplicateId(id))
   }
 
   // WARNING: Very basic support! Not fully developed.
@@ -565,11 +580,26 @@ class TrueBaseFolder extends TreeNode {
   }
 
   private _isLoaded = false
+  verbose = true
+
+  warn(message: string) {
+    if (this.verbose) console.log(message)
+  }
+
+  silence() {
+    this.verbose = false
+    return this
+  }
 
   // todo: RAII?
   loadFolder() {
     if (this._isLoaded) return this
-    const files = this._getAndFilterFilesFromFolder()
+
+    const allFiles = Disk.getFiles(this.dir)
+    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.thingsFolder))
+
+    const files = this._filterFiles(Disk.getFiles(this.dir))
+    if (!files.length) this.warn(UserFacingWarningMessages.noFilesWithRightExtension(this.fileExtension))
 
     this.setChildren(this._readFiles(files)) // todo: speedup?
     this._setDiskVersions()
@@ -586,10 +616,6 @@ class TrueBaseFolder extends TreeNode {
     // todo: speedup?
     this.forEach((file: treeNode) => file.setDiskVersion())
     return this
-  }
-
-  private _getAndFilterFilesFromFolder() {
-    return this._filterFiles(Disk.getFiles(this.dir))
   }
 
   // todo: cleanup the filtering here.
@@ -653,7 +679,7 @@ class TrueBaseFolder extends TreeNode {
     return files
       .map(fullPath => {
         const content = Disk.read(fullPath)
-        if (content.match(/\r/)) throw new Error("bad \\r in " + fullPath)
+        if (content.match(/\r/)) throw new Error(UserFacingErrorMessages.returnCharFound(fullPath))
         const id = Utils.getFileName(Utils.removeFileExtension(fullPath))
         return content ? id + "\n " + content.replace(/\n/g, "\n ") : id
       })

@@ -387,8 +387,10 @@ class TrueBaseServer {
 
 canonicalLink ${canonicalLink}
 
-title Search Results
+title ${encodedTitle ? encodedTitle : "Search Results"}
  hidden
+
+${encodedDescription ? `description ${encodedDescription}` : ""}
 
 html <form method="get" action="search.html" class="tqlForm"><textarea id="tqlInput" name="q"></textarea><input type="submit" value="Search"></form>
 html <div id="tqlErrors"></div>

@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.1.0 2023-3-23
+- 🎉 update Scroll to get proper canonical links
+
 # 11.0.1 2023-3-21
 - 🏥 fix search submission bugs
 - 🏥 improve error messages

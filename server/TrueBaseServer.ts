@@ -362,7 +362,8 @@ class TrueBaseServer {
       const { searchServer } = this
       const query = req.query.q ?? ""
       searchServer.logQuery(query, req.ip, "scroll")
-      if (!searchCache[query]) searchCache[query] = this.searchToHtml(query)
+      const canonicalLink = `${req.protocol}://${req.get("host")}${req.originalUrl}`
+      if (!searchCache[query]) searchCache[query] = this.searchToHtml(query, canonicalLink)
 
       res.send(searchCache[query])
     })
@@ -375,7 +376,7 @@ class TrueBaseServer {
   }
 
   // todo: cleanup
-  searchToHtml(originalQuery: string) {
+  searchToHtml(originalQuery: string, canonicalLink = "") {
     const { hits, queryTime, columnNames, errors, title, description } = this.searchServer.search(decodeURIComponent(originalQuery).replace(/\r/g, ""), this.extendedTqlParser)
     const { folder } = this
     const results = new TreeNode(hits)._toDelimited(delimiter, columnNames, delimitedEscapeFunction)
@@ -383,6 +384,8 @@ class TrueBaseServer {
     const encodedDescription = Utils.escapeScrollAndHtml(description)
     const encodedQuery = encodeURIComponent(originalQuery)
     const page = `import header.scroll
+
+canonicalLink ${canonicalLink}
 
 title Search Results
  hidden

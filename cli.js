@@ -115,7 +115,7 @@ description SITE_NAME: SITE_DESCRIPTION
 git GIT_URL
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email feedback@DOMAIN_NAME
-baseUrl https://DOMAIN_NAME`
+baseUrl https://DOMAIN_NAME/`
     Disk.writeObjectToDisk(cwd, initFolder)
     require("child_process").execSync("git init", { cwd })
     return this.log(`\n👍 Initialized new TrueBase in '${cwd}'.`)

@@ -505,7 +505,9 @@ import footer.scroll`
 
     const { siteFolder } = this.settings
 
-    const notFoundPage = virtualFiles["/custom_404.html"]
+    let notFoundPage = virtualFiles[browserAppFolder + "/custom_404.html"]
+    if (virtualFiles[siteFolder + "/custom_404.html"]) notFoundPage = virtualFiles[siteFolder + "/custom_404.html"]
+
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => {
       const url = req.path.endsWith("/") ? req.path + "index.html" : req.path

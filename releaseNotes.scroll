@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.2.1 2023-3-23
+- 🏥 fix 404 page
+
 # 11.2.0 2023-3-23
 - 🎉 use custom titles and description in search results pages
 

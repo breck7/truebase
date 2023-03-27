@@ -13,7 +13,7 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
-const { ScrollCli, ScrollFile, ScrollFolder } = require("scroll-cli")
+const { ScrollCli, ScrollFile, ScrollInMemoryFileSystem, ScrollDiskFileSystem } = require("scroll-cli")
 
 const genericTqlNode = require("../tql/tql.nodejs.js")
 let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
@@ -24,6 +24,8 @@ const browserAppFolder = path.join(__dirname, "..", "browser")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
 const delimiter = " DeLiM "
+
+const ensureFolderEndsInSlash = (folder: any) => folder.replace(/\/$/, "") + "/"
 
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
@@ -383,7 +385,7 @@ class TrueBaseServer {
     const encodedTitle = Utils.escapeScrollAndHtml(title)
     const encodedDescription = Utils.escapeScrollAndHtml(description)
     const encodedQuery = encodeURIComponent(originalQuery)
-    const page = `import header.scroll
+    const scrollCode = `import header.scroll
 
 canonicalLink ${canonicalLink}
 
@@ -414,13 +416,10 @@ html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBro
 
 import footer.scroll`
 
-    const virtualFilePath = this.settings.siteFolder + "/search.html"
-    this.virtualFiles[virtualFilePath] = page
-    return new ScrollFile(page, virtualFilePath, this.scrollFolder).html
-  }
-
-  get scrollFolder() {
-    return new ScrollFolder("", this.virtualFiles)
+    const randomPath = Utils.getRandomCharacters(24)
+    const virtualFilePath = `${this.settings.siteFolder}/search-${randomPath}.scroll`
+    this.virtualFiles[virtualFilePath] = scrollCode
+    return new ScrollFile(scrollCode, virtualFilePath, this.scrollFileSystem).html
   }
 
   extendedTqlParser: any
@@ -483,6 +482,7 @@ import footer.scroll`
   }
 
   virtualFiles: { [firstWord: string]: string } = {}
+  scrollFileSystem = new ScrollInMemoryFileSystem(this.virtualFiles)
   dumpStaticSiteCommand() {
     this.warmAll()
     const basePath = path.join(this.settings.ignoreFolder, "staticSite")
@@ -494,8 +494,6 @@ import footer.scroll`
     this.warmGrammarFiles()
     this.warmJsAndCss()
     this.warmSiteFolder()
-    this.warmTrueBasePages()
-    this.warmScrollFolders()
   }
 
   beforeListen() {
@@ -507,6 +505,17 @@ import footer.scroll`
 
     let notFoundPage = virtualFiles[browserAppFolder + "/custom_404.html"]
     if (virtualFiles[siteFolder + "/custom_404.html"]) notFoundPage = virtualFiles[siteFolder + "/custom_404.html"]
+
+    // Do not convert the file to a Scroll until requested
+    this.app.get("/truebase/:filename", (req: any, res: any, next: any) => {
+      const virtualPath = siteFolder + "/" + req.params.filename
+      if (virtualFiles[virtualPath]) return res.send(virtualFiles[virtualPath])
+
+      const id = req.params.filename.replace(".html", "")
+      const file = this.folder.getFile(id)
+      if (file) virtualFiles[siteFolder + `/truebase/${file.id}.scroll`] = file.toScroll()
+      next()
+    })
 
     //The 404 Route (ALWAYS Keep this as the last route)
     this.app.get("*", (req: any, res: any) => {
@@ -524,20 +533,10 @@ import footer.scroll`
   }
 
   compileScrollFile(filepath: string) {
-    const folderPath = path.dirname(filepath) + "/"
-    const folder = this.scrollFolders[folderPath]
-    const file = folder.files.find((file: any) => file.filePath === filepath)
-    folder.write(file.permalink, file.html)
-    return this.virtualFiles[filepath.replace(".scroll", ".html")]
-  }
-
-  scrollFolders: any = {}
-  warmScrollFolders() {
-    const { virtualFiles } = this
-    const folders = lodash.uniq(Object.keys(virtualFiles).map(filename => path.dirname(filename))).map((filename: string) => (filename.endsWith("/") ? filename : filename + "/"))
-    folders.forEach((folder: string) => {
-      this.scrollFolders[folder] = new ScrollFolder(folder, virtualFiles).silence()
-    })
+    const file = this.scrollFileSystem.getScrollFile(filepath)
+    const destinationPath = ensureFolderEndsInSlash(file.folderPath) + file.permalink
+    this.scrollFileSystem.write(destinationPath, file.html)
+    return this.virtualFiles[destinationPath]
   }
 
   stopListening() {
@@ -633,12 +632,6 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
       if (!filename.endsWith(".scroll")) return
       virtualFiles[filename] = Disk.read(filename)
     })
-  }
-
-  warmTrueBasePages() {
-    const { virtualFiles } = this
-    const { siteFolder } = this.settings
-    this.folder.forEach((file: any) => (virtualFiles[siteFolder + `/truebase/${file.id}.scroll`] = file.toScroll()))
   }
 
   get grammarIgnoreFolder() {
@@ -799,8 +792,7 @@ import footer.scroll`
     const testTree: any = {}
 
     testTree.ensureNoErrorsInScrollExtensions = (areEqual: any) => {
-      const scrollFolder = new ScrollFolder(siteFolder)
-      const { grammarErrors } = scrollFolder
+      const grammarErrors = new ScrollDiskFileSystem().getGrammarErrorsInFolder(siteFolder)
       if (grammarErrors.length) console.log(grammarErrors)
       areEqual(grammarErrors.length, 0, "no errors in scroll extensions")
     }
@@ -814,8 +806,8 @@ import footer.scroll`
         // Do not check all ~5K generated scroll files for errors b/c redundant and wastes time.
         // Just check the Javascript one below.
         if (folderPath.includes("truebase")) return
-        const folder = new ScrollFolder(folderPath)
-        areEqual(folder.grammarErrors.length + folder.errors.length, 0, `no scroll errors in ${folderPath}`)
+        const fileSystem = new ScrollDiskFileSystem()
+        areEqual(fileSystem.getGrammarErrorsInFolder(folderPath).length + fileSystem.getScrollErrorsInFolder(folderPath).length, 0, `no scroll errors in ${folderPath}`)
         //areEqual(folder.errors.length, 0, `no errors in ${folderPath}`)
       }
 
@@ -830,12 +822,9 @@ import footer.scroll`
       areEqual(errors.length, 0, "no errors in db")
     }
 
-    testTree.ensureFieldsAreTrimmed = (areEqual: any) => {
-      const scrollFolder = new ScrollFolder(siteFolder)
-      const { grammarErrors } = scrollFolder
-      if (grammarErrors.length) console.log(grammarErrors)
-      areEqual(grammarErrors.length, 0, "no errors in scroll extensions")
-    }
+    // todo:
+    // testTree.ensureFieldsAreTrimmed = (areEqual: any) => {
+    // }
 
     const testAll = async () => {
       const fileTree: any = {}

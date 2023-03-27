@@ -1,6 +1,6 @@
 {
   "name": "truebase",
-  "version": "11.3.0",
+  "version": "11.4.0",
   "description": "TrueBase is a system for long-term, collaborative, trustworthy semantic knowledge bases",
   "author": "Breck Yunits et al",
   "bin": {
@@ -19,7 +19,8 @@
     "coverage": "tap ./test.js --coverage-report=lcov",
     "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')",
     "local": "./planetsDB/PlanetsDB.js startDevServer",
-    "scrollBeta": "npm install ~/scroll"
+    "scrollBeta": "npm install ~/scroll",
+    "perf": "time ./planetsDB/PlanetsDB.js testPerf"
   },
   "files": [
     "server/*",
@@ -38,7 +39,7 @@
     "minimist": "^1.2.8",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.1",
-    "scroll-cli": "^62.5.0",
+    "scroll-cli": "^63.0.0",
     "simple-git": "^3.17.0",
     "tap": "^16.3.4"
   },

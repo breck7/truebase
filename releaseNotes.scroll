@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.4.0 2023-3-27
+- 🎉 upgrade to Scroll 63. TrueBase file routes are now compiled on demand for faster startup time.
+
 # 11.3.0 2023-3-27
 - 🎉 Do not compile a Scroll file until first requested to make startup faster.
 

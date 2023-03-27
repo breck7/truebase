@@ -495,7 +495,7 @@ import footer.scroll`
     this.warmJsAndCss()
     this.warmSiteFolder()
     this.warmTrueBasePages()
-    this.compileScrollFiles()
+    this.warmScrollFolders()
   }
 
   beforeListen() {
@@ -512,15 +512,32 @@ import footer.scroll`
     this.app.get("*", (req: any, res: any) => {
       const url = req.path.endsWith("/") ? req.path + "index.html" : req.path
       if (virtualFiles[siteFolder + url]) return res.send(virtualFiles[siteFolder + url])
-      else if (virtualFiles[url]) return res.send(virtualFiles[url])
+      if (virtualFiles[url]) return res.send(virtualFiles[url])
+
+      // Compile scroll files only when first requested
+      const scrollPath = url.replace(".html", ".scroll")
+      if (virtualFiles[scrollPath]) return res.send(this.compileScrollFile(scrollPath))
+      if (virtualFiles[siteFolder + scrollPath]) return res.send(this.compileScrollFile(siteFolder + scrollPath))
+
       res.status(404).send(notFoundPage)
     })
   }
 
-  compileScrollFiles() {
+  compileScrollFile(filepath: string) {
+    const folderPath = path.dirname(filepath) + "/"
+    const folder = this.scrollFolders[folderPath]
+    const file = folder.files.find((file: any) => file.filePath === filepath)
+    folder.write(file.permalink, file.html)
+    return this.virtualFiles[filepath.replace(".scroll", ".html")]
+  }
+
+  scrollFolders: any = {}
+  warmScrollFolders() {
     const { virtualFiles } = this
     const folders = lodash.uniq(Object.keys(virtualFiles).map(filename => path.dirname(filename))).map((filename: string) => (filename.endsWith("/") ? filename : filename + "/"))
-    folders.forEach((folder: string) => new ScrollFolder(folder, virtualFiles).silence().buildFiles())
+    folders.forEach((folder: string) => {
+      this.scrollFolders[folder] = new ScrollFolder(folder, virtualFiles).silence()
+    })
   }
 
   stopListening() {

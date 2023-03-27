@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.3.0 2023-3-27
+- 🎉 Do not compile a Scroll file until first requested to make startup faster.
+
 # 11.2.1 2023-3-23
 - 🏥 fix 404 page
 

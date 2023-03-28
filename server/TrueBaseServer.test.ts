@@ -6,7 +6,7 @@ import { TrueBaseServer } from "./TrueBaseServer"
 const path = require("path")
 const { TestRacer } = require("jtree/products/TestRacer.js")
 const { PlanetsDB } = require("../planetsDB/PlanetsDB.js")
-const testTree: any = {}
+const testTree = PlanetsDB.testTree
 
 testTree.search = (equal: any) => {
   PlanetsDB.listen(4567)

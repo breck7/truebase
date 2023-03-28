@@ -1,6 +1,6 @@
 {
   "name": "truebase",
-  "version": "11.4.0",
+  "version": "11.5.0",
   "description": "TrueBase is a system for long-term, collaborative, trustworthy semantic knowledge bases",
   "author": "Breck Yunits et al",
   "bin": {
@@ -34,7 +34,7 @@
   "dependencies": {
     "autocompleter": "^8.0.3",
     "express": "*",
-    "jtree": "^69.4.1",
+    "jtree": "^70.0.0",
     "lodash": "^4.17.21",
     "minimist": "^1.2.8",
     "morgan": "^1.10.0",

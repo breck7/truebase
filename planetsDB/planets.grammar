@@ -1,3 +1,4 @@
+// Cell Parsers
 anyCell
 stringCell
 boolCell
@@ -11,6 +12,8 @@ trueBaseIdCell
  description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
  regex [a-z0-9\-]+
  highlightScope string
+
+// Line Parsers
 planetsdbNode
  root
  string tableName planetsdb
@@ -19,6 +22,8 @@ planetsdbNode
  catchAllNodeType errorNode
 errorNode
  baseNodeType errorNode
+
+// Abstract column types
 abstractTrueBaseColumnNode
  cruxFromId
  single
@@ -34,6 +39,11 @@ abstractBooleanColumnNode
 abstractIntColumnNode
  cells keywordCell intCell
  extends abstractTrueBaseColumnNode
+abstractFloatColumnNode
+ cells keywordCell floatCell
+ extends abstractTrueBaseColumnNode
+
+// Specific column types
 titleNode
  extends abstractStringColumnNode
 descriptionNode
@@ -52,9 +62,6 @@ diameterNode
  extends abstractIntColumnNode
 moonsNode
  extends abstractIntColumnNode
-abstractFloatColumnNode
- cells keywordCell floatCell
- extends abstractTrueBaseColumnNode
 yearsToOrbitSunNode
  extends abstractFloatColumnNode
 hasLifeNode
@@ -76,7 +83,7 @@ wikipediaNode
  contentKey id
  inScope wikipediaPageViewsNode
 neighborNode
- todo Needs to be unique
+ // Needs to be unique
  cells trueBaseIdCell intCell
  uniqueFirstWord
 neighborsNode

@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 11.5.0 2023-3-28
+- 🎉 upgrade to JTree 70 to get Grammar 4.0. Now you can add comments and blank lines in grammars
+
 # 11.4.0 2023-3-27
 - 🎉 upgrade to Scroll 63. TrueBase file routes are now compiled on demand for faster startup time.
 

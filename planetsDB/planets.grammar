@@ -1,3 +1,4 @@
+// Cell Parsers
 anyCell
 stringCell
 boolCell
@@ -11,75 +12,84 @@ trueBaseIdCell
  description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
  regex [a-z0-9\-]+
  highlightScope string
+
+// Line Parsers
 planetsdbNode
  root
  string tableName planetsdb
  string fileExtension planetsdb
- inScope abstractPropertyNode
+ inScope abstractTrueBaseColumnNode
  catchAllNodeType errorNode
 errorNode
  baseNodeType errorNode
-abstractPropertyNode
+
+// Abstract column types
+abstractTrueBaseColumnNode
  cruxFromId
  single
-abstractStringPropertyNode
+abstractStringColumnNode
  cells keywordCell
  catchAllCellType stringCell
- extends abstractPropertyNode
-abstractBooleanPropertyNode
+ extends abstractTrueBaseColumnNode
+abstractStringListColumnNode
+ extends abstractStringColumnNode
+abstractBooleanColumnNode
  cells keywordCell boolCell
- extends abstractPropertyNode
-abstractIntPropertyNode
+ extends abstractTrueBaseColumnNode
+abstractIntColumnNode
  cells keywordCell intCell
- extends abstractPropertyNode
+ extends abstractTrueBaseColumnNode
+abstractFloatColumnNode
+ cells keywordCell floatCell
+ extends abstractTrueBaseColumnNode
+
+// Specific column types
 titleNode
- extends abstractStringPropertyNode
+ extends abstractStringColumnNode
 descriptionNode
- extends abstractPropertyNode
+ extends abstractTrueBaseColumnNode
  catchAllNodeType descriptionLineNode
  baseNodeType blobNode
  boolean includeChildrenInCsv false
 descriptionLineNode
  catchAllCellType stringCell
 akaNode
- extends abstractStringPropertyNode
+ extends abstractStringColumnNode
  single false
 surfaceGravityNode
- extends abstractIntPropertyNode
+ extends abstractIntColumnNode
 diameterNode
- extends abstractIntPropertyNode
+ extends abstractIntColumnNode
 moonsNode
- extends abstractIntPropertyNode
-abstractFloatPropertyNode
- cells keywordCell floatCell
- extends abstractPropertyNode
+ extends abstractIntColumnNode
 yearsToOrbitSunNode
- extends abstractFloatPropertyNode
+ extends abstractFloatColumnNode
 hasLifeNode
- extends abstractBooleanPropertyNode
-explanationNode
- baseNodeType blobNode
+ extends abstractBooleanColumnNode
 ageNode
- extends abstractIntPropertyNode
+ extends abstractIntColumnNode
  contentKey value
  childrenKey description
- catchAllNodeType explanationNode
+ catchAllNodeType columnExplanationNode
+columnExplanationNode
+ description Add untyped notes about this column.
+ baseNodeType blobNode
 wikipediaPageViewsNode
  cells keywordCell intCell
  crux pageViews
  single
 wikipediaNode
- extends abstractStringPropertyNode
+ extends abstractStringColumnNode
  contentKey id
  inScope wikipediaPageViewsNode
 neighborNode
- todo Needs to be unique
+ // Needs to be unique
  cells trueBaseIdCell intCell
  uniqueFirstWord
 neighborsNode
  cells keywordCell
- extends abstractPropertyNode
+ extends abstractTrueBaseColumnNode
  catchAllNodeType neighborNode
 relatedNode
- extends abstractStringPropertyNode
+ extends abstractStringListColumnNode
  listDelimiter  & 

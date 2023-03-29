@@ -38,7 +38,7 @@ columnExplanationNode
  description Add untyped notes about this column.
  baseNodeType blobNode
 wikipediaPageViewsNode
- cells keywordCell intCell
+ cells columnNameCell intCell
  crux pageViews
  single
 wikipediaNode
@@ -50,7 +50,7 @@ neighborNode
  cells trueBaseIdCell intCell
  uniqueFirstWord
 neighborsNode
- cells keywordCell
+ cells columnNameCell
  extends abstractTrueBaseColumnNode
  catchAllNodeType neighborNode
 relatedNode

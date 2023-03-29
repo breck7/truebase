@@ -1,0 +1,82 @@
+// WorldWideColumns is an experimental attempt to define reusuable base abstract column types for TrueBases.
+
+// Cell Parsers
+blankCell
+anyCell
+stringCell
+ highlightScope string
+ description Any string except for a blank cell.
+ regex .+
+boolCell
+ enum true false
+numberCell
+intCell
+ extends numberCell
+ highlightScope constant.numeric.integer
+floatCell
+ extends numberCell
+ highlightScope constant.numeric.float
+keywordCell
+ highlightScope keyword
+trueBaseIdCell
+ description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
+ regex [a-z0-9\-]+
+ highlightScope string
+urlCell
+ highlightScope constant.language
+ regex (ftp|https?)://.+
+externalGuidCell
+ description A GUID from another site.
+
+// Line Parsers
+// The main line parser. Anything extending this will be included in the CSV dumps.
+abstractTrueBaseColumnNode
+ cruxFromId
+ single
+
+// Common string parsers
+abstractStringColumnNode
+ cells keywordCell
+ catchAllCellType stringCell
+ extends abstractTrueBaseColumnNode
+abstractStringListColumnNode
+ description A list of strings separated by the `listDelimiter`.
+ extends abstractStringColumnNode
+ listDelimiter  
+
+// Commmon numeric parsers
+abstractBooleanColumnNode
+ cells keywordCell boolCell
+ extends abstractTrueBaseColumnNode
+abstractIntColumnNode
+ cells keywordCell intCell
+ extends abstractTrueBaseColumnNode
+abstractFloatColumnNode
+ cells keywordCell floatCell
+ extends abstractTrueBaseColumnNode
+
+// Common miscellaneous parsers
+blankLineNode
+ description Blank lines are okay.
+ cells blankCell
+ compiler
+  stringTemplate 
+ pattern ^$
+ tags doNotSynthesize
+ boolean shouldSerialize false
+trueBaseErrorNode
+ baseNodeType errorNode
+
+// URL Parsers
+abstractUrlNode
+ cells keywordCell urlCell
+ extends abstractTrueBaseColumnNode
+
+// GUID Parsers
+abstractMultiwordGuidNode
+ description Use when you have a column that serves as a Globally Unique Identifier (GUID) where the GUID can contain spaces.
+ cruxFromId
+ cells keywordCell
+ catchAllCellType externalGuidCell
+ extends abstractTrueBaseColumnNode
+ single

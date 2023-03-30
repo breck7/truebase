@@ -1,6 +1,6 @@
 {
   "name": "truebase",
-  "version": "11.6.0",
+  "version": "12.0.0",
   "description": "TrueBase is a system for long-term, collaborative, trustworthy semantic knowledge bases",
   "author": "Breck Yunits et al",
   "bin": {
@@ -40,7 +40,7 @@
     "minimist": "^1.2.8",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.1",
-    "scroll-cli": "^64.0.0",
+    "scroll-cli": "^65.0.0",
     "simple-git": "^3.17.0",
     "tap": "^16.3.4"
   },

@@ -131,7 +131,7 @@ matchesRegexNode
  javascript
   toPredicate() {
     const regex = new RegExp(this.content ?? "")
-    return file => regex.test(file.toString())
+    return file => regex.test(file.asString)
   }
 commentNode
  description Comments are ignored.

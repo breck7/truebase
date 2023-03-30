@@ -478,7 +478,7 @@ import footer.scroll`
     if (parsed.length < 3) throw new Error(`Must provide at least 3 facts about the language.`)
 
     return {
-      content: parsed.sortFromSortTemplate().toString()
+      content: parsed.sortFromSortTemplate().asString
     }
   }
 
@@ -655,7 +655,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
     const extendedTqlFileName = `${extendedTqlName}.grammar`
     const extendedTqlPath = path.join(grammarIgnoreFolder, extendedTqlFileName)
-    virtualFiles["/" + extendedTqlFileName] = extendedTqlGrammar.toString()
+    virtualFiles["/" + extendedTqlFileName] = extendedTqlGrammar.asString
 
     // todo
     Disk.write(extendedTqlPath, virtualFiles["/" + extendedTqlFileName])
@@ -668,7 +668,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     grammar.getNode("trueBaseIdCell").set("enum", ids)
     const grammarFileName = `${grammarId}.grammar`
 
-    virtualFiles["/" + grammarFileName] = grammar.toString()
+    virtualFiles["/" + grammarFileName] = grammar.asString
     // todo
     const browserFileName = `${grammarId}.browser.js`
     const grammarPath = path.join(grammarIgnoreFolder, grammarFileName)
@@ -897,7 +897,7 @@ class SearchServer {
     try {
       const treeQLProgram = new tqlParser(treeQLCode)
       const programErrors = treeQLProgram.scopeErrors.concat(treeQLProgram.getAllErrors())
-      if (programErrors.length) throw new Error(programErrors.map((err: any) => err.getMessage()).join(" "))
+      if (programErrors.length) throw new Error(programErrors.map((err: any) => err.message).join(" "))
       const sortBy = treeQLProgram.get("sortBy")
       title = treeQLProgram.get("title")
       description = treeQLProgram.get("description")
@@ -954,7 +954,7 @@ class SearchServer {
   }
 
   tree(treeQLCode: string) {
-    return new TreeNode(this.search(treeQLCode).hits).toString()
+    return new TreeNode(this.search(treeQLCode).hits).asString
   }
 
   csv(treeQLCode: string) {

@@ -50,8 +50,8 @@ class TrueBaseFile extends TreeNode {
   }
 
   toScroll() {
-    const prevPage = this.getPrevious().permalink
-    const nextPage = this.getNext().permalink
+    const prevPage = this.previous.permalink
+    const nextPage = this.next.permalink
     const title = this.get("title")
     const description = this.get("description")
     return `import ../header.scroll
@@ -128,7 +128,7 @@ import ../footer.scroll`
   }
 
   get lowercase() {
-    return this.toString().toLowerCase()
+    return this.asString.toLowerCase()
   }
 
   get lowercaseNames() {
@@ -141,8 +141,7 @@ import ../footer.scroll`
 
   get linksToOtherFiles() {
     return lodash.uniq(
-      this.parsed
-        .getTopDownArray()
+      this.parsed.topDownArray
         .filter((node: TrueBaseFile) => node.containsTrueBaseIds)
         .map((node: TrueBaseFile) => node.getWordsFrom(1))
         .flat()
@@ -187,7 +186,7 @@ import ../footer.scroll`
   }
 
   appendUniqueLine(line: string) {
-    const file = this.toString()
+    const file = this.asString
     if (file.match(new RegExp("^" + Disk.escape(line), "m"))) return true
     const prefix = !file || file.endsWith("\n") ? "" : "\n"
     return this.appendLine(prefix + line + "\n")
@@ -206,8 +205,7 @@ import ../footer.scroll`
   }
 
   updateTrueBaseIds(oldTrueBaseId: string, newTrueBaseId: string) {
-    this.parsed
-      .getTopDownArray()
+    this.parsed.topDownArray
       .filter((node: TrueBaseFile) => node.containsTrueBaseIds)
       .map((node: TrueBaseFile) =>
         node.setContent(
@@ -222,7 +220,7 @@ import ../footer.scroll`
   }
 
   get factCount() {
-    return this.parsed.getTopDownArray().filter((node: any) => node.shouldSerialize !== false).length
+    return this.parsed.topDownArray.filter((node: any) => node.shouldSerialize !== false).length
   }
 
   get parsed() {
@@ -241,8 +239,7 @@ import ../footer.scroll`
     this.setChildren(
       this.parsed
         .sortFromSortTemplate()
-        .toString()
-        .replace(/\n\n+/g, "\n\n")
+        .asString.replace(/\n\n+/g, "\n\n")
         .replace(/\n+$/g, "") + "\n"
     )
   }
@@ -276,7 +273,7 @@ class TrueBaseFolder extends TreeNode {
     this.dir = settings.thingsFolder
     this.grammarDir = settings.grammarFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
-    this.grammarCode = new grammarNode(rawCode).format().toString()
+    this.grammarCode = new grammarNode(rawCode).format().asString
     this.grammarProgramConstructor = new HandGrammarProgram(this.grammarCode).compileAndReturnRootConstructor()
     this.fileExtension = new this.grammarProgramConstructor().fileExtension
     return this
@@ -292,7 +289,7 @@ class TrueBaseFolder extends TreeNode {
   }
 
   get bytes() {
-    if (!this.quickCache.bytes) this.quickCache.bytes = this.toString().length
+    if (!this.quickCache.bytes) this.quickCache.bytes = this.asString.length
     return this.quickCache.bytes
   }
 
@@ -306,9 +303,9 @@ class TrueBaseFolder extends TreeNode {
     const { computedColumnNames } = this
     this.quickCache.nodesForCsv = this.map((file: TrueBaseFile) => {
       const clone = file.parsed.clone()
-      clone.getTopDownArray().forEach((node: any) => {
+      clone.topDownArray.forEach((node: any) => {
         if (node.includeChildrenInCsv === false) node.deleteChildren()
-        if (node.getNodeTypeId() === "blankLineNode") node.destroy()
+        if (node.definition && node.nodeTypeId === "blankLineNode") node.destroy()
       })
 
       computedColumnNames.forEach(prop => {
@@ -380,9 +377,9 @@ class TrueBaseFolder extends TreeNode {
     this.quickCache.colNameToGrammarDefMap = new Map()
     const map = this.quickCache.colNameToGrammarDefMap
     this.nodesForCsv.forEach((node: any) => {
-      node.getTopDownArray().forEach((node: any) => {
+      node.topDownArray.forEach((node: any) => {
         const path = node.getFirstWordPath().replace(/ /g, ".")
-        map.set(path, node.getDefinition())
+        map.set(path, node.definition)
       })
     })
     return map
@@ -430,8 +427,7 @@ class TrueBaseFolder extends TreeNode {
     // Return columns with documentation sorted in the most interesting order.
 
     const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
-    const colNames = new TreeNode(objectsForCsv)
-      .toCsv()
+    const colNames = new TreeNode(objectsForCsv).asCsv
       .split("\n")[0]
       .split(",")
       .map((col: string) => {
@@ -545,21 +541,21 @@ class TrueBaseFolder extends TreeNode {
 
   // WARNING: Very basic support! Not fully developed.
   // WARNING: Does not yet support having multiple tuples with the same key—will collapse those to one.
-  toSQLite() {
-    return this.toSQLiteCreateTables() + "\n\n" + this.toSQLiteInsertRows()
+  get asSQLite() {
+    return this.sqliteCreateTables + "\n\n" + this.sqliteInsertRows
   }
 
-  toSQLiteCreateTables() {
+  get sqliteCreateTables() {
     this.loadFolder()
 
     const grammarProgram = new HandGrammarProgram(this.grammarCode)
-    const tableDefinitionNodes = grammarProgram.filter((node: any) => node.getTableNameIfAny && node.getTableNameIfAny())
+    const tableDefinitionNodes = grammarProgram.filter((node: any) => node.tableNameIfAny)
     // todo: filter out root root
 
     return tableDefinitionNodes.map((node: any) => node.toSQLiteTableSchema()).join("\n")
   }
 
-  toSQLiteInsertRows() {
+  get sqliteInsertRows() {
     return this.map((file: any) => file.parsed.toSQLiteInsertStatement(file.id)).join("\n")
   }
 

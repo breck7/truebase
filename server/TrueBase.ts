@@ -236,12 +236,7 @@ import ../footer.scroll`
   }
 
   sort() {
-    this.setChildren(
-      this.parsed
-        .sortFromSortTemplate()
-        .asString.replace(/\n\n+/g, "\n\n")
-        .replace(/\n+$/g, "") + "\n"
-    )
+    this.setChildren(this.parsed.sortFromSortTemplate().asString.replace(/\n\n+/g, "\n\n").replace(/\n+$/g, "") + "\n")
   }
 
   prettifyAndSave() {
@@ -305,7 +300,7 @@ class TrueBaseFolder extends TreeNode {
       const clone = file.parsed.clone()
       clone.topDownArray.forEach((node: any) => {
         if (node.includeChildrenInCsv === false) node.deleteChildren()
-        if (node.definition && node.nodeTypeId === "blankLineNode") node.destroy()
+        if (node.nodeTypeId === "blankLineNode") node.destroy()
       })
 
       computedColumnNames.forEach(prop => {

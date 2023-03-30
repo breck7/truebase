@@ -234,7 +234,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
     const { stagedFiles } = this
     el.style.display = "none"
     if (!stagedFiles.length) return
-    document.getElementById("patch").value = stagedFiles.toString()
+    document.getElementById("patch").value = stagedFiles.asString
     el.style.display = "block"
   }
 
@@ -243,7 +243,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
     el.onclick = () => {
       const tree = this.stagedFiles
       tree.touchNode(this.filename).setChildren(this.value)
-      this.setStage(tree.toString())
+      this.setStage(tree.asString)
       this.updateStagedStatus()
     }
 

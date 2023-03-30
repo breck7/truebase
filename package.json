@@ -20,6 +20,7 @@
     "cloc": "cloc $(git ls-files | grep --extended-regexp --invert-match 'products|lib|package-lock')",
     "local": "./planetsDB/PlanetsDB.js startDevServer",
     "scrollBeta": "npm install ~/scroll",
+    "jtreeBeta": "npm install ~/jtree",
     "perf": "time ./planetsDB/PlanetsDB.js testPerf"
   },
   "files": [
@@ -34,7 +35,7 @@
   "dependencies": {
     "autocompleter": "^8.0.3",
     "express": "*",
-    "jtree": "^70.0.0",
+    "jtree": "^71.0.0",
     "lodash": "^4.17.21",
     "minimist": "^1.2.8",
     "morgan": "^1.10.0",

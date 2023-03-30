@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 12.0.1 2023-3-30
+- 🏥 regression fix
+
 # 12.0.0 2023-3-30
 - 🎉 Jtree 71 to get scoped parsers
 

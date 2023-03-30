@@ -167,7 +167,10 @@ class TrueBaseServer {
       .trim()
       .replace(/[^a-zA-Z \.]/g, "")
       .substr(0, 32)
-    const authorEmail = field.split("<")[1].replace(">", "").trim()
+    const authorEmail = field
+      .split("<")[1]
+      .replace(">", "")
+      .trim()
     return {
       authorName,
       authorEmail
@@ -462,8 +465,8 @@ import footer.scroll`
     // Remove all return characters
     content = Utils.removeEmptyLines(Utils.removeReturnChars(content))
 
-    const programParser = this.folder.grammarProgramConstructor
-    const parsed = new programParser(content)
+    const rootParser = this.folder.rootParser
+    const parsed = new rootParser(content)
 
     const errs = parsed.getAllErrors()
 
@@ -872,7 +875,7 @@ class SearchServer {
       this._touchedLog = true
     }
 
-    fs.appendFile(this.searchRequestLog, tree, function () {})
+    fs.appendFile(this.searchRequestLog, tree, function() {})
     return this
   }
 

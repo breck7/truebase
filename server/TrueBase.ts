@@ -225,8 +225,8 @@ import ../footer.scroll`
 
   get parsed() {
     if (!this.quickCache.parsed) {
-      const programParser = this.parent.grammarProgramConstructor
-      this.quickCache.parsed = new programParser(this.childrenToString())
+      const rootParser = this.parent.rootParser
+      this.quickCache.parsed = new rootParser(this.childrenToString())
     }
     return this.quickCache.parsed
   }
@@ -236,7 +236,12 @@ import ../footer.scroll`
   }
 
   sort() {
-    this.setChildren(this.parsed.sortFromSortTemplate().asString.replace(/\n\n+/g, "\n\n").replace(/\n+$/g, "") + "\n")
+    this.setChildren(
+      this.parsed
+        .sortFromSortTemplate()
+        .asString.replace(/\n\n+/g, "\n\n")
+        .replace(/\n+$/g, "") + "\n"
+    )
   }
 
   prettifyAndSave() {
@@ -244,11 +249,24 @@ import ../footer.scroll`
     this.save()
     return this
   }
+
+  // For CSV export
+  get asObject() {
+    if (this.quickCache.asObject) return this.quickCache.asObject
+    const obj: any = this.toFlatObject()
+    const { colNamesForCsv, computedColumnNames } = this.parent
+    computedColumnNames.forEach((colName: string) => {
+      const value = this[colName]
+      if (value !== undefined) obj[colName] = value.toString()
+    })
+    this.quickCache.asObject = obj
+    return obj
+  }
 }
 
 class TrueBaseFolder extends TreeNode {
   globalSortFunction = (item: object) => -Object.keys(item).length // By default show the items with most cells filled up top.
-  grammarProgramConstructor: any = undefined
+  rootParser: any = undefined // The root parser as defined by the Grammar files in a TrueBase
 
   dir = ""
   grammarDir = ""
@@ -269,8 +287,9 @@ class TrueBaseFolder extends TreeNode {
     this.grammarDir = settings.grammarFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
     this.grammarCode = new grammarNode(rawCode).format().asString
-    this.grammarProgramConstructor = new HandGrammarProgram(this.grammarCode).compileAndReturnRootConstructor()
-    this.fileExtension = new this.grammarProgramConstructor().fileExtension
+    this.grammarProgram = new HandGrammarProgram(this.grammarCode)
+    this.rootParser = this.grammarProgram.compileAndReturnRootConstructor()
+    this.fileExtension = new this.rootParser().fileExtension
     return this
   }
 
@@ -293,30 +312,10 @@ class TrueBaseFolder extends TreeNode {
     return this.quickCache.factCount
   }
 
-  get nodesForCsv() {
-    if (this.quickCache.nodesForCsv) return this.quickCache.nodesForCsv
-    const { computedColumnNames } = this
-    this.quickCache.nodesForCsv = this.map((file: TrueBaseFile) => {
-      const clone = file.parsed.clone()
-      clone.topDownArray.forEach((node: any) => {
-        if (node.includeChildrenInCsv === false) node.deleteChildren()
-        if (node.nodeTypeId === "blankLineNode") node.destroy()
-      })
-
-      computedColumnNames.forEach(prop => {
-        const value = file[prop]
-        if (value !== undefined) clone.set(prop, value.toString())
-      })
-
-      return clone
-    })
-    return this.quickCache.nodesForCsv
-  }
-
   get objectsForCsv() {
     if (!this.quickCache.objectsForCsv)
       this.quickCache.objectsForCsv = lodash.sortBy(
-        this.nodesForCsv.map((node: treeNode) => node.toFlatObject()),
+        this.map((file: TrueBaseFile) => file.asObject),
         this.globalSortFunction
       )
     return this.quickCache.objectsForCsv
@@ -369,19 +368,23 @@ class TrueBaseFolder extends TreeNode {
 
   get colNameToGrammarDefMap() {
     if (this.quickCache.colNameToGrammarDefMap) return this.quickCache.colNameToGrammarDefMap
-    this.quickCache.colNameToGrammarDefMap = new Map()
-    const map = this.quickCache.colNameToGrammarDefMap
-    this.nodesForCsv.forEach((node: any) => {
-      node.topDownArray.forEach((node: any) => {
-        const path = node.getFirstWordPath().replace(/ /g, ".")
-        map.set(path, node.definition)
-      })
-    })
+    const map = new Map()
+    this.concreteColumnDefinitions.forEach((def: any) => map.set(def.cruxIfAny, def)) // todo: handle nested definitions
+    this.quickCache.colNameToGrammarDefMap = map
     return map
   }
 
+  get concreteColumnDefinitions() {
+    if (this.quickCache.concreteColumnDefinitions) return this.quickCache.concreteColumnDefinitions
+    this.quickCache.concreteColumnDefinitions = this.grammarProgram.getNode("abstractTrueBaseColumnNode").concreteDescendantDefinitions
+    return this.quickCache.concreteColumnDefinitions
+  }
+
   get colNamesForCsv() {
-    return this.columnDocumentation.map((col: any) => col.Column)
+    if (this.quickCache.colNamesForCsv) return this.quickCache.colNamesForCsv
+    // todo: nested columns?
+    this.quickCache.colNamesForCsv = this.concreteColumnDefinitions.map((def: any) => def.cruxIfAny)
+    return this.quickCache.colNamesForCsv
   }
 
   makeCsv(filename: string, objectsForCsv = this.objectsForCsv) {
@@ -421,14 +424,15 @@ class TrueBaseFolder extends TreeNode {
 
     // Return columns with documentation sorted in the most interesting order.
 
-    const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
-    const colNames = new TreeNode(objectsForCsv).asCsv
-      .split("\n")[0]
-      .split(",")
-      .map((col: string) => {
+    const { colNamesForCsv, colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
+    const table = new Table(
+      objectsForCsv,
+      colNamesForCsv.map((col: string) => {
         return { name: col }
-      })
-    const table = new Table(objectsForCsv, colNames, undefined, false) // todo: fix jtable or switch off
+      }),
+      undefined,
+      false
+    ) // todo: fix jtable or switch off
     const cols = table
       .getColumnsArray()
       .map((col: any) => {
@@ -543,8 +547,7 @@ class TrueBaseFolder extends TreeNode {
   get sqliteCreateTables() {
     this.loadFolder()
 
-    const grammarProgram = new HandGrammarProgram(this.grammarCode)
-    const tableDefinitionNodes = grammarProgram.filter((node: any) => node.tableNameIfAny)
+    const tableDefinitionNodes = this.grammarProgram.filter((node: any) => node.tableNameIfAny)
     // todo: filter out root root
 
     return tableDefinitionNodes.map((node: any) => node.toSQLiteTableSchema()).join("\n")

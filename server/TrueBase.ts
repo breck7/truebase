@@ -6,7 +6,6 @@ const { TreeNode, TreeEvents } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram, GrammarConstants } = require("jtree/products/GrammarLanguage.js")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
-const { Table } = require("jtree/products/jtable.node.js")
 import { TrueBaseSettingsObject } from "./TrueBaseSettings"
 const grammarNode = require("jtree/products/grammar.nodejs.js")
 
@@ -26,6 +25,12 @@ interface ColumnInterface {
   Definition: string
   DefinitionLink: string
   Recommended: boolean
+}
+
+enum SQLiteTypes {
+  integer = "INTEGER",
+  float = "FLOAT",
+  text = "TEXT"
 }
 
 const UserFacingWarningMessages = {
@@ -76,7 +81,7 @@ import ../footer.scroll`
   get missingColumns() {
     return (this.parent.columnDocumentation as ColumnInterface[])
       .filter(col => col.Description !== "computed")
-      .filter(col => !col.Column.includes("."))
+      .filter(col => !col.Column.includes("_"))
       .filter(col => !this.has(col.Column))
   }
 
@@ -102,21 +107,6 @@ import ../footer.scroll`
 
   getAll(keyword: string) {
     return this.findNodes(keyword).map((node: any) => node.content)
-  }
-
-  getTypedValue(dotPath: string) {
-    const value = dotPath.includes(".") ? lodash.get(this.typed, dotPath) : this.typed[dotPath]
-    const typeOfValue = typeof value
-    if (typeOfValue === "object" && !Array.isArray(typeOfValue))
-      // JSON and Tree Notation are not naturally isomorphic. This accounts for trees with content.
-      return this.get(dotPath.replace(".", " "))
-    return value
-  }
-
-  selectAsObject(columnNames: string[]) {
-    const obj: any = {}
-    columnNames.forEach((dotPath: string) => (obj[dotPath] = this.getTypedValue(dotPath)))
-    return obj
   }
 
   get rank() {
@@ -250,17 +240,66 @@ import ../footer.scroll`
     return this
   }
 
+  getTypedValue(dotPath: string, dot = "_") {
+    const value = dotPath.includes(dot) ? lodash.get(this.typed, dotPath.replace("_", ".")) : this.typed[dotPath]
+    const typeOfValue = typeof value
+    if (typeOfValue === "object" && !Array.isArray(typeOfValue)) {
+      // This is a little messy. JSON and Tree Notation are not naturally isomorphic. This either returns the content or the children, depending on the situation:.
+      /*
+// Returns content:
+wikipedia someUrl
+ pageViews 123
+
+// Returns children as string:
+neighbors
+ Mars 232
+ Venus 123
+      */
+      const node = this.getNode(dotPath.replace(dot, " "))
+      const content = node.content
+      return content ? content : node.childrenToString()
+    }
+    return value
+  }
+
+  selectAsObject(columnNames: string[]) {
+    const obj: any = {}
+    columnNames.forEach((dotPath: string) => (obj[dotPath] = this.getTypedValue(dotPath)))
+    return obj
+  }
+
   // For CSV export
   get asObject() {
     if (this.quickCache.asObject) return this.quickCache.asObject
-    const obj: any = this.toFlatObject()
     const { colNamesForCsv, computedColumnNames } = this.parent
+    const obj = this.selectAsObject(colNamesForCsv)
     computedColumnNames.forEach((colName: string) => {
       const value = this[colName]
-      if (value !== undefined) obj[colName] = value.toString()
+      if (value !== undefined) obj[colName] = value.toString() // todo: do we need to do this here?
     })
     this.quickCache.asObject = obj
     return obj
+  }
+
+  get asSQLiteInsertStatement() {
+    const { id, parsed } = this
+    const tableName = this.parent.tableName
+    const columns = this.parent.sqliteTableColumns
+    const hits = columns.filter((colDef: any) => this.has(colDef.columnName))
+
+    const values = hits.map((colDef: any) => {
+      const node = parsed.getNode(colDef.columnName)
+      let content = node.content
+      const hasChildren = node.length
+      const isText = colDef.type === SQLiteTypes.text
+      if (content && hasChildren) content = node.contentWithChildren.replace(/\n/g, "\\n")
+      else if (hasChildren) content = node.childrenToString().replace(/\n/g, "\\n")
+      return isText || hasChildren ? `"${content}"` : content
+    })
+
+    hits.unshift({ columnName: "id", type: SQLiteTypes.text })
+    values.unshift(`"${id}"`)
+    return `INSERT INTO ${tableName} (${hits.map((col: any) => col.columnName).join(",")}) VALUES (${values.join(",")});`
   }
 }
 
@@ -313,11 +352,24 @@ class TrueBaseFolder extends TreeNode {
   }
 
   get objectsForCsv() {
-    if (!this.quickCache.objectsForCsv)
-      this.quickCache.objectsForCsv = lodash.sortBy(
-        this.map((file: TrueBaseFile) => file.asObject),
-        this.globalSortFunction
-      )
+    if (!this.quickCache.objectsForCsv) {
+      const objects = this.map((file: TrueBaseFile) => file.asObject)
+      this.quickCache.objectsForCsv = lodash.sortBy(objects, this.globalSortFunction)
+
+      const colStats: any = {}
+      const { colNamesForCsv, computedColumnNames } = this
+      const colNames = colNamesForCsv.concat(computedColumnNames)
+      objects.forEach((obj: any) => {
+        colNames.forEach((colName: string) => {
+          if (!colStats[colName]) colStats[colName] = { incompleteCount: 0 }
+          const stats = colStats[colName]
+          const value = obj[colName]
+          if (value === undefined) stats.incompleteCount++
+          else if (stats.example === undefined) stats.example = value
+        })
+      })
+      this.quickCache.colStats = colStats
+    }
     return this.quickCache.objectsForCsv
   }
 
@@ -349,10 +401,10 @@ class TrueBaseFolder extends TreeNode {
     return pageRankLinks
   }
 
-  // todo: is there already a way to do this in jtree?
+  // todo: is there already a way to do this in jtree? there should be, if not.
   getFilePathAndLineNumberWhereGrammarNodeIsDefined(nodeTypeId: string) {
     const { grammarFileMap } = this
-    const regex = new RegExp(`^${nodeTypeId}`, "gm")
+    const regex = new RegExp(`^ *${nodeTypeId}`, "gm") // todo: this will break for scoped parsers
     let filePath: string
     let lineNumber: number
     Object.keys(grammarFileMap).some(grammarFilePath => {
@@ -369,7 +421,7 @@ class TrueBaseFolder extends TreeNode {
   get colNameToGrammarDefMap() {
     if (this.quickCache.colNameToGrammarDefMap) return this.quickCache.colNameToGrammarDefMap
     const map = new Map()
-    this.concreteColumnDefinitions.forEach((def: any) => map.set(def.cruxIfAny, def)) // todo: handle nested definitions
+    this.concreteColumnDefinitions.forEach((def: any) => map.set(def.cruxPathAsColumnName, def)) // todo: handle nested definitions
     this.quickCache.colNameToGrammarDefMap = map
     return map
   }
@@ -383,7 +435,7 @@ class TrueBaseFolder extends TreeNode {
   get colNamesForCsv() {
     if (this.quickCache.colNamesForCsv) return this.quickCache.colNamesForCsv
     // todo: nested columns?
-    this.quickCache.colNamesForCsv = this.concreteColumnDefinitions.map((def: any) => def.cruxIfAny)
+    this.quickCache.colNamesForCsv = this.concreteColumnDefinitions.map((def: any) => def.cruxPathAsColumnName)
     return this.quickCache.colNamesForCsv
   }
 
@@ -423,27 +475,26 @@ class TrueBaseFolder extends TreeNode {
     if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
 
     // Return columns with documentation sorted in the most interesting order.
+    const names = this.colNamesForCsv.concat(this.computedColumnNames)
 
-    const { colNamesForCsv, colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
-    const table = new Table(
-      objectsForCsv,
-      colNamesForCsv.map((col: string) => {
-        return { name: col }
-      }),
-      undefined,
-      false
-    ) // todo: fix jtable or switch off
-    const cols = table
-      .getColumnsArray()
-      .map((col: any) => {
-        const reductions = col.getReductions()
-        const Column = col.getColumnName()
+    const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
+    const colStats = this.quickCache.colStats
+    const fileCount = this.length
+    const cols = names
+      .map((Column: string) => {
         const colDef = colNameToGrammarDefMap.get(Column)
         let colDefId
         if (colDef) colDefId = colDef.getLine()
         else colDefId = ""
-
-        const Example = reductions.mode
+        const stats = colStats[Column]
+        const Values = fileCount - stats.incompleteCount
+        const Example =
+          stats.example !== undefined
+            ? stats.example
+                .toString()
+                .replace(/\n/g, " ")
+                .substr(0, 30)
+            : ""
         const Description = colDefId !== "" && colDefId !== "errorNode" ? colDef.get("description") : "computed"
         let Source
         if (colDef) Source = colDef.getFrom("string sourceDomain")
@@ -457,8 +508,8 @@ class TrueBaseFolder extends TreeNode {
         const SourceLink = Source ? `https://${Source}` : ""
         return {
           Column,
-          Values: reductions.count,
-          Coverage: Math.round((100 * reductions.count) / (reductions.count + reductions.incompleteCount)) + "%",
+          Values,
+          Coverage: Math.round((100 * Values) / (Values + stats.incompleteCount)) + "%",
           Example,
           Source,
           SourceLink,
@@ -544,17 +595,38 @@ class TrueBaseFolder extends TreeNode {
     return this.sqliteCreateTables + "\n\n" + this.sqliteInsertRows
   }
 
+  get tableName() {
+    return this.fileExtension
+  }
+
   get sqliteCreateTables() {
     this.loadFolder()
+    const columns = this.sqliteTableColumns.map((columnDef: any) => `${columnDef.columnName} ${columnDef.type}`)
+    return `create table ${this.tableName} (
+ id TEXT NOT NULL PRIMARY KEY,
+ ${columns.join(",\n ")}
+);`
+  }
 
-    const tableDefinitionNodes = this.grammarProgram.filter((node: any) => node.tableNameIfAny)
-    // todo: filter out root root
+  get sqliteTableColumns() {
+    return this.concreteColumnDefinitions.map((def: any) => {
+      const firstNonKeywordCellType = def.cellParser.getCellArray()[1]
 
-    return tableDefinitionNodes.map((node: any) => node.toSQLiteTableSchema()).join("\n")
+      let type = SQLiteTypes.text
+      if (firstNonKeywordCellType) {
+        if (firstNonKeywordCellType.constructor.parserFunctionName === "parseInt") type = SQLiteTypes.integer
+        else if (firstNonKeywordCellType.constructor.parserFunctionName === "parseFloat") type = SQLiteTypes.float
+      }
+
+      return {
+        columnName: def.cruxPathAsColumnName,
+        type
+      }
+    })
   }
 
   get sqliteInsertRows() {
-    return this.map((file: any) => file.parsed.toSQLiteInsertStatement(file.id)).join("\n")
+    return this.map((file: TrueBaseFile) => file.asSQLiteInsertStatement).join("\n")
   }
 
   createParser() {

@@ -47,7 +47,7 @@ testTree.colNamesForCsv = (equal: any) => {
   // Arrange
   const folder = getFolder()
   // Act/Assert
-  equal(folder.colNamesForCsv.join(" "), "title aka wikipedia related description surfaceGravity diameter moons age yearsToOrbitSun hasLife neighbors", "col names works")
+  equal(folder.colNamesForCsv.join(" "), "title aka wikipedia wikipedia_pageViews related description surfaceGravity diameter moons age yearsToOrbitSun hasLife neighbors", "col names works")
 }
 
 testTree.toTypedMap = (equal: any) => {

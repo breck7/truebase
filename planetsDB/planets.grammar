@@ -1,10 +1,12 @@
 // Line Parsers
 planetsdbNode
  root
- string tableName planetsdb
  string fileExtension planetsdb
  inScope abstractTrueBaseColumnNode
  catchAllNodeType trueBaseErrorNode
+
+distanceCell
+ extends intCell
 
 // Specific column types
 titleNode
@@ -29,6 +31,7 @@ yearsToOrbitSunNode
  extends abstractFloatColumnNode
 hasLifeNode
  extends abstractBooleanColumnNode
+ description As far as we know
 ageNode
  extends abstractIntColumnNode
  contentKey value
@@ -37,21 +40,20 @@ ageNode
 columnExplanationNode
  description Add untyped notes about this column.
  baseNodeType blobNode
-wikipediaPageViewsNode
- cells columnNameCell intCell
- crux pageViews
- single
 wikipediaNode
  extends abstractStringColumnNode
  contentKey id
- inScope wikipediaPageViewsNode
+ string sourceDomain wikipedia.org
+ pageViewsNode
+  extends abstractIntColumnNode
+  string sourceDomain wikipedia.org
 neighborNode
  // Needs to be unique
- cells trueBaseIdCell intCell
+ cells trueBaseIdCell distanceCell
  uniqueFirstWord
 neighborsNode
  cells columnNameCell
- extends abstractTrueBaseColumnNode
+ extends abstractHashMapColumnNode
  catchAllNodeType neighborNode
 relatedNode
  extends abstractStringListColumnNode

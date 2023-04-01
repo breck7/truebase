@@ -504,8 +504,9 @@ import footer.scroll`
 
     const { siteFolder } = this.settings
 
-    let notFoundPage = virtualFiles[browserAppFolder + "/custom_404.html"]
-    if (virtualFiles[siteFolder + "/custom_404.html"]) notFoundPage = virtualFiles[siteFolder + "/custom_404.html"]
+    let notFoundPage = ""
+    if (virtualFiles[siteFolder + "/custom_404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/custom_404.scroll")
+    else notFoundPage = this.compileScrollFile(browserAppFolder + "/custom_404.scroll")
 
     // Do not convert the file to a Scroll until requested
     this.app.get("/truebase/:filename", (req: any, res: any, next: any) => {

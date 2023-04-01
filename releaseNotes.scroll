@@ -5,6 +5,7 @@ startColumns 4
 * Here's a list of the notable changes in TrueBase.
 
 # 13.0.0 2023-3-31
+- ⚠️ BREAKING: all parser definitions should extend `abstractTrueBaseColumnNode` to be included in generated CSVs
 - ⚠️ BREAKING: `_` is now used to make nested column names rather than `.`. `_` is no longer allowed in column names. This works better with SQLite.
  - Any TQL queries using `.` for the nested paths need to be updated
 - 🏥 various fixes to CSV generation

@@ -41,7 +41,7 @@ const UserFacingWarningMessages = {
 const UserFacingErrorMessages = {
   brokenPermalink: (subjectId: string, targetId: string) => `Broken permalink in '${subjectId}': No file '${targetId}' found`,
   missingColumnSourceFile: (filePath: string) => `Could not find grammar file '${filePath}'`,
-  missingColumn: (colName: string) => `No column found for '${colName}'`,
+  missingColumn: (colName: string, allColumnNames: string[]) => `No column found for '${colName}'. Available columns: ${allColumnNames.sort().join(" ")}`,
   titleRequired: (content: string) => `A "title" must be provided when creating a new file. Content provided:\n ${content.replace(/\n/g, "\n ")}`,
   duplicateId: (id: string) => `Already file with id: "${id}". Are you sure the database doesn't have this already? Perhaps update the title to something more unique for now.`,
   returnCharFound: (fullPath: string) => `Return character '\\r' found in '${fullPath}'. Return chars are unneeded.`
@@ -271,8 +271,11 @@ neighbors
   // For CSV export
   get asObject() {
     if (this.quickCache.asObject) return this.quickCache.asObject
-    const { colNamesForCsv, computedColumnNames } = this.parent
-    const obj = this.selectAsObject(colNamesForCsv)
+    const { computedColumnNames } = this.parent
+    const obj: any = {}
+    this.parsed.topDownArray.forEach((col: any) => {
+      if (col.isColumn) obj[col.columnName] = col.columnValue
+    })
     computedColumnNames.forEach((colName: string) => {
       const value = this[colName]
       if (value !== undefined) obj[colName] = value.toString() // todo: do we need to do this here?
@@ -480,51 +483,55 @@ class TrueBaseFolder extends TreeNode {
     const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
     const colStats = this.quickCache.colStats
     const fileCount = this.length
-    const cols = names
-      .map((Column: string) => {
-        const colDef = colNameToGrammarDefMap.get(Column)
-        let colDefId
-        if (colDef) colDefId = colDef.getLine()
-        else colDefId = ""
-        const stats = colStats[Column]
-        const Values = fileCount - stats.incompleteCount
-        const Example =
-          stats.example !== undefined
-            ? stats.example
-                .toString()
-                .replace(/\n/g, " ")
-                .substr(0, 30)
-            : ""
-        const Description = colDefId !== "" && colDefId !== "errorNode" ? colDef.get("description") : "computed"
-        let Source
-        if (colDef) Source = colDef.getFrom("string sourceDomain")
-        else Source = ""
+    const cols = names.map((Column: string) => {
+      const colDef = colNameToGrammarDefMap.get(Column)
+      let colDefId
+      if (colDef) colDefId = colDef.getLine()
+      else colDefId = ""
+      const stats = colStats[Column]
+      const Values = fileCount - stats.incompleteCount
+      const Example =
+        stats.example !== undefined
+          ? stats.example
+              .toString()
+              .replace(/\n/g, " ")
+              .substr(0, 30)
+          : ""
+      const Description = colDefId !== "" && colDefId !== "errorNode" ? colDef.get("description") : "computed"
+      let Source
+      if (colDef) Source = colDef.getFrom("string sourceDomain")
+      else Source = ""
 
-        const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
-        if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
+      const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
+      if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
-        const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
-        const DefinitionLink = colDefId !== "" && colDefId !== "errorNode" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
-        const SourceLink = Source ? `https://${Source}` : ""
-        return {
-          Column,
-          Values,
-          Coverage: Math.round((100 * Values) / (Values + stats.incompleteCount)) + "%",
-          Example,
-          Source,
-          SourceLink,
-          Description,
-          Definition,
-          DefinitionLink,
-          Recommended: colDef && colDef.getFrom("boolean alwaysRecommended") === "true"
-        }
-      })
-      .filter((col: any) => col.Values)
+      const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
+      const DefinitionLink = colDefId !== "" && colDefId !== "errorNode" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
+      const SourceLink = Source ? `https://${Source}` : ""
+      return {
+        Column,
+        Values,
+        Coverage: Math.round((100 * Values) / (Values + stats.incompleteCount)) + "%",
+        Example,
+        Source,
+        SourceLink,
+        Description,
+        Definition,
+        DefinitionLink,
+        Recommended: colDef && colDef.getFrom("boolean alwaysRecommended") === "true"
+      }
+    })
 
     const sortedCols: any[] = []
     defaultColumnSortOrder.forEach(colName => {
       const hit = cols.find((col: any) => col.Column === colName)
-      if (!hit) throw new Error(UserFacingErrorMessages.missingColumn(colName))
+      if (!hit)
+        throw new Error(
+          UserFacingErrorMessages.missingColumn(
+            colName,
+            cols.map((col: any) => col.Column)
+          )
+        )
       sortedCols.push(hit)
     })
 

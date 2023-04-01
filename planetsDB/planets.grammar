@@ -12,12 +12,7 @@ distanceCell
 titleNode
  extends abstractStringColumnNode
 descriptionNode
- extends abstractTrueBaseColumnNode
- catchAllNodeType descriptionLineNode
- baseNodeType blobNode
- boolean includeChildrenInCsv false
-descriptionLineNode
- catchAllCellType stringCell
+ extends abstractStringBlobNode
 akaNode
  extends abstractStringColumnNode
  single false

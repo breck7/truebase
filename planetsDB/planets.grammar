@@ -12,7 +12,7 @@ distanceCell
 titleNode
  extends abstractStringColumnNode
 descriptionNode
- extends abstractStringBlobNode
+ extends abstractStringBlobColumnNode
 akaNode
  extends abstractStringColumnNode
  single false

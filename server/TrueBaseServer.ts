@@ -717,7 +717,8 @@ css
 
 * SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format(
       "0.0b"
-    )} uncompressed. Every row is an entity and every entity is one row.
+    )} uncompressed. Every row is an entity and every entity is one row. You can also download the typed tree structured data as JSON.
+ link TRUEBASE_ID.json JSON
 
 # Column Documentation
 

@@ -330,6 +330,11 @@ document.addEventListener("DOMContentLoaded", () => document.querySelectorAll(".
 <div class="scrollSectionComponent"><h1 class="scrollTitleComponent"><a href="releaseNotes.html">Release Notes</a></h1>
 </div><div class="scrollColumnsComponent" style="column-width:35ch;column-count:4;max-width:200ch;">
 <p class="scrollParagraphComponent">Here's a list of the notable changes in TrueBase.</p>
+<div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">13.0.0 2023-3-31</h3>
+<ul style="text-indent:0px;"><li >⚠️ BREAKING: all parser definitions should extend <code>abstractTrueBaseColumnNode</code> to be included in generated CSVs</li>
+<li >⚠️ BREAKING: <code><em></code> is now used to make nested column names rather than <code>.</code>. <code></em></code> is no longer allowed in column names. This works better with SQLite.</li><ul style="text-indent:20px;"><li >Any TQL queries using <code>.</code> for the nested paths need to be updated</li></ul>
+<li >🏥 various fixes to CSV generation</li></ul>
+</div>
 <div class="scrollSectionComponent"><h3 class="scrollParagraphComponent">12.0.1 2023-3-30</h3>
 <ul style="text-indent:0px;"><li >🏥 regression fix</li></ul>
 </div>

@@ -4,6 +4,10 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 13.1.0 2023-3-31
+- 🏥 fix 404 regression
+- 🎉 upgrade JTree to get better sortTemplate
+
 # 13.0.0 2023-3-31
 - ⚠️ BREAKING: all parser definitions should extend `abstractTrueBaseColumnNode` to be included in generated CSVs
 - ⚠️ BREAKING: `_` is now used to make nested column names rather than `.`. `_` is no longer allowed in column names. This works better with SQLite.

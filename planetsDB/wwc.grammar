@@ -127,7 +127,7 @@ abstractCountColumnNode
  cells columnNameCell countCell
  extends abstractIntColumnNode
 abstractPercentageColumnNode
- cells keywordCell percentCell
+ cells columnNameCell percentCell
  extends abstractNumericColumnNode
 
 // Common time parsers

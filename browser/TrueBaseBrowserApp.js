@@ -177,7 +177,7 @@ class TrueBaseBrowserApp {
     this.program = new this.programCompiler(code)
     const errs = this.program.scopeErrors.concat(this.program.getAllErrors())
 
-    const errMessage = errs.length ? errs.map(err => err.getMessage()).join(" ") : "&nbsp;"
+    const errMessage = errs.length ? errs.map(err => err.message).join(" ") : "&nbsp;"
     document.getElementById("tqlErrors").innerHTML = errMessage
   }
 

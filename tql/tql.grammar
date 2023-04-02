@@ -25,11 +25,11 @@ columnNameCell
  description The column to search on.
  highlightScope constant.numeric
 blankCell
-tqlNode
+tqlParser
  root
  description TrueBase Query Language (TQL) is a new language for querying a TrueBase.
- catchAllNodeType catchAllErrorNode
- inScope abstractQueryNode blankLineNode commentNode abstractModifierNode abstractMetaNode
+ catchAllParser catchAllErrorParser
+ inScope abstractQueryParser blankLineParser commentParser abstractModifierParser abstractMetaParser
  javascript
   get tests() {
     const tests = this.filter(node => node.toPredicate).map(node => {
@@ -43,16 +43,16 @@ tqlNode
     const predicate = file => tests.every(fn => fn(file))
     return trueBaseFolder.filter(file => predicate(file))
   }
-abstractQueryNode
+abstractQueryParser
  cells keywordCell
- inScope abstractQueryNode commentNode
+ inScope abstractQueryParser commentParser
  javascript
   toPredicate() {
     return () => true
   }
-catchAllErrorNode
- baseNodeType errorNode
-blankLineNode
+catchAllErrorParser
+ baseParser errorParser
+blankLineParser
  description Blank lines are ignored.
  cells blankCell
  compiler
@@ -60,9 +60,9 @@ blankLineNode
  pattern ^$
  tags doNotSynthesize
  boolean shouldSerialize false
-whereNode
+whereParser
  description Find files whose value in the given column meet this condition.
- extends abstractQueryNode
+ extends abstractQueryParser
  cells keywordCell columnNameCell comparisonCell
  catchAllCellType numberOrStringCell
  crux where
@@ -93,8 +93,8 @@ whereNode
         return value ? textQueryValue.split(" ").includes(value.toString()) : false
     }
   }
-includesTextNode
- extends abstractQueryNode
+includesTextParser
+ extends abstractQueryParser
  description Find files that include this text somewhere. Case insensitive.
  catchAllCellType stringCell
  crux includes
@@ -103,14 +103,14 @@ includesTextNode
     const query = (this.content ?? "").toLowerCase()
     return file => file.lowercase.includes(query)
   }
-doesNotIncludeTextNode
+doesNotIncludeTextParser
  description Find files that do not include this text anywhere. Case insensitive.
- extends includesTextNode
+ extends includesTextParser
  crux doesNotInclude
  boolean flip true
-columnIsMissingNode
+columnIsMissingParser
  description Find files whose value in the given column is missing.
- extends abstractQueryNode
+ extends abstractQueryParser
  cells keywordCell columnNameCell
  crux missing
  javascript
@@ -118,14 +118,14 @@ columnIsMissingNode
     const columnName = this.getWord(1)
     return file => !file.has(columnName.replaceAll("_", " "))
   }
-columnIsNotMissingNode
+columnIsNotMissingParser
  description Find files whose value in the given column is not missing.
- extends columnIsMissingNode
+ extends columnIsMissingParser
  crux notMissing
  boolean flip true
-matchesRegexNode
+matchesRegexParser
  description Find files that match this regex on a full text search.
- extends abstractQueryNode
+ extends abstractQueryParser
  catchAllCellType regexCell
  crux matchesRegex
  javascript
@@ -133,60 +133,60 @@ matchesRegexNode
     const regex = new RegExp(this.content ?? "")
     return file => regex.test(file.asString)
   }
-commentNode
+commentParser
  description Comments are ignored.
  crux #
  cells commentCell
  catchAllCellType commentCell
- catchAllNodeType commentNode
+ catchAllParser commentParser
  boolean suggestInAutocomplete false
-abstractModifierNode
+abstractModifierParser
  cells keywordCell
  cruxFromId
-abstractColumnModifierNode
- extends abstractModifierNode
+abstractColumnModifierParser
+ extends abstractModifierParser
  catchAllCellType columnNameCell
-selectNode
+selectParser
  description Choose which columns to return.
- extends abstractColumnModifierNode
-selectAllNode
+ extends abstractColumnModifierParser
+selectAllParser
  description Select all the columns
- extends abstractColumnModifierNode
-addColumnNode
+ extends abstractColumnModifierParser
+addColumnParser
  description Add a custom column using Javascript template strings.
  cells keywordCell customColumnNameCell
  catchAllCellType javascriptCell
- extends abstractModifierNode
+ extends abstractModifierParser
  example
   addColumn GoogleSearch <a href="https://www.google.com/search?q=${row.title}">Search Google for ${row.title}</a>
-renameNode
+renameParser
  cells keywordCell columnNameCell customColumnNameCell
  example
   rename githubRepo.stars Stars
  description Rename a column.
- extends abstractColumnModifierNode
-sortByNode
+ extends abstractColumnModifierParser
+sortByParser
  description Sort by these columns.
- extends abstractColumnModifierNode
+ extends abstractColumnModifierParser
  single
-reverseNode
- extends abstractModifierNode
+reverseParser
+ extends abstractModifierParser
  description Reverse the order of results.
  single
-limitNode
- extends abstractModifierNode
+limitParser
+ extends abstractModifierParser
  description Return a maximum of this many results.
  cells keywordCell numberCell
  single
-abstractMetaNode
+abstractMetaParser
  cells keywordCell
  catchAllCellType stringCell
  cruxFromId
  single
  boolean suggestInAutocomplete false
-titleNode
+titleParser
  description Give your query a title for display on the results page.
- extends abstractMetaNode
-descriptionNode
+ extends abstractMetaParser
+descriptionParser
  description Give your query a description for display on the results page.
- extends abstractMetaNode
+ extends abstractMetaParser

@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 14.0.0 2023-4-2
+- ⚠️ BREAKING: Upgrade to Jtree 73 and Grammar 6. Any custom grammar files need to be updated (generally this just means a find/replace of `Node` to `Parser`).
+
 # 13.1.0 2023-3-31
 - 🏥 fix 404 regression
 - 🎉 upgrade JTree to get better sortTemplate

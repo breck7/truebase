@@ -107,7 +107,7 @@ testTree.fileSystemEvents = async (equal: any) => {
   const expectedContent = "hello world"
   waiting = new Promise(resolve => {
     folder.onDescendantChanged((event: any) => {
-      const fileNode = event.targetNode.getAncestorByNodeConstructor(TrueBaseFile)
+      const fileNode = event.targetNode.getAncestorByParser(TrueBaseFile)
 
       // Assert
       equal(fileNode.childrenToString(), expectedContent, "file change detected")

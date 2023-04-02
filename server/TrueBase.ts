@@ -7,7 +7,7 @@ const { HandGrammarProgram, GrammarConstants } = require("jtree/products/Grammar
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 import { TrueBaseSettingsObject } from "./TrueBaseSettings"
-const grammarNode = require("jtree/products/grammar.nodejs.js")
+const grammarParser = require("jtree/products/grammar.nodejs.js")
 
 declare type stringMap = { [firstWord: string]: any }
 declare type fileName = string
@@ -190,8 +190,8 @@ import ../footer.scroll`
     return Disk.getFileName(this._getFilePath())
   }
 
-  createParser() {
-    return new TreeNode.Parser(TreeNode)
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(TreeNode)
   }
 
   updateTrueBaseIds(oldTrueBaseId: string, newTrueBaseId: string) {
@@ -328,9 +328,9 @@ class TrueBaseFolder extends TreeNode {
     this.dir = settings.thingsFolder
     this.grammarDir = settings.grammarFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
-    this.grammarCode = new grammarNode(rawCode).format().asString
+    this.grammarCode = new grammarParser(rawCode).format().asString
     this.grammarProgram = new HandGrammarProgram(this.grammarCode)
-    this.rootParser = this.grammarProgram.compileAndReturnRootConstructor()
+    this.rootParser = this.grammarProgram.compileAndReturnRootParser()
     this.fileExtension = new this.rootParser().fileExtension
     return this
   }
@@ -405,16 +405,16 @@ class TrueBaseFolder extends TreeNode {
   }
 
   // todo: is there already a way to do this in jtree? there should be, if not.
-  getFilePathAndLineNumberWhereGrammarNodeIsDefined(nodeTypeId: string) {
+  getFilePathAndLineNumberWhereParserIsDefined(parserId: string) {
     const { grammarFileMap } = this
-    const regex = new RegExp(`^ *${nodeTypeId}`, "gm") // todo: this will break for scoped parsers
+    const regex = new RegExp(`^ *${parserId}`, "gm") // todo: this will break for scoped parsers
     let filePath: string
     let lineNumber: number
     Object.keys(grammarFileMap).some(grammarFilePath => {
       const code = grammarFileMap[grammarFilePath]
       if (grammarFileMap[grammarFilePath].match(regex)) {
         filePath = grammarFilePath
-        lineNumber = code.split("\n").indexOf(nodeTypeId)
+        lineNumber = code.split("\n").indexOf(parserId)
         return true
       }
     })
@@ -431,7 +431,7 @@ class TrueBaseFolder extends TreeNode {
 
   get concreteColumnDefinitions() {
     if (this.quickCache.concreteColumnDefinitions) return this.quickCache.concreteColumnDefinitions
-    this.quickCache.concreteColumnDefinitions = this.grammarProgram.getNode("abstractTrueBaseColumnNode").concreteDescendantDefinitions
+    this.quickCache.concreteColumnDefinitions = this.grammarProgram.getNode("abstractTrueBaseColumnParser").concreteDescendantDefinitions
     return this.quickCache.concreteColumnDefinitions
   }
 
@@ -497,16 +497,16 @@ class TrueBaseFolder extends TreeNode {
               .replace(/\n/g, " ")
               .substr(0, 30)
           : ""
-      const Description = colDefId !== "" && colDefId !== "errorNode" ? colDef.get("description") : "computed"
+      const Description = colDefId !== "" && colDefId !== "errorParser" ? colDef.get("description") : "computed"
       let Source
       if (colDef) Source = colDef.getFrom("string sourceDomain")
       else Source = ""
 
-      const sourceLocation = this.getFilePathAndLineNumberWhereGrammarNodeIsDefined(colDefId)
+      const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
-      const Definition = colDefId !== "" && colDefId !== "errorNode" ? path.basename(sourceLocation.filePath) : "A computed value"
-      const DefinitionLink = colDefId !== "" && colDefId !== "errorNode" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
+      const Definition = colDefId !== "" && colDefId !== "errorParser" ? path.basename(sourceLocation.filePath) : "A computed value"
+      const DefinitionLink = colDefId !== "" && colDefId !== "errorParser" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
       const SourceLink = Source ? `https://${Source}` : ""
       return {
         Column,
@@ -636,8 +636,8 @@ class TrueBaseFolder extends TreeNode {
     return this.map((file: TrueBaseFile) => file.asSQLiteInsertStatement).join("\n")
   }
 
-  createParser() {
-    return new TreeNode.Parser(TrueBaseFile)
+  createParserCombinator() {
+    return new TreeNode.ParserCombinator(TrueBaseFile)
   }
 
   get typedMap() {

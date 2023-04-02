@@ -159,8 +159,8 @@ class TrueBaseBrowserApp {
   }
 
   async startTQLCodeMirror() {
-    this.programCompiler = tqlNode
-    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => tqlNode, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("tqlInput"), {
+    this.programCompiler = tqlParser
+    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => tqlParser, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("tqlInput"), {
       lineWrapping: false,
       lineNumbers: false
     })
@@ -293,8 +293,8 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
   }
 
   async startCodeMirrorEditor() {
-    this.programCompiler = pldbNode
-    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => pldbNode, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("fileContent"), {
+    this.programCompiler = pldbParser // todo: generalize
+    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => pldbParser, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("fileContent"), {
       lineWrapping: false,
       lineNumbers: true
     })

@@ -1,55 +1,55 @@
 // Line Parsers
-planetsdbNode
+planetsdbParser
  root
  string fileExtension planetsdb
- inScope abstractTrueBaseColumnNode
- catchAllNodeType trueBaseErrorNode
+ inScope abstractTrueBaseColumnParser
+ catchAllParser trueBaseErrorParser
 
 distanceCell
  extends intCell
 
 // Specific column types
-titleNode
- extends abstractStringColumnNode
-descriptionNode
- extends abstractStringBlobColumnNode
-akaNode
- extends abstractStringColumnNode
+titleParser
+ extends abstractStringColumnParser
+descriptionParser
+ extends abstractStringBlobColumnParser
+akaParser
+ extends abstractStringColumnParser
  single false
-surfaceGravityNode
- extends abstractIntColumnNode
-diameterNode
- extends abstractIntColumnNode
-moonsNode
- extends abstractIntColumnNode
-yearsToOrbitSunNode
- extends abstractFloatColumnNode
-hasLifeNode
- extends abstractBooleanColumnNode
+surfaceGravityParser
+ extends abstractIntColumnParser
+diameterParser
+ extends abstractIntColumnParser
+moonsParser
+ extends abstractIntColumnParser
+yearsToOrbitSunParser
+ extends abstractFloatColumnParser
+hasLifeParser
+ extends abstractBooleanColumnParser
  description As far as we know
-ageNode
- extends abstractIntColumnNode
+ageParser
+ extends abstractIntColumnParser
  contentKey value
  childrenKey description
- catchAllNodeType columnExplanationNode
-columnExplanationNode
+ catchAllParser columnExplanationParser
+columnExplanationParser
  description Add untyped notes about this column.
- baseNodeType blobNode
-wikipediaNode
- extends abstractStringColumnNode
+ baseParser blobParser
+wikipediaParser
+ extends abstractStringColumnParser
  contentKey id
  string sourceDomain wikipedia.org
- pageViewsNode
-  extends abstractIntColumnNode
+ pageViewsParser
+  extends abstractIntColumnParser
   string sourceDomain wikipedia.org
-neighborNode
+neighborParser
  // Needs to be unique
  cells trueBaseIdCell distanceCell
  uniqueFirstWord
-neighborsNode
+neighborsParser
  cells columnNameCell
- extends abstractHashMapColumnNode
- catchAllNodeType neighborNode
-relatedNode
- extends abstractStringListColumnNode
+ extends abstractHashMapColumnParser
+ catchAllParser neighborParser
+relatedParser
+ extends abstractStringListColumnParser
  listDelimiter  & 

@@ -13,10 +13,10 @@ const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
-const grammarNode = require("jtree/products/grammar.nodejs.js")
+const grammarParser = require("jtree/products/grammar.nodejs.js")
 const { ScrollCli, ScrollFile, ScrollInMemoryFileSystem, ScrollDiskFileSystem } = require("scroll-cli")
 
-const genericTqlNode = require("../tql/tql.nodejs.js")
+const genericTqlParser = require("../tql/tql.nodejs.js")
 let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
 if (!Disk.exists(nodeModulesFolder)) nodeModulesFolder = path.join(__dirname, "..", "..") // Hacky. Todo: cleanup
 const jtreeFolder = path.join(nodeModulesFolder, "jtree")
@@ -653,7 +653,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
     extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
     const extendedTqlName = `${grammarId}Tql`
-    extendedTqlGrammar.getNode("tqlNode").setWord(`${extendedTqlName}Node`)
+    extendedTqlGrammar.getNode("tqlParser").setWord(`${extendedTqlName}Parser`)
     const extendedTqlFileName = `${extendedTqlName}.grammar`
     const extendedTqlPath = path.join(grammarIgnoreFolder, extendedTqlFileName)
     virtualFiles["/" + extendedTqlFileName] = extendedTqlGrammar.asString
@@ -792,7 +792,7 @@ import footer.scroll`
     const testTree: any = {}
 
     testTree.ensureNoErrorsInGrammar = (areEqual: any) => {
-      const grammarErrors = new grammarNode(this.folder.grammarCode).getAllErrors().map((err: any) => err.toObject())
+      const grammarErrors = new grammarParser(this.folder.grammarCode).getAllErrors().map((err: any) => err.toObject())
       if (grammarErrors.length) console.log(grammarErrors)
       areEqual(grammarErrors.length, 0, "no errors in pldb grammar")
     }
@@ -886,7 +886,7 @@ class SearchServer {
     return (<any>this)[format](decodeURIComponent(originalQuery).replace(/\r/g, ""))
   }
 
-  search(treeQLCode: string, tqlParser: any = genericTqlNode) {
+  search(treeQLCode: string, tqlParser: any = genericTqlParser) {
     const { searchCache } = this
     if (searchCache[treeQLCode]) return searchCache[treeQLCode]
 

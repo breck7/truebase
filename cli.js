@@ -83,9 +83,9 @@ ${trueBaseId}Node
  string tableName ${trueBaseId}
  string fileExtension ${trueBaseId}
  inScope abstractPropertyNode
- catchAllNodeType errorNode
+ catchAllParser errorNode
 errorNode
- baseNodeType errorNode
+ baseParser errorNode
 abstractPropertyNode
  cruxFromId
  single

@@ -4,6 +4,6 @@ title Logging in
 * Logging in...
  id loginResult
 
-html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().attemptLoginCommand())</script>
+<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().attemptLoginCommand())</script>
 
 import footer.scroll

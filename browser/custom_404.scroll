@@ -3,12 +3,9 @@ title Oops! - Page not found
 
 * Sorry but we cannot find the requested page.
 
-css
- .scrollFilePageComponent { text-align: center;}
-
 import searchForm.scroll
 
-html <script>document.getElementById("searchFormInput").value = (window.location.pathname + "").split("/").pop().replace(/\.[^\.]+$/, "").replace(/</g, "&lt;") </script>
+<script>document.getElementById("searchFormInput").value = (window.location.pathname + "").split("/").pop().replace(/\.[^\.]+$/, "").replace(/</g, "&lt;") </script>
 
 * You can report a broken link on the GitHub.
  GIT_URL/issues report a broken link

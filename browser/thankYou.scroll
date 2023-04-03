@@ -3,8 +3,7 @@ title Thank you!
 
 * Success! Your contributions have been committed: <span id="commitHash"></span>
 
-html
- <script> const commit = new URLSearchParams(window.location.search).get("commit") || ""); document.getElementById("commitHash").innerHTML = `<a target="_SITE_NAME" href="GIT_URL/commit/${commit}">${commit.substring(0, 7)}</a>`</script>
+<script> const commit = new URLSearchParams(window.location.search).get("commit") || ""); document.getElementById("commitHash").innerHTML = `<a target="_SITE_NAME" href="GIT_URL/commit/${commit}">${commit.substring(0, 7)}</a>`</script>
 
 * From all of us at SITE_NAME, as well as all future readers, thank you!
 

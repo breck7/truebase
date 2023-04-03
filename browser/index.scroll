@@ -5,12 +5,12 @@ title SITE_NAME
 
 # SITE_NAME: SITE_DESCRIPTION
 
-html <center>
+<center>
 
 import searchForm.scroll
 
 replace BASE_URL .
 
-html </center>
+</center>
 
 import footer.scroll

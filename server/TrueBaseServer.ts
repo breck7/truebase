@@ -608,7 +608,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   get combinedCss() {
-    return new ScrollFile().SCROLL_CSS + "\n" + this.cssFiles.map(Disk.read).join(`\n\n`)
+    return new ScrollFile("gazetteTheme noTag").html + "\n" + this.cssFiles.map(Disk.read).join(`\n\n`)
   }
 
   get combinedJs() {

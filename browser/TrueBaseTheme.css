@@ -77,18 +77,18 @@ body {
   cursor: pointer;
 }
 
-.scrollFilePageTitle {
-  font-size: 36px;
+.scrollTitle {
+  font-size: 2em;
 }
 
-.scrollTableComponent {
+.scrollTable {
   table-layout: auto;
 }
-.scrollTableComponent pre {
+.scrollTable pre {
   max-width: 80ch;
   overflow: auto;
 }
-.scrollCodeBlockComponent {
+.scrollCodeBlock {
   border: 1px solid rgba(204, 204, 204, 0.8);
   border-radius: 3px;
   max-height: 50ch;
@@ -108,11 +108,6 @@ body {
 }
 .citationSection h4 {
   text-align: center;
-}
-
-.scrollCiteComponent {
-  overflow: scroll;
-  margin: 6px 0;
 }
 
 /* todo: should be in trueBase code? */

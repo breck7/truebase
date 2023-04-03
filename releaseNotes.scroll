@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 14.2.0 2023-4-3
+- 🏥 Update Scroll
+
 # 14.1.0 2023-4-3
 * Maintenance release. Updated packages and specified NodeJs >= 16.
 

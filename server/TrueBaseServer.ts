@@ -167,10 +167,7 @@ class TrueBaseServer {
       .trim()
       .replace(/[^a-zA-Z \.]/g, "")
       .substr(0, 32)
-    const authorEmail = field
-      .split("<")[1]
-      .replace(">", "")
-      .trim()
+    const authorEmail = field.split("<")[1].replace(">", "").trim()
     return {
       authorName,
       authorEmail
@@ -608,7 +605,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   get combinedCss() {
-    return new ScrollFile("gazetteTheme noTag").html + "\n" + this.cssFiles.map(Disk.read).join(`\n\n`)
+    return new ScrollFile(`gazetteCss\n tags false`).html + "\n" + this.cssFiles.map(Disk.read).join(`\n\n`)
   }
 
   get combinedJs() {
@@ -877,7 +874,7 @@ class SearchServer {
       this._touchedLog = true
     }
 
-    fs.appendFile(this.searchRequestLog, tree, function() {})
+    fs.appendFile(this.searchRequestLog, tree, function () {})
     return this
   }
 

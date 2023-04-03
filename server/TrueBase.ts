@@ -226,12 +226,7 @@ import ../footer.scroll`
   }
 
   sort() {
-    this.setChildren(
-      this.parsed
-        .sortFromSortTemplate()
-        .asString.replace(/\n\n+/g, "\n\n")
-        .replace(/\n+$/g, "") + "\n"
-    )
+    this.setChildren(this.parsed.sortFromSortTemplate().asString.replace(/\n\n+/g, "\n\n").replace(/\n+$/g, "") + "\n")
   }
 
   prettifyAndSave() {
@@ -317,7 +312,6 @@ class TrueBaseFolder extends TreeNode {
 
   // todo: move these to .truebase settings file
   computedColumnNames: string[] = []
-  defaultColumnSortOrder = ["title"]
   thingsViewSourcePath = `/things/`
   grammarViewSourcePath = `/grammar/`
   computedsViewSourcePath = ``
@@ -444,8 +438,8 @@ class TrueBaseFolder extends TreeNode {
 
   makeCsv(filename: string, objectsForCsv = this.objectsForCsv) {
     if (this.quickCache[filename]) return this.quickCache[filename]
-    const { colNamesForCsv } = this
-    this.quickCache[filename] = new TreeNode(objectsForCsv).toDelimited(",", colNamesForCsv)
+    const { columnNamesSortedByMostInteresting } = this
+    this.quickCache[filename] = new TreeNode(objectsForCsv).toDelimited(",", columnNamesSortedByMostInteresting)
     return this.quickCache[filename]
   }
 
@@ -474,13 +468,18 @@ class TrueBaseFolder extends TreeNode {
     }
   }
 
+  get columnNamesSortedByMostInteresting() {
+    return this.columnDocumentation.map(col => col.Column)
+  }
+
   get columnDocumentation(): ColumnInterface[] {
     if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
 
     // Return columns with documentation sorted in the most interesting order.
     const names = this.colNamesForCsv.concat(this.computedColumnNames)
 
-    const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath, defaultColumnSortOrder } = this
+    const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath } = this
+    const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
     const colStats = this.quickCache.colStats
     const fileCount = this.length
     const cols = names.map((Column: string) => {
@@ -490,13 +489,7 @@ class TrueBaseFolder extends TreeNode {
       else colDefId = ""
       const stats = colStats[Column]
       const Values = fileCount - stats.incompleteCount
-      const Example =
-        stats.example !== undefined
-          ? stats.example
-              .toString()
-              .replace(/\n/g, " ")
-              .substr(0, 30)
-          : ""
+      const Example = stats.example !== undefined ? stats.example.toString().replace(/\n/g, " ").substr(0, 30) : ""
       const Description = colDefId !== "" && colDefId !== "errorParser" ? colDef.get("description") : "computed"
       let Source
       if (colDef) Source = colDef.getFrom("string sourceDomain")
@@ -523,7 +516,7 @@ class TrueBaseFolder extends TreeNode {
     })
 
     const sortedCols: any[] = []
-    defaultColumnSortOrder.forEach(colName => {
+    columnOrder.forEach(colName => {
       const hit = cols.find((col: any) => col.Column === colName)
       if (!hit)
         throw new Error(
@@ -539,7 +532,7 @@ class TrueBaseFolder extends TreeNode {
       .sortBy(cols, "Values")
       .reverse()
       .forEach((col: any) => {
-        if (!defaultColumnSortOrder.includes(col.Column)) sortedCols.push(col)
+        if (!columnOrder.includes(col.Column)) sortedCols.push(col)
       })
 
     sortedCols.forEach((col, index) => (col.Index = index + 1))

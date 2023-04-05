@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 14.4.0 2023-4-5
+- 🏥 Login fixes
+
 # 14.3.0 2023-4-3
 - 🎉 better sorting of columns in CSV files. Use `columnOrder` in `.truebase` file to define custom sort order.
 

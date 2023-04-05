@@ -113,7 +113,7 @@ class TrueBaseBrowserApp {
     this.revealUserAccountButtons()
   }
 
-  attemptLoginCommand() {
+  async attemptLoginCommand() {
     const params = new URLSearchParams(window.location.search)
     const email = params.get("email")
     const password = params.get("password")
@@ -126,32 +126,62 @@ class TrueBaseBrowserApp {
       jQuery("#loginResult").html(`Email and password not in url. Try clicking your link again? If you think this is a bug please email loginProblems@${domainName}`)
       return
     }
-    jQuery.post("/login", { email, password }, data => {
-      if (data === "OK") {
-        jQuery("#loginResult").html(`You are logged in as ${email}`)
-        this.store.setItem(this.localStorageKeys.email, email)
-        this.store.setItem(this.localStorageKeys.password, password)
-        this.hideUserAccountsButtons()
-        this.revealUserAccountButtons()
-      } else jQuery("#loginResult").html(`Sorry. Something went wrong. If you think this is a bug please email loginProblems@${domainName}`)
+
+    const response = await fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
     })
+
+    const el = document.querySelector("#loginResult")
+    if (response.status === 200) {
+      el.innerHTML = `You are logged in as ${email}`
+      this.store.setItem(this.localStorageKeys.email, email)
+      this.store.setItem(this.localStorageKeys.password, password)
+      this.hideUserAccountsButtons()
+      this.revealUserAccountButtons()
+    } else {
+      console.error(response)
+      el.innerHTML = `Sorry. Something went wrong. If you think this is a bug please email loginProblems@${domainName}`
+    }
   }
 
-  verifyEmailAndSendLoginLinkCommand() {
-    // send link
-    const email = jQuery("#loginEmail").val()
+  get loginMessageElement() {
+    return document.querySelector("#loginMessage")
+  }
+
+  get loginEmailElement() {
+    return document.querySelector("#loginEmail")
+  }
+
+  async verifyEmailAndSendLoginLinkCommand() {
+    const { loginEmailElement, loginMessageElement } = this
+    const email = loginEmailElement.value
     const htmlEscapedEmail = Utils.htmlEscaped(email)
+    loginMessageElement.style.display = "inline-block"
     if (!Utils.isValidEmail(email)) {
-      jQuery(".loginMessage").show()
-      jQuery(".loginMessage").html(`'${htmlEscapedEmail}' is not a valid email.`)
+      loginMessageElement.innerHTML = `<span class="error">'${htmlEscapedEmail}' is not a valid email.</span>`
       return
     }
     jQuery(".notLoggedIn").hide()
-    jQuery.post("/sendLoginLink", { email }, data => {
-      jQuery(".loginMessage").show()
-      console.log(data)
-      jQuery(".loginMessage").html(`Login link sent to '${htmlEscapedEmail}'.`)
+
+    let elapsed = 0
+    const interval = setInterval(() => (loginMessageElement.innerHTML = `Sending login link... ${++elapsed / 10}s`), 100)
+
+    const response = await fetch("/sendLoginLink", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
     })
+    clearInterval(interval)
+    const text = await response.text()
+
+    if (response.status === 200) loginMessageElement.innerHTML = `Login link sent to '${htmlEscapedEmail}'.`
+    else loginMessageElement.innerHTML = `<span class="error">Error: ${text}</span>`
   }
 
   renderSearchPage() {
@@ -219,7 +249,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
 
     document.getElementById("pageTitle").innerHTML = `Editing file <i>${filename}</i>`
 
-    document.addEventListener("keydown", function(event) {
+    document.addEventListener("keydown", function (event) {
       if (document.activeElement !== document.body) return
       if (event.key === "ArrowLeft") window.location = `edit.html?id=` + data.previous
       else if (event.key === "ArrowRight") window.location = `edit.html?id=` + data.next

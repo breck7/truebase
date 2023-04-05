@@ -140,6 +140,7 @@ class TrueBaseBrowserApp {
       this.store.setItem(this.localStorageKeys.password, password)
       this.hideUserAccountsButtons()
       this.revealUserAccountButtons()
+      this.shootConfettiCommand()
     } else {
       console.error(response)
       el.innerHTML = `Sorry. Something went wrong. If you think this is a bug please email us.`
@@ -378,6 +379,45 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
 
   get route() {
     return location.pathname.split("/")[1]
+  }
+
+  shootConfettiCommand(duration = 500) {
+    var count = 200
+    var defaults = {
+      origin: { y: 0.7 }
+    }
+
+    function fire(particleRatio, opts) {
+      confetti(
+        Object.assign({}, defaults, opts, {
+          particleCount: Math.floor(count * particleRatio)
+        })
+      )
+    }
+
+    fire(0.25, {
+      spread: 26,
+      startVelocity: 55
+    })
+    fire(0.2, {
+      spread: 60
+    })
+    fire(0.35, {
+      spread: 100,
+      decay: 0.91,
+      scalar: 0.8
+    })
+    fire(0.1, {
+      spread: 120,
+      startVelocity: 25,
+      decay: 0.92,
+      scalar: 1.2
+    })
+    fire(0.1, {
+      spread: 120,
+      startVelocity: 45
+    })
+    return this
   }
 
   updateQuickLinks() {

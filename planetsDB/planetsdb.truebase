@@ -1,6 +1,6 @@
 trueBaseId planetsdb
-siteName PlanetsDB
-siteDomain planetsdb.truebase.pub
+name PlanetsDB
+domain localhost:5678
 grammarFolder .
 thingsFolder .
 ignoreFolder ../ignore

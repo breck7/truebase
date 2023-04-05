@@ -10,8 +10,6 @@ class TrueBaseBrowserApp {
     author: "author"
   }
 
-  domainName = "truebase.pub"
-
   get store() {
     return window.localStorage
   }
@@ -123,7 +121,7 @@ class TrueBaseBrowserApp {
       return
     }
     if (!email || !password) {
-      jQuery("#loginResult").html(`Email and password not in url. Try clicking your link again? If you think this is a bug please email loginProblems@${domainName}`)
+      jQuery("#loginResult").html(`Email and password not in url. Try clicking your link again? If you think this is a bug please email us.`)
       return
     }
 
@@ -144,7 +142,7 @@ class TrueBaseBrowserApp {
       this.revealUserAccountButtons()
     } else {
       console.error(response)
-      el.innerHTML = `Sorry. Something went wrong. If you think this is a bug please email loginProblems@${domainName}`
+      el.innerHTML = `Sorry. Something went wrong. If you think this is a bug please email us.`
     }
   }
 

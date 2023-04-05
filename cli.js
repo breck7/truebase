@@ -62,8 +62,8 @@ class TrueBaseCli {
     if (!trueBaseId) return this.log(`❌ cannot make a truebase in top folder`)
     const initFolder = {}
     initFolder[`${trueBaseId}${SETTINGS_EXTENSION}`] = `trueBaseId ${trueBaseId}
-siteName ${trueBaseId}
-siteDomain ${trueBaseId}.truebase.pub
+name ${trueBaseId}
+domain localhost
 grammarFolder ./grammar
 thingsFolder ./things
 ignoreFolder ./ignore
@@ -108,7 +108,7 @@ replaceDefault BASE_URL
 replace SITE_NAME ${trueBaseId}
 replace SITE_DESCRIPTION A truebase
 replace TRUEBASE_ID ${trueBaseId}
-replace DOMAIN_NAME ${trueBaseId}.truebase.pub
+replace DOMAIN_NAME localhost
 replace GIT_URL https://github.com/breck7/truebase
 
 description SITE_NAME: SITE_DESCRIPTION

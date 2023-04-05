@@ -256,7 +256,7 @@ class TrueBaseServer {
     )
   }
 
-  async createEmailConfig() {
+  async createTestEmailConfig() {
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount()
@@ -268,7 +268,7 @@ class TrueBaseServer {
   async sendEmail(to: string, from: string, subject: string, link: string) {
     if (!this.emailConfig) {
       this.emailConfigPath = path.join(this.settings.ignoreFolder, "emailConfig.tree")
-      if (!Disk.exists(this.emailConfigPath)) await this.createEmailConfig()
+      if (!Disk.exists(this.emailConfigPath)) await this.createTestEmailConfig()
       this.emailConfig = new TreeNode(Disk.read(this.emailConfigPath)).toObject()
     }
 
@@ -282,6 +282,8 @@ class TrueBaseServer {
         pass
       }
     })
+
+    console.log(`Sending email using '${host}'.`)
 
     // send mail with defined transport object
     let info = await transporter.sendMail({
@@ -329,7 +331,7 @@ class TrueBaseServer {
         if (!Utils.isValidEmail(email)) throw new Error(`"${email}" is not a valid email.`)
 
         const link = this.getOrCreateLoginLink(email)
-        const from = `"${name}" <feedbackwelcome@${domain}>`
+        const from = `"${name}" <feedback@${domain}>`
         await this.sendEmail(email, from, `Your ${name} login link`, link)
         return res.send("OK")
       } catch (err) {

@@ -121,6 +121,10 @@ body {
 .tqlForm {
 }
 
+.error {
+  color: red;
+}
+
 #tqlErrors {
   font-size: 10px;
   color: #333;

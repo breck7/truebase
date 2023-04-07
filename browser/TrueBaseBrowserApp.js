@@ -97,10 +97,11 @@ class TrueBaseBrowserApp {
   }
 
   revealUserAccountButtons() {
-    if (this.loggedInUser) {
-      jQuery(".loggedIn").show()
-      jQuery("#logoutButton").attr("title", `Logout of ${this.store.getItem(this.localStorageKeys.email)}`)
-    } else jQuery(".notLoggedIn").show()
+    if (this.loggedInUser) jQuery("#logoutButton").attr("title", `Logout of ${this.store.getItem(this.localStorageKeys.email)}`)
+    else {
+      jQuery(".loggedIn").hide()
+      jQuery(".notLoggedIn").show()
+    }
   }
 
   logoutCommand() {

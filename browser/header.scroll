@@ -32,7 +32,6 @@ stumpNoSnippet
   a Logout
    onclick new TrueBaseBrowserApp().logoutCommand()
    class loggedIn
-   style display:none;
    id logoutButton
    href #
   input

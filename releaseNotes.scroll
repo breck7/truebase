@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 14.5.0 2023-4-8
+- 🏥 Fix cli `init` regressions and add tests
+
 # 14.4.0 2023-4-5
 - 🏥 Login fixes
 

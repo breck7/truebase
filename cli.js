@@ -69,37 +69,16 @@ thingsFolder ./things
 ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
-    initFolder[`/grammar/${trueBaseId}.grammar`] = `stringCell
-intCell
- highlightScope constant.numeric.integer
-keywordCell
- highlightScope keyword
-trueBaseIdCell
- description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
- regex [a-z0-9\-]+
- highlightScope string
-${trueBaseId}Node
+    initFolder[`/grammar/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}
  string fileExtension ${trueBaseId}
- inScope abstractPropertyNode
- catchAllParser errorNode
-errorNode
- baseParser errorNode
-abstractPropertyNode
- cruxFromId
- single
-abstractStringPropertyNode
- cells keywordCell
- catchAllCellType stringCell
- extends abstractPropertyNode
-abstractIntPropertyNode
- cells keywordCell intCell
- extends abstractPropertyNode
-titleNode
- extends abstractStringPropertyNode
-diameterNode
- extends abstractIntPropertyNode`
+ inScope abstractTrueBaseColumnParser
+ catchAllParser trueBaseErrorParser
+titleParser
+ extends abstractStringColumnParser
+diameterParser
+ extends abstractIntColumnParser`
     initFolder[`/things/earth.${trueBaseId}`] = `title Earth
 diameter 12756`
     initFolder[`/site/settings.scroll`] = `importOnly
@@ -116,6 +95,7 @@ git GIT_URL
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email feedback@DOMAIN_NAME
 baseUrl https://DOMAIN_NAME/`
+    initFolder[`/grammar/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
     Disk.writeObjectToDisk(cwd, initFolder)
     require("child_process").execSync("git init", { cwd })
     return this.log(`\n👍 Initialized new TrueBase in '${cwd}'.`)

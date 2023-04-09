@@ -14,7 +14,7 @@ const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const grammarParser = require("jtree/products/grammar.nodejs.js")
-const { ScrollCli, ScrollFile, ScrollInMemoryFileSystem, ScrollDiskFileSystem } = require("scroll-cli")
+const { ScrollCli, ScrollFile, ScrollFileSystem } = require("scroll-cli")
 
 const genericTqlParser = require("../tql/tql.nodejs.js")
 let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
@@ -25,8 +25,6 @@ const browserAppFolder = path.join(__dirname, "..", "browser")
 
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
 const delimiter = " DeLiM "
-
-const ensureFolderEndsInSlash = (folder: any) => folder.replace(/\/$/, "") + "/"
 
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
@@ -167,7 +165,10 @@ class TrueBaseServer {
       .trim()
       .replace(/[^a-zA-Z \.]/g, "")
       .substr(0, 32)
-    const authorEmail = field.split("<")[1].replace(">", "").trim()
+    const authorEmail = field
+      .split("<")[1]
+      .replace(">", "")
+      .trim()
     return {
       authorName,
       authorEmail
@@ -482,7 +483,7 @@ import footer.scroll`
   }
 
   virtualFiles: { [firstWord: string]: string } = {}
-  scrollFileSystem = new ScrollInMemoryFileSystem(this.virtualFiles)
+  scrollFileSystem = new ScrollFileSystem(this.virtualFiles)
   dumpStaticSiteCommand() {
     this.warmAll()
     const basePath = path.join(this.settings.ignoreFolder, "staticSite")
@@ -535,7 +536,7 @@ import footer.scroll`
 
   compileScrollFile(filepath: string) {
     const file = this.scrollFileSystem.getScrollFile(filepath)
-    const destinationPath = ensureFolderEndsInSlash(file.folderPath) + file.permalink
+    const destinationPath = Utils.ensureFolderEndsInSlash(file.folderPath) + file.permalink
     this.scrollFileSystem.write(destinationPath, file.html)
     return this.virtualFiles[destinationPath]
   }
@@ -797,7 +798,7 @@ import footer.scroll`
     }
 
     testTree.ensureNoErrorsInScrollExtensions = (areEqual: any) => {
-      const grammarErrors = new ScrollDiskFileSystem().getGrammarErrorsInFolder(siteFolder)
+      const { grammarErrors } = new ScrollCli().getErrorsInFolder(siteFolder)
       if (grammarErrors.length) console.log(grammarErrors)
       areEqual(grammarErrors.length, 0, "no errors in scroll extensions")
     }
@@ -811,13 +812,12 @@ import footer.scroll`
         // Do not check all ~5K generated scroll files for errors b/c redundant and wastes time.
         // Just check the Javascript one below.
         if (folderPath.includes("truebase")) return
-        const fileSystem = new ScrollDiskFileSystem()
-        areEqual(fileSystem.getGrammarErrorsInFolder(folderPath).length + fileSystem.getScrollErrorsInFolder(folderPath).length, 0, `no scroll errors in ${folderPath}`)
+        const { grammarErrors, scrollErrors } = new ScrollCli().getErrorsInFolder(folderPath)
+        areEqual(grammarErrors.length + scrollErrors.length, 0, `no scroll errors in ${folderPath}`)
         //areEqual(folder.errors.length, 0, `no errors in ${folderPath}`)
       }
 
-      const cli = new ScrollCli()
-      cli.verbose = false
+      const cli = new ScrollCli().silence()
       Object.keys(cli.findScrollsInDirRecursive(siteFolder)).map(checkScroll)
     }
 
@@ -876,7 +876,7 @@ class SearchServer {
       this._touchedLog = true
     }
 
-    fs.appendFile(this.searchRequestLog, tree, function () {})
+    fs.appendFile(this.searchRequestLog, tree, function() {})
     return this
   }
 

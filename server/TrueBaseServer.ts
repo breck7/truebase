@@ -698,7 +698,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   get statusPage() {
     const { folder } = this
     return `import header.scroll
-title SITE_NAME Status
+title SITE_NAME Stats
 
 ${this.folder.dashboard}
 

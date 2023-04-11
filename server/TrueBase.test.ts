@@ -47,7 +47,7 @@ testTree.colNamesForCsv = (equal: any) => {
   // Arrange
   const folder = getFolder()
   // Act/Assert
-  equal(folder.colNamesForCsv.join(" "), "title aka wikipedia wikipedia_pageViews related description surfaceGravity diameter moons age yearsToOrbitSun hasLife neighbors", "col names works")
+  equal(folder.colNamesForCsv.join(" "), "title aka related description surfaceGravity diameter moons age yearsToOrbitSun hasLife wikipedia wikipedia_pageViews neighbors", "col names works")
 }
 
 testTree.toTypedMap = (equal: any) => {
@@ -63,7 +63,7 @@ testTree.toTypedMap = (equal: any) => {
   equal(typedMap.earth.neighbors.mars, 110000000)
   equal(typedMap.earth.hasLife, true)
   equal(typedMap.earth.aka.length, 2)
-  equal(typedMap.earth.wikipedia.id, "Earth")
+  equal(typedMap.earth.wikipedia.url, "https://en.wikipedia.org/wiki/Earth")
   equal(typedMap.earth.wikipedia.pageViews, 123)
   equal(typedMap.earth.age.value, 4500000000)
   equal(typedMap.earth.age.description, "It was only during the 19th century that geologists realized Earth's age was at least many millions of years.")

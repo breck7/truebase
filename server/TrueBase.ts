@@ -17,6 +17,7 @@ declare type treeNode = any
 interface ColumnInterface {
   Column: string
   Values: number
+  Missing: number
   Coverage: string
   Example: string
   Source: string
@@ -129,13 +130,20 @@ import ../footer.scroll`
     return [this.id, this.title]
   }
 
+  // todo: assumes a catch all
   get linksToOtherFiles() {
     return lodash.uniq(
       this.parsed.topDownArray
-        .filter((node: TrueBaseFile) => node.containsTrueBaseIds)
-        .map((node: TrueBaseFile) => node.getWordsFrom(1))
+        .filter((node: TrueBaseFile) => node.trueBaseIds)
+        .map((node: TrueBaseFile) => node.trueBaseIds)
         .flat()
     )
+  }
+
+  updateTrueBaseIds(oldTrueBaseId: string, newTrueBaseId: string) {
+    this.parsed.topDownArray.filter((node: TrueBaseFile) => node.updateTruebaseIds).map((node: TrueBaseFile) => node.updateTruebaseIds(oldTrueBaseId, newTrueBaseId))
+    this.setChildren(this.parsed.childrenToString())
+    this.save()
   }
 
   doesLinkTo(id: string) {
@@ -192,21 +200,6 @@ import ../footer.scroll`
 
   createParserCombinator() {
     return new TreeNode.ParserCombinator(TreeNode)
-  }
-
-  updateTrueBaseIds(oldTrueBaseId: string, newTrueBaseId: string) {
-    this.parsed.topDownArray
-      .filter((node: TrueBaseFile) => node.containsTrueBaseIds)
-      .map((node: TrueBaseFile) =>
-        node.setContent(
-          node
-            .getWordsFrom(1)
-            .map((word: string) => (word === oldTrueBaseId ? newTrueBaseId : word))
-            .join(" ")
-        )
-      )
-    this.setChildren(this.parsed.childrenToString())
-    this.save()
   }
 
   get factCount() {
@@ -343,6 +336,41 @@ class TrueBaseFolder extends TreeNode {
     return this.quickCache.bytes
   }
 
+  get dashboard() {
+    const { columnDocumentation } = this
+    const complete = lodash.sum(columnDocumentation.map(col => col.Values))
+    const missing = lodash.sum(columnDocumentation.map(col => col.Missing))
+    const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
+    const urlCells = this.cellIndex["urlCell"].length
+    return `dashboard
+ ${this.length} Files
+ ${this.bytes} Bytes
+ ${this.numberOfLines} Lines
+ ${this.numberOfWords} Words
+ ${this.colNamesForCsv.length} Columns
+ ${complete} Filled
+ ${missing} Missing
+ ${linksToOtherFiles} File links
+ ${urlCells} URLs`
+  }
+
+  get cellIndex() {
+    if (this.quickCache.cellIndex) return this.quickCache.cellIndex
+    const cellIndex: any = {}
+    this.forEach((file: any) => {
+      file.parsed.programAsCells.forEach((line: any) => {
+        line.forEach((cell: any) => {
+          if (cell) {
+            if (!cellIndex[cell.cellTypeId]) cellIndex[cell.cellTypeId] = []
+            cellIndex[cell.cellTypeId].push(cell)
+          }
+        })
+      })
+    })
+    this.quickCache.cellIndex = cellIndex
+    return cellIndex
+  }
+
   get factCount() {
     if (!this.quickCache.factCount) this.quickCache.factCount = lodash.sum(this.map((file: TrueBaseFile) => file.factCount))
     return this.quickCache.factCount
@@ -358,10 +386,10 @@ class TrueBaseFolder extends TreeNode {
       const colNames = colNamesForCsv.concat(computedColumnNames)
       objects.forEach((obj: any) => {
         colNames.forEach((colName: string) => {
-          if (!colStats[colName]) colStats[colName] = { incompleteCount: 0 }
+          if (!colStats[colName]) colStats[colName] = { missingCount: 0 }
           const stats = colStats[colName]
           const value = obj[colName]
-          if (value === undefined) stats.incompleteCount++
+          if (value === undefined) stats.missingCount++
           else if (stats.example === undefined) stats.example = value
         })
       })
@@ -488,7 +516,8 @@ class TrueBaseFolder extends TreeNode {
       if (colDef) colDefId = colDef.getLine()
       else colDefId = ""
       const stats = colStats[Column]
-      const Values = fileCount - stats.incompleteCount
+      const Missing = stats.missingCount
+      const Values = fileCount - Missing
       const Example = stats.example !== undefined ? stats.example.toString().replace(/\n/g, " ").substr(0, 30) : ""
       const Description = colDefId !== "" && colDefId !== "errorParser" ? colDef.get("description") : "computed"
       let Source
@@ -504,7 +533,8 @@ class TrueBaseFolder extends TreeNode {
       return {
         Column,
         Values,
-        Coverage: Math.round((100 * Values) / (Values + stats.incompleteCount)) + "%",
+        Missing,
+        Coverage: Math.round((100 * Values) / (Values + Missing)) + "%",
         Example,
         Source,
         SourceLink,

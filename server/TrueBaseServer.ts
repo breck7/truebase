@@ -139,6 +139,8 @@ class TrueBaseServer {
       }
     })
 
+    app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.scrollToHtml(this.statusPage)))
+
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/truebase/${req.params.id.toLowerCase()}.html`) : next()))
 
@@ -165,10 +167,7 @@ class TrueBaseServer {
       .trim()
       .replace(/[^a-zA-Z \.]/g, "")
       .substr(0, 32)
-    const authorEmail = field
-      .split("<")[1]
-      .replace(">", "")
-      .trim()
+    const authorEmail = field.split("<")[1].replace(">", "").trim()
     return {
       authorName,
       authorEmail
@@ -417,8 +416,12 @@ html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBro
 
 import footer.scroll`
 
-    const randomPath = Utils.getRandomCharacters(24)
-    const virtualFilePath = `${this.settings.siteFolder}/search-${randomPath}.scroll`
+    return this.scrollToHtml(scrollCode)
+  }
+
+  scrollToHtml(scrollCode: string, virtualFilePath = `${this.settings.siteFolder}/random-${Utils.getRandomCharacters(24)}.scroll`) {
+    // todo: eliminate need for virtualFilePath?
+    // I believe we have that because we need import paths to work correctly. And perhaps to mix default files with overrides.
     this.virtualFiles[virtualFilePath] = scrollCode
     return new ScrollFile(scrollCode, virtualFilePath, this.scrollFileSystem).html
   }
@@ -692,6 +695,16 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     )
   }
 
+  get statusPage() {
+    const { folder } = this
+    return `import header.scroll
+title SITE_NAME Stats
+
+${this.folder.dashboard}
+
+import footer.scroll`
+  }
+
   warmCsvFiles() {
     const { trueBaseId, siteFolder } = this.settings
     const { folder, virtualFiles } = this
@@ -876,7 +889,7 @@ class SearchServer {
       this._touchedLog = true
     }
 
-    fs.appendFile(this.searchRequestLog, tree, function() {})
+    fs.appendFile(this.searchRequestLog, tree, function () {})
     return this
   }
 

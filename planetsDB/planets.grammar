@@ -36,8 +36,8 @@ columnExplanationParser
  description Add untyped notes about this column.
  baseParser blobParser
 wikipediaParser
- extends abstractStringColumnParser
- contentKey id
+ extends abstractUrlColumnParser
+ contentKey url
  string sourceDomain wikipedia.org
  pageViewsParser
   extends abstractIntColumnParser
@@ -46,6 +46,14 @@ neighborParser
  // Needs to be unique
  cells trueBaseIdCell distanceCell
  uniqueFirstWord
+ javascript
+  get trueBaseIds() {
+    return [this.getWord(1)]
+  }
+  updateTruebaseIds(oldTrueBaseId, newTrueBaseId) {
+    if (this.getWord(1) === oldTrueBaseId)
+      this.setWord(1, newTrueBaseId)
+  }
 neighborsParser
  cells columnNameCell
  extends abstractHashMapColumnParser

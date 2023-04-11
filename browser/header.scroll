@@ -29,6 +29,8 @@ stumpNoSnippet
    href BASE_URL/search.html
   a CSV
    href BASE_URL/csv.html
+  a Stats
+   href BASE_URL/stats.html
   a Logout
    onclick new TrueBaseBrowserApp().logoutCommand()
    class loggedIn

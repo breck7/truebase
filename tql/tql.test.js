@@ -17,7 +17,7 @@ doesNotInclude zzzzz
 matchesRegex \\d+
 where moons = 1
 where diameter > 10000
-where related includes mars
+where nicknames includes Planet Earth
 notMissing diameter
 rename diameter Diameter`)
 

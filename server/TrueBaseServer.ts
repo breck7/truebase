@@ -614,15 +614,29 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     return new ScrollFile(`gazetteCss\n tags false`).html + "\n" + this.cssFiles.map(Disk.read).join(`\n\n`)
   }
 
+  get autocompleteJs() {
+    const json = JSON.stringify(
+      this.folder.map((file: any) => {
+        return {
+          label: file.get("title"),
+          id: file.id,
+          url: `/truebase/${file.id}.html`
+        }
+      }),
+      undefined,
+      2
+    )
+    return `var autocompleteJs = ` + json + "\n\n"
+  }
+
   get combinedJs() {
-    return this.jsFiles.map(filename => Disk.read(filename)).join(`;\n\n`)
+    return this.autocompleteJs + this.jsFiles.map(filename => Disk.read(filename)).join(`;\n\n`)
   }
 
   warmJsAndCss() {
     const { virtualFiles } = this
     virtualFiles["/combined.js"] = this.combinedJs
     virtualFiles["/combined.css"] = this.combinedCss
-    virtualFiles["/autocomplete.json"] = this.autocompleteJson
   }
 
   warmSiteFolder() {
@@ -679,20 +693,6 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     Disk.write(grammarPath, virtualFiles["/" + grammarFileName])
     GrammarCompiler.compileGrammarForBrowser(grammarPath, grammarIgnoreFolder + "/", false)
     virtualFiles["/" + browserFileName] = Disk.read(path.join(grammarIgnoreFolder, browserFileName))
-  }
-
-  get autocompleteJson() {
-    return JSON.stringify(
-      this.folder.map((file: any) => {
-        return {
-          label: file.get("title"),
-          id: file.id,
-          url: `/truebase/${file.id}.html`
-        }
-      }),
-      undefined,
-      2
-    )
   }
 
   get statusPage() {

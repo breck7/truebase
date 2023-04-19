@@ -45,9 +45,6 @@ class TrueBaseBrowserApp {
     return `Anon <${`anon.${user}.${hash}`}@${window.location.host}.com>`
   }
 
-  searchIndex = false
-  searchIndexRequestMade = false
-
   render() {
     this.initAutocomplete("trueBaseThemeHeaderSearch")
     return this
@@ -55,6 +52,7 @@ class TrueBaseBrowserApp {
 
   // This method is currently used to enable autocomplete on: the header search, front page search, 404 page search
   initAutocomplete(elementId) {
+    const autocompleteSearchIndex = window.autocompleteJs || [] // todo: cleanup?
     const input = document.getElementById(elementId)
     const urlParams = new URLSearchParams(window.location.search)
     const query = urlParams.get("q")
@@ -66,14 +64,7 @@ class TrueBaseBrowserApp {
       preventSubmit: true,
       fetch: async (query, update) => {
         const text = query.toLowerCase()
-        // you can also use AJAX requests instead of preloaded data
-        if (!this.searchIndexRequestMade) {
-          this.searchIndexRequestMade = true
-          let response = await fetch("/autocomplete.json")
-          if (response.ok) this.searchIndex = await response.json()
-        }
-
-        const suggestions = this.searchIndex.filter(entity => entity.label.toLowerCase().startsWith(text))
+        const suggestions = autocompleteSearchIndex.filter(entity => entity.label.toLowerCase().startsWith(text))
 
         const htmlEncodedQuery = query.replace(/</g, "&lt;")
 

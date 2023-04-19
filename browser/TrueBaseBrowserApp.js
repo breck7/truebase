@@ -180,7 +180,7 @@ class TrueBaseBrowserApp {
   }
 
   async startTQLCodeMirror() {
-    this.programCompiler = tqlParser
+    this.fileParser = tqlParser
     this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => tqlParser, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("tqlInput"), {
       lineWrapping: false,
       lineNumbers: false
@@ -195,7 +195,7 @@ class TrueBaseBrowserApp {
     const code = this.value
     if (this._code === code) return
     this._code = code
-    this.program = new this.programCompiler(code)
+    this.program = new this.fileParser(code)
     const errs = this.program.scopeErrors.concat(this.program.getAllErrors())
 
     const errMessage = errs.length ? errs.map(err => err.message).join(" ") : "&nbsp;"
@@ -209,7 +209,6 @@ class TrueBaseBrowserApp {
   async renderEditPage() {
     this.renderCodeEditorStuff()
     await this.initEditData()
-    this.updateQuickLinks()
   }
 
   renderCreatePage() {
@@ -230,7 +229,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
     this.updateAuthor()
   }
 
-  async initEditData(currentValue, missingRecommendedColumns) {
+  async initEditData() {
     const { filename, currentFileId } = this
     const localValue = this.stagedFiles.getNode(filename)
     let response = await fetch(`/edit.json?id=${currentFileId}`)
@@ -240,14 +239,10 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
 
     document.getElementById("pageTitle").innerHTML = `Editing file <i>${filename}</i>`
 
-    document.addEventListener("keydown", function (event) {
-      if (document.activeElement !== document.body) return
-      if (event.key === "ArrowLeft") window.location = `edit.html?id=` + data.previous
-      else if (event.key === "ArrowRight") window.location = `edit.html?id=` + data.next
-    })
-
     this.codeMirrorInstance.setValue(localValue ? localValue.childrenToString() : data.content)
     document.getElementById("missingRecommendedColumns").innerHTML = `<br><b>Missing columns:</b><br>${data.missingRecommendedColumns.map(col => col.Column).join("<br>")}`
+
+    document.getElementById("helpfulResearchLinks").innerHTML = data.helpfulResearchLinks
   }
 
   updateStagedStatus() {
@@ -298,7 +293,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
    <div id="tqlErrors"></div> <!-- todo: cleanup. -->
  </div>
  <div class="cell">
-   <div id="quickLinks"></div>
+   <div id="helpfulResearchLinks"></div>
    <div id="missingRecommendedColumns"></div>
    <div id="exampleSection"></div>
  </div>
@@ -314,8 +309,8 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
   }
 
   async startCodeMirrorEditor() {
-    this.programCompiler = pldbParser // todo: generalize
-    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => pldbParser, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("fileContent"), {
+    this.fileParser = SERVER_TIME_PARSER_NAME // replaced at server time.
+    this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => SERVER_TIME_PARSER_NAME, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("fileContent"), {
       lineWrapping: false,
       lineNumbers: true
     })
@@ -328,9 +323,13 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
     return new URLSearchParams(window.location.search).get("id")
   }
 
+  get fileExtension() {
+    return new this.fileParser().fileExtension
+  }
+
   get filename() {
     if (location.pathname.includes("create.html")) return "create"
-    return this.currentFileId + ".pldb"
+    return this.currentFileId + "." + this.fileExtension
   }
 
   get codeMirrorWidth() {
@@ -410,33 +409,5 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
       startVelocity: 45
     })
     return this
-  }
-
-  updateQuickLinks() {
-    const code = this.codeMirrorInstance.getValue()
-    if (!code) return
-    const tree = new TreeNode(code)
-    const title = tree.get("title")
-    const references = tree.findNodes("reference").map(node => "Reference: " + node.content)
-
-    const links = ["website", "githubRepo", "wikipedia"].filter(key => tree.has(key)).map(key => `${Utils.capitalizeFirstLetter(key)}: ${tree.get(key)}`)
-
-    const permalink = this.route
-    document.getElementById("quickLinks").innerHTML =
-      Utils.linkify(`<b>PLDB on ${title}:</b><br>
-Git: https://github.com/breck7/pldb/blob/main/truebase/things/${permalink}.pldb<br>
-HTML page: https://pldb.com/truebase/${permalink}.html
-<br><br>
-<b>Links about ${title}:</b><br>
-${links.join("<br>")}
-${references.join("<br>")}<br><br>
-
-<b>Search for more information about ${title}:</b><br>
-Google: https://www.google.com/search?q=${title}+programming+language<br>
-Google w/time: https://www.google.com/search?q=${title}+programming+language&tbs=cdr%3A1%2Ccd_min%3A1%2F1%2F1980%2Ccd_max%3A12%2F31%2F1995&tbm=<br>
-Google Scholar: https://scholar.google.com/scholar?q=${title}<br>
-Google Groups: https://groups.google.com/forum/#!search/${title}<br>
-Google Trends: https://trends.google.com/trends/explore?date=all&q=${title}<br>
-DDG: https://duckduckgo.com/?q=${title}<br>`) + `Wayback Machine: <a target="_blank" href="https://web.archive.org/web/20220000000000*/${title}">https://web.archive.org/web/20220000000000*/${title}</a>`
   }
 }

@@ -109,8 +109,7 @@ class TrueBaseServer {
         JSON.stringify({
           content: file.childrenToString(),
           missingRecommendedColumns: file.missingRecommendedColumns,
-          next: file.nextRanked.id,
-          previous: file.previousRanked.id
+          helpfulResearchLinks: file.helpfulResearchLinks
         })
       )
     })
@@ -158,8 +157,8 @@ class TrueBaseServer {
   }
 
   gitOn = false
-  GIT_DEFAULT_USERNAME = "PLDBBot"
-  GIT_DEFAULT_EMAIL = "bot@pldb.com"
+  GIT_DEFAULT_USERNAME = "TrueBaseBot"
+  GIT_DEFAULT_EMAIL = "bot@truebase.pub"
 
   parseGitAuthor(field = `${this.GIT_DEFAULT_USERNAME} <${this.GIT_DEFAULT_EMAIL}>`) {
     const authorName = field
@@ -630,7 +629,13 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   get combinedJs() {
-    return this.autocompleteJs + this.jsFiles.map(filename => Disk.read(filename)).join(`;\n\n`)
+    return (
+      this.autocompleteJs +
+      this.jsFiles
+        .map(filename => Disk.read(filename))
+        .join(`;\n\n`)
+        .replace(/SERVER_TIME_PARSER_NAME/g, `${this.grammarId}Parser`)
+    )
   }
 
   warmJsAndCss() {
@@ -805,9 +810,10 @@ import footer.scroll`
     const testTree: any = {}
 
     testTree.ensureNoErrorsInGrammar = (areEqual: any) => {
-      const grammarErrors = new grammarParser(this.folder.grammarCode).getAllErrors().map((err: any) => err.toObject())
+      const grammar = new grammarParser(this.folder.grammarCode)
+      const grammarErrors = grammar.getAllErrors().map((err: any) => err.toObject())
       if (grammarErrors.length) console.log(grammarErrors)
-      areEqual(grammarErrors.length, 0, "no errors in pldb grammar")
+      areEqual(grammarErrors.length, 0, `no errors in ${this.grammarId} grammar`)
     }
 
     testTree.ensureNoErrorsInScrollExtensions = (areEqual: any) => {

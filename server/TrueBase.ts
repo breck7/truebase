@@ -57,6 +57,11 @@ class TrueBaseFile extends TreeNode {
     return this.parent.thingsViewSourcePath + this.filename
   }
 
+  get helpfulResearchLinks() {
+    const { id } = this
+    return `<a href="/truebase/${id}.html">/truebase/${id}.html</a>`
+  }
+
   toScroll() {
     const prevPage = this.previous.permalink
     const nextPage = this.next.permalink
@@ -70,6 +75,9 @@ html <a class="trueBaseThemePreviousItem" href="${prevPage}">&lt;</a><a class="t
 title ${title}
 
 ${description ? description : ""}
+
+* Edit
+ link /edit.html?id=${this.id}
 
 code
  ${this.childrenToString().replace(/\n/g, "\n ")}
@@ -218,7 +226,7 @@ import ../footer.scroll`
     return cols.map((col: ColumnInterface) => {
       return {
         column: col.Column,
-        question: col.parserDef.question
+        question: col.parserDef.description
       }
     })
   }

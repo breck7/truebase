@@ -240,7 +240,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
     document.getElementById("pageTitle").innerHTML = `Editing file <i>${filename}</i>`
 
     this.codeMirrorInstance.setValue(localValue ? localValue.childrenToString() : data.content)
-    document.getElementById("missingRecommendedColumns").innerHTML = `<br><b>Missing columns:</b><br>${data.missingRecommendedColumns.map(col => col.Column).join("<br>")}`
+    document.getElementById("missingRecommendedColumnNames").innerHTML = `<br><b>Missing recommended columns:</b><br>${data.missingRecommendedColumnNames.join("<br>")}`
 
     document.getElementById("helpfulResearchLinks").innerHTML = data.helpfulResearchLinks
   }
@@ -294,7 +294,7 @@ githubRepo https://github.com/elixir-lang/elixir</pre>`
  </div>
  <div class="cell">
    <div id="helpfulResearchLinks"></div>
-   <div id="missingRecommendedColumns"></div>
+   <div id="missingRecommendedColumnNames"></div>
    <div id="exampleSection"></div>
  </div>
  <div>

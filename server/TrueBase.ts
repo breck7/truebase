@@ -96,8 +96,8 @@ import ../footer.scroll`
       .filter(col => !this.has(col.Column))
   }
 
-  get missingRecommendedColumns() {
-    return this.missingColumns.filter(col => col.Recommended === true)
+  get missingRecommendedColumnNames() {
+    return this.missingColumns.filter(col => col.Recommended === true).map(col => col.Column)
   }
 
   get webPermalink() {

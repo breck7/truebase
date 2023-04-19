@@ -13,6 +13,7 @@ declare type stringMap = { [firstWord: string]: any }
 declare type fileName = string
 declare type filepath = string
 declare type treeNode = any
+declare type parserDef = treeNode
 
 interface ColumnInterface {
   Column: string
@@ -26,6 +27,7 @@ interface ColumnInterface {
   Definition: string
   DefinitionLink: string
   Recommended: boolean
+  parserDef?: parserDef
 }
 
 enum SQLiteTypes {
@@ -204,6 +206,21 @@ import ../footer.scroll`
 
   get factCount() {
     return this.parsed.topDownArray.filter((node: any) => node.shouldSerialize !== false).length
+  }
+
+  get topUnansweredQuestions() {
+    // V1 algo is just that the questions with the most answers are the most important
+    // V2 should take into account the currently answered questions
+    const cols = lodash.sortBy(
+      this.missingColumns.filter(col => col.parserDef),
+      "Missing"
+    )
+    return cols.map((col: ColumnInterface) => {
+      return {
+        column: col.Column,
+        question: col.parserDef.question
+      }
+    })
   }
 
   get parsed() {
@@ -511,17 +528,17 @@ class TrueBaseFolder extends TreeNode {
     const colStats = this.quickCache.colStats
     const fileCount = this.length
     const cols = names.map((Column: string) => {
-      const colDef = colNameToGrammarDefMap.get(Column)
+      const parserDef = colNameToGrammarDefMap.get(Column)
       let colDefId
-      if (colDef) colDefId = colDef.getLine()
+      if (parserDef) colDefId = parserDef.getLine()
       else colDefId = ""
       const stats = colStats[Column]
       const Missing = stats.missingCount
       const Values = fileCount - Missing
       const Example = stats.example !== undefined ? stats.example.toString().replace(/\n/g, " ").substr(0, 30) : ""
-      const Description = colDefId !== "" && colDefId !== "errorParser" ? colDef.get("description") : "computed"
+      const Description = colDefId !== "" && colDefId !== "errorParser" ? parserDef.get("description") : "computed"
       let Source
-      if (colDef) Source = colDef.getFrom("string sourceDomain")
+      if (parserDef) Source = parserDef.getFrom("string sourceDomain")
       else Source = ""
 
       const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
@@ -541,7 +558,8 @@ class TrueBaseFolder extends TreeNode {
         Description,
         Definition,
         DefinitionLink,
-        Recommended: colDef && colDef.getFrom("boolean alwaysRecommended") === "true"
+        parserDef,
+        Recommended: parserDef && parserDef.getFrom("boolean alwaysRecommended") === "true"
       }
     })
 

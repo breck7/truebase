@@ -50,6 +50,15 @@ testTree.colNamesForCsv = (equal: any) => {
   equal(folder.colNamesForCsv.join(" "), "title aka nicknames description surfaceGravity diameter moons age yearsToOrbitSun hasLife wikipedia wikipedia_pageViews neighbors", "col names works")
 }
 
+testTree.topUnansweredQuestions = (equal: any) => {
+  // Arrange
+  const folder = getFolder().loadFolder()
+  const mars = folder.getNode("mars")
+  const earth = folder.getNode("earth")
+  // Act/Assert
+  equal(earth.topUnansweredQuestions.length < mars.topUnansweredQuestions.length, true)
+}
+
 testTree.toTypedMap = (equal: any) => {
   // Arrange
   const folder = getFolder()

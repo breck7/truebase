@@ -9,6 +9,6 @@ css .errorClass {color: red;}
  class errorClass
  id errorHolder
 
-<script>document.getElementById("errorHolder").innerHTML = decodeURIComponent(new URLSearchParams(window.location.search).get("error") || ""))</script>
+<script>document.getElementById("errorHolder").innerHTML = decodeURIComponent(new URLSearchParams(window.location.search).get("error") || "")</script>
 
 import footer.scroll

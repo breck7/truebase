@@ -108,7 +108,7 @@ class TrueBaseServer {
       res.send(
         JSON.stringify({
           content: file.childrenToString(),
-          missingRecommendedColumns: file.missingRecommendedColumns,
+          missingRecommendedColumnNames: file.missingRecommendedColumnNames,
           helpfulResearchLinks: file.helpfulResearchLinks
         })
       )

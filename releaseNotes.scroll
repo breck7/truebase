@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 15.0.1 2023-4-19
+- 🏥 fix bug in missing recommended columns client side editing app
+
 # 15.0.0 2023-4-19
 - 🎉 browser editing
 - 🎉 infra in place for top unanswered questions

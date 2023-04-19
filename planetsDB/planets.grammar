@@ -11,30 +11,40 @@ distanceCell
 // Specific column types
 titleParser
  extends abstractStringColumnParser
+
 descriptionParser
  extends abstractStringBlobColumnParser
+
 akaParser
  extends abstractStringColumnParser
  single false
+
 surfaceGravityParser
  extends abstractIntColumnParser
+
 diameterParser
  extends abstractIntColumnParser
+
 moonsParser
  extends abstractIntColumnParser
+
 yearsToOrbitSunParser
  extends abstractFloatColumnParser
+
 hasLifeParser
  extends abstractBooleanColumnParser
  description As far as we know
+
 ageParser
  extends abstractIntColumnParser
  contentKey value
  childrenKey description
  catchAllParser columnExplanationParser
+
 columnExplanationParser
  description Add untyped notes about this column.
  baseParser blobParser
+
 wikipediaParser
  extends abstractUrlColumnParser
  contentKey url
@@ -42,6 +52,7 @@ wikipediaParser
  pageViewsParser
   extends abstractIntColumnParser
   string sourceDomain wikipedia.org
+
 neighborParser
  // Needs to be unique
  cells trueBaseIdCell distanceCell
@@ -54,10 +65,12 @@ neighborParser
     if (this.getWord(1) === oldTrueBaseId)
       this.setWord(1, newTrueBaseId)
   }
+
 neighborsParser
  cells columnNameCell
  extends abstractHashMapColumnParser
  catchAllParser neighborParser
+
 relatedParser
  extends abstractStringListColumnParser
  listDelimiter  & 

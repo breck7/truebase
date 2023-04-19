@@ -47,7 +47,16 @@ testTree.colNamesForCsv = (equal: any) => {
   // Arrange
   const folder = getFolder()
   // Act/Assert
-  equal(folder.colNamesForCsv.join(" "), "title aka related description surfaceGravity diameter moons age yearsToOrbitSun hasLife wikipedia wikipedia_pageViews neighbors", "col names works")
+  equal(folder.colNamesForCsv.join(" "), "title aka nicknames description surfaceGravity diameter moons age yearsToOrbitSun hasLife wikipedia wikipedia_pageViews neighbors", "col names works")
+}
+
+testTree.topUnansweredQuestions = (equal: any) => {
+  // Arrange
+  const folder = getFolder().loadFolder()
+  const mars = folder.getNode("mars")
+  const earth = folder.getNode("earth")
+  // Act/Assert
+  equal(earth.topUnansweredQuestions.length < mars.topUnansweredQuestions.length, true)
 }
 
 testTree.toTypedMap = (equal: any) => {
@@ -68,7 +77,7 @@ testTree.toTypedMap = (equal: any) => {
   equal(typedMap.earth.age.value, 4500000000)
   equal(typedMap.earth.age.description, "It was only during the 19th century that geologists realized Earth's age was at least many millions of years.")
   equal(typedMap.earth.description.split("\n").length, 2)
-  equal(typedMap.earth.related[1], "venus")
+  equal(typedMap.earth.nicknames[1], "Planet Earth")
 }
 
 testTree.fileSystemEvents = async (equal: any) => {

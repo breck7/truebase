@@ -11,37 +11,58 @@ distanceCell
 // Specific column types
 titleParser
  extends abstractStringColumnParser
+ description What is the title of the planet?
+
 descriptionParser
  extends abstractStringBlobColumnParser
+ description Can you provide a brief description of the planet?
+
 akaParser
  extends abstractStringColumnParser
  single false
+ description What are the alternative names for the planet?
+
 surfaceGravityParser
  extends abstractIntColumnParser
+ description What is the surface gravity of the planet?
+
 diameterParser
  extends abstractIntColumnParser
+ description What is the diameter of the planet?
+
 moonsParser
  extends abstractIntColumnParser
+ description How many moons does the planet have?
+
 yearsToOrbitSunParser
  extends abstractFloatColumnParser
+ description How many Earth years does it take for the planet to orbit the Sun?
+
 hasLifeParser
  extends abstractBooleanColumnParser
- description As far as we know
+ description Does the planet have any known life forms?
+
 ageParser
  extends abstractIntColumnParser
  contentKey value
  childrenKey description
  catchAllParser columnExplanationParser
+ description How old is the planet?
 columnExplanationParser
- description Add untyped notes about this column.
  baseParser blobParser
+ description Any additional notes about the line above?
+
 wikipediaParser
  extends abstractUrlColumnParser
  contentKey url
  string sourceDomain wikipedia.org
+ description What is the Wikipedia URL for the planet?
  pageViewsParser
   extends abstractIntColumnParser
+  boolean fromCrawler true
   string sourceDomain wikipedia.org
+  description How many page views does the planet's Wikipedia page have?
+
 neighborParser
  // Needs to be unique
  cells trueBaseIdCell distanceCell
@@ -54,10 +75,15 @@ neighborParser
     if (this.getWord(1) === oldTrueBaseId)
       this.setWord(1, newTrueBaseId)
   }
+ description What are the neighboring celestial bodies and their distances?
+
 neighborsParser
  cells columnNameCell
  extends abstractHashMapColumnParser
  catchAllParser neighborParser
-relatedParser
+ description Can you provide more information about the planet's neighbors?
+
+nicknamesParser
  extends abstractStringListColumnParser
  listDelimiter  & 
+ description What are some other names for the planet?

@@ -1,6 +1,7 @@
 const path = require("path")
 const fs = require("fs")
 const lodash = require("lodash")
+const numeral = require("numeral")
 
 const { TreeNode, TreeEvents } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram, GrammarConstants } = require("jtree/products/GrammarLanguage.js")
@@ -368,15 +369,15 @@ class TrueBaseFolder extends TreeNode {
     const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
     const urlCells = this.cellIndex["urlCell"].length
     return `dashboard
- ${this.length} Files
- ${this.bytes} Bytes
- ${this.numberOfLines} Lines
- ${this.numberOfWords} Words
+ ${numeral(this.length).format("0,0")} Files
+ ${numeral(this.bytes).format("0,0")} Bytes
+ ${numeral(this.numberOfLines).format("0,0")} Lines
+ ${numeral(this.numberOfWords).format("0,0")} Words
  ${this.colNamesForCsv.length} Columns
- ${complete} Filled
- ${missing} Missing
- ${linksToOtherFiles} File links
- ${urlCells} URLs`
+ ${numeral(complete).format("0,0")} Filled
+ ${numeral(missing).format("0,0")} Missing
+ ${numeral(linksToOtherFiles).format("0,0")} File links
+ ${numeral(urlCells).format("0,0")} URLs`
   }
 
   get cellIndex() {

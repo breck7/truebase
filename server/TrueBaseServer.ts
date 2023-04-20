@@ -532,6 +532,9 @@ import footer.scroll`
       if (virtualFiles[scrollPath]) return res.send(this.compileScrollFile(scrollPath))
       if (virtualFiles[siteFolder + scrollPath]) return res.send(this.compileScrollFile(siteFolder + scrollPath))
 
+      // If the requested url ends in .csv, .grammar, et cetera, but is not found, set the content/type
+      // back to HTML before sending the 404 page.
+      res.setHeader("content-type", "text/html")
       res.status(404).send(notFoundPage)
     })
   }

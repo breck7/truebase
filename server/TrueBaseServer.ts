@@ -720,6 +720,7 @@ import footer.scroll`
     const mainCsvFilename = `${trueBaseId}.csv`
     virtualFiles["/" + mainCsvFilename] = folder.makeCsv(mainCsvFilename)
     virtualFiles["/columns.csv"] = this.columnsCsv
+    const delimiter = `!~DELIM~!`
 
     const csvTemplate = `import header.scroll
 title SITE_NAME CSV File Documentation
@@ -744,8 +745,9 @@ css
 
 # Column Documentation
 
-pipeTable
- ${columnsCsvOutput.columnsMetadataTree.toDelimited("|", columnsCsvOutput.columnMetadataColumnNames, false).replace(/\n/g, "\n  ")}
+table ${delimiter}
+ ${columnsCsvOutput.columnsMetadataTree.toDelimited(delimiter, columnsCsvOutput.columnMetadataColumnNames, false).replace(/\n/g, "\n  ")}
+}
 
 * The table above is also available as csv.
  link BASE_URL/columns.csv csv

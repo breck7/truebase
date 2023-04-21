@@ -551,7 +551,7 @@ class TrueBaseFolder extends TreeNode {
       const Missing = stats.missingCount
       const Values = fileCount - Missing
       const Example = stats.example !== undefined ? stats.example.toString().replace(/\n/g, " ").substr(0, 30) : ""
-      const Description = colDefId !== "" && colDefId !== "errorParser" ? parserDef.get("description") : "computed"
+      const Description = colDefId !== "" && colDefId !== "errorParser" ? parserDef.description : "computed"
       let Source
       if (parserDef) Source = parserDef.getFrom("string sourceDomain")
       else Source = ""

@@ -18,6 +18,7 @@ declare type parserDef = treeNode
 
 interface ColumnInterface {
   Column: string
+  ColumnLink: string
   Values: number
   Missing: number
   Coverage: string
@@ -516,7 +517,7 @@ class TrueBaseFolder extends TreeNode {
 
   get columnsCsvOutput() {
     const columnsMetadataTree = new TreeNode(this.columnDocumentation)
-    const columnMetadataColumnNames = ["Index", "Column", "Values", "Coverage", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
+    const columnMetadataColumnNames = ["Index", "Column", "ColumnLink", "Values", "Coverage", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
 
     const columnsCsv = columnsMetadataTree.toDelimited(",", columnMetadataColumnNames)
 
@@ -555,6 +556,7 @@ class TrueBaseFolder extends TreeNode {
       if (parserDef) Source = parserDef.getFrom("string sourceDomain")
       else Source = ""
 
+      const ColumnLink = `search.html?q=select+${Column}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
       const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
@@ -563,6 +565,7 @@ class TrueBaseFolder extends TreeNode {
       const SourceLink = Source ? `https://${Source}` : ""
       return {
         Column,
+        ColumnLink,
         Values,
         Missing,
         Coverage: Math.round((100 * Values) / (Values + Missing)) + "%",

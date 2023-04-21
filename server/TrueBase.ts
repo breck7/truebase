@@ -28,7 +28,6 @@ interface ColumnInterface {
   Definition: string
   DefinitionLink: string
   Recommended: boolean
-  parserDef?: parserDef
 }
 
 enum SQLiteTypes {
@@ -220,16 +219,18 @@ import ../footer.scroll`
   get topUnansweredQuestions() {
     // V1 algo is just that the questions with the most answers are the most important
     // V2 should take into account the currently answered questions
-    const cols = lodash.sortBy(
-      this.missingColumns.filter(col => col.parserDef),
-      "Missing"
-    )
-    return cols.map((col: ColumnInterface) => {
-      return {
-        column: col.Column,
-        question: col.parserDef.description
-      }
-    })
+    const cols = lodash.sortBy(this.missingColumns, "Missing")
+    return cols
+      .map((col: ColumnInterface) => {
+        const column = col.Column
+        const parserDef = this.parent.getParserDefFromColumnName(column)
+        if (!parserDef) return false
+        return {
+          column,
+          question: parserDef.description
+        }
+      })
+      .filter((i: any) => i)
   }
 
   get parsed() {
@@ -469,12 +470,16 @@ class TrueBaseFolder extends TreeNode {
     return { filePath, lineNumber }
   }
 
-  get colNameToGrammarDefMap() {
-    if (this.quickCache.colNameToGrammarDefMap) return this.quickCache.colNameToGrammarDefMap
+  get colNameToParserDefMap() {
+    if (this.quickCache.colNameToParserDefMap) return this.quickCache.colNameToParserDefMap
     const map = new Map()
     this.concreteColumnDefinitions.forEach((def: any) => map.set(def.cruxPathAsColumnName, def)) // todo: handle nested definitions
-    this.quickCache.colNameToGrammarDefMap = map
+    this.quickCache.colNameToParserDefMap = map
     return map
+  }
+
+  getParserDefFromColumnName(columnName: string) {
+    return this.colNameToParserDefMap.get(columnName)
   }
 
   get concreteColumnDefinitions() {
@@ -532,12 +537,12 @@ class TrueBaseFolder extends TreeNode {
     // Return columns with documentation sorted in the most interesting order.
     const names = this.colNamesForCsv.concat(this.computedColumnNames)
 
-    const { colNameToGrammarDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath } = this
+    const { colNameToParserDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath } = this
     const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
     const colStats = this.quickCache.colStats
     const fileCount = this.length
     const cols = names.map((Column: string) => {
-      const parserDef = colNameToGrammarDefMap.get(Column)
+      const parserDef = colNameToParserDefMap.get(Column)
       let colDefId
       if (parserDef) colDefId = parserDef.getLine()
       else colDefId = ""
@@ -567,7 +572,6 @@ class TrueBaseFolder extends TreeNode {
         Description,
         Definition,
         DefinitionLink,
-        parserDef,
         Recommended: parserDef && parserDef.getFrom("boolean alwaysRecommended") === "true"
       }
     })

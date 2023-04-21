@@ -556,7 +556,8 @@ class TrueBaseFolder extends TreeNode {
       if (parserDef) Source = parserDef.getFrom("string sourceDomain")
       else Source = ""
 
-      const ColumnLink = `search.html?q=select+${Column}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
+      const columnsToSelect = Column.includes("_") ? [Column, Column.split("_")[0]].join("+") : Column
+      const ColumnLink = `search.html?q=select+${columnsToSelect}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
       const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 

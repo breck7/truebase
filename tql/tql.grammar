@@ -116,7 +116,7 @@ columnIsMissingParser
  javascript
   toPredicate() {
     const columnName = this.getWord(1)
-    return file => !file.has(columnName.replaceAll("_", " "))
+    return file => !file.has(columnName.replaceAll("_", " ")) && !file.parent.isComputedColumn(columnName)
   }
 columnIsNotMissingParser
  description Find files whose value in the given column is not missing.

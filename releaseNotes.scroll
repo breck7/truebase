@@ -4,6 +4,13 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 16.0.0 2023-4-22
+- 🎉 you can now run queries against computed columns
+- 🎉 you now define computed columns in grammar just like other columns:
+ - need to add `boolean isComputed true`
+ - your File class needs to have a getter with a matching columnName
+- ⚠️ BREAKING: (only PLDB affected) computed columns are done via the new method above
+
 # 15.2.0 2023-4-20
 - 🏥 fixes in CSV documentation display.
  - Fixed bug where description was not showing for extended columns.

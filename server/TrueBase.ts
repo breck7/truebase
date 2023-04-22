@@ -19,16 +19,20 @@ declare type parserDef = treeNode
 interface ColumnInterface {
   Column: string
   ColumnLink: string
-  Values: number
-  Missing: number
-  Coverage: string
-  Example: string
   Source: string
   SourceLink: string
   Description: string
   Definition: string
   DefinitionLink: string
   Recommended: boolean
+  Computed: boolean
+}
+
+interface ColumnInterfaceWithStats extends ColumnInterface {
+  Values: number
+  Missing: number
+  Coverage: string
+  Example: string
 }
 
 enum SQLiteTypes {
@@ -90,15 +94,15 @@ import ../footer.scroll`
     Disk.writeIfChanged(path.join(folder, this.id + ".scroll"), this.toScroll())
   }
 
-  get missingColumns() {
-    return (this.parent.columnDocumentation as ColumnInterface[])
-      .filter(col => col.Description !== "computed")
+  get missingRootColumns() {
+    return (this.parent.columnDocumentation as ColumnInterfaceWithStats[])
+      .filter(col => col.Computed === false)
       .filter(col => !col.Column.includes("_"))
       .filter(col => !this.has(col.Column))
   }
 
   get missingRecommendedColumnNames() {
-    return this.missingColumns.filter(col => col.Recommended === true).map(col => col.Column)
+    return this.missingRootColumns.filter(col => col.Recommended === true).map(col => col.Column)
   }
 
   get webPermalink() {
@@ -220,9 +224,9 @@ import ../footer.scroll`
   get topUnansweredQuestions() {
     // V1 algo is just that the questions with the most answers are the most important
     // V2 should take into account the currently answered questions
-    const cols = lodash.sortBy(this.missingColumns, "Missing")
+    const cols = lodash.sortBy(this.missingRootColumns, "Missing")
     return cols
-      .map((col: ColumnInterface) => {
+      .map((col: ColumnInterfaceWithStats) => {
         const column = col.Column
         const parserDef = this.parent.getParserDefFromColumnName(column)
         if (!parserDef) return false
@@ -257,6 +261,8 @@ import ../footer.scroll`
   }
 
   getTypedValue(dotPath: string, dot = "_") {
+    if (this.parent.isComputedColumn(dotPath)) return this[dotPath]
+
     const value = dotPath.includes(dot) ? lodash.get(this.typed, dotPath.replace("_", ".")) : this.typed[dotPath]
     const typeOfValue = typeof value
     if (typeOfValue === "object" && !Array.isArray(typeOfValue)) {
@@ -292,6 +298,9 @@ neighbors
     this.parsed.topDownArray.forEach((col: any) => {
       if (col.isColumn) obj[col.columnName] = col.columnValue
     })
+    // Currently computed columns are an advanced features only used in PLDB. They require extending
+    // the TrueBase File class and defining a Parser Definition in Grammar with the same column name
+    // as the getter in the extended File class.
     computedColumnNames.forEach((colName: string) => {
       const value = this[colName]
       if (value !== undefined) obj[colName] = value.toString() // todo: do we need to do this here?
@@ -332,10 +341,8 @@ class TrueBaseFolder extends TreeNode {
   fileExtension = ""
 
   // todo: move these to .truebase settings file
-  computedColumnNames: string[] = []
   thingsViewSourcePath = `/things/`
   grammarViewSourcePath = `/grammar/`
-  computedsViewSourcePath = ``
 
   settings: TrueBaseSettingsObject
   setSettings(settings: TrueBaseSettingsObject) {
@@ -410,10 +417,9 @@ class TrueBaseFolder extends TreeNode {
       this.quickCache.objectsForCsv = lodash.sortBy(objects, this.globalSortFunction)
 
       const colStats: any = {}
-      const { colNamesForCsv, computedColumnNames } = this
-      const colNames = colNamesForCsv.concat(computedColumnNames)
+      const { colNamesForCsv } = this
       objects.forEach((obj: any) => {
-        colNames.forEach((colName: string) => {
+        colNamesForCsv.forEach((colName: string) => {
           if (!colStats[colName]) colStats[colName] = { missingCount: 0 }
           const stats = colStats[colName]
           const value = obj[colName]
@@ -496,6 +502,17 @@ class TrueBaseFolder extends TreeNode {
     return this.quickCache.colNamesForCsv
   }
 
+  isComputedColumn(name: string) {
+    if (!this.quickCache.computedColumnNamesMap) this.quickCache.computedColumnNamesMap = new Set(this.computedColumnNames)
+    return this.quickCache.computedColumnNamesMap.has(name)
+  }
+
+  get computedColumnNames() {
+    if (this.quickCache.computedColumnNames) return this.quickCache.computedColumnNames
+    this.quickCache.computedColumnNames = this.basicColumnDocumentation.filter(col => col.Computed).map(col => col.Column)
+    return this.quickCache.computedColumnNames
+  }
+
   makeCsv(filename: string, objectsForCsv = this.objectsForCsv) {
     if (this.quickCache[filename]) return this.quickCache[filename]
     const { columnNamesSortedByMostInteresting } = this
@@ -532,51 +549,60 @@ class TrueBaseFolder extends TreeNode {
     return this.columnDocumentation.map(col => col.Column)
   }
 
-  get columnDocumentation(): ColumnInterface[] {
-    if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
+  get basicColumnDocumentation(): ColumnInterface[] {
+    if (this.quickCache.basicColumnDocumentation) return this.quickCache.basicColumnDocumentation
 
-    // Return columns with documentation sorted in the most interesting order.
-    const names = this.colNamesForCsv.concat(this.computedColumnNames)
-
-    const { colNameToParserDefMap, objectsForCsv, grammarViewSourcePath, computedsViewSourcePath } = this
+    const { colNameToParserDefMap, grammarViewSourcePath } = this
     const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
-    const colStats = this.quickCache.colStats
-    const fileCount = this.length
-    const cols = names.map((Column: string) => {
+    const cols = this.colNamesForCsv.map((Column: string) => {
       const parserDef = colNameToParserDefMap.get(Column)
-      let colDefId
-      if (parserDef) colDefId = parserDef.getLine()
-      else colDefId = ""
-      const stats = colStats[Column]
-      const Missing = stats.missingCount
-      const Values = fileCount - Missing
-      const Example = stats.example !== undefined ? stats.example.toString().replace(/\n/g, " ").substr(0, 30) : ""
-      const Description = colDefId !== "" && colDefId !== "errorParser" ? parserDef.description : "computed"
-      let Source
-      if (parserDef) Source = parserDef.getFrom("string sourceDomain")
-      else Source = ""
-
+      const Computed = parserDef.constantsObject.isComputed === true
+      const colDefId = parserDef.getLine()
+      const Description = parserDef.description
+      const Source = parserDef.getFrom("string sourceDomain")
       const columnsToSelect = Column.includes("_") ? [Column, Column.split("_")[0]].join("+") : Column
       const ColumnLink = `search.html?q=select+${columnsToSelect}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
       const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
-      const Definition = colDefId !== "" && colDefId !== "errorParser" ? path.basename(sourceLocation.filePath) : "A computed value"
-      const DefinitionLink = colDefId !== "" && colDefId !== "errorParser" ? `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}` : `${computedsViewSourcePath}#:~:text=get%20${Column}()`
+      const Definition = path.basename(sourceLocation.filePath)
+      const DefinitionLink = `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
       const SourceLink = Source ? `https://${Source}` : ""
       return {
         Column,
         ColumnLink,
-        Values,
-        Missing,
-        Coverage: Math.round((100 * Values) / (Values + Missing)) + "%",
-        Example,
         Source,
         SourceLink,
         Description,
         Definition,
         DefinitionLink,
+        Computed,
         Recommended: parserDef && parserDef.getFrom("boolean alwaysRecommended") === "true"
+      }
+    })
+    this.quickCache.basicColumnDocumentation = cols
+    return cols
+  }
+
+  get columnDocumentation(): ColumnInterfaceWithStats[] {
+    if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
+
+    const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
+    const objectsForCsv = this.objectsForCsv // todo: we are doing this to warm cache. cleanup
+    const colStats = this.quickCache.colStats
+    const fileCount = this.length
+    const cols = this.basicColumnDocumentation.map((col: ColumnInterface) => {
+      const Column = col.Column
+      const stats = colStats[Column]
+      const Missing = stats.missingCount
+      const Values = fileCount - Missing
+      const Example = stats.example !== undefined ? stats.example.toString().replace(/\n/g, " ").substr(0, 30) : ""
+      return {
+        ...col,
+        Values,
+        Missing,
+        Coverage: Math.round((100 * Values) / (Values + Missing)) + "%",
+        Example
       }
     })
 
@@ -674,20 +700,21 @@ class TrueBaseFolder extends TreeNode {
   }
 
   get sqliteTableColumns() {
-    return this.concreteColumnDefinitions.map((def: any) => {
-      const firstNonKeywordCellType = def.cellParser.getCellArray()[1]
+    return this.concreteColumnDefinitions
+      .filter((def: parserDef) => !def.constantsObject.isComputed)
+      .map((def: parserDef) => {
+        const firstNonKeywordCellType = def.cellParser.getCellArray()[1]
+        let type = SQLiteTypes.text
+        if (firstNonKeywordCellType) {
+          if (firstNonKeywordCellType.constructor.parserFunctionName === "parseInt") type = SQLiteTypes.integer
+          else if (firstNonKeywordCellType.constructor.parserFunctionName === "parseFloat") type = SQLiteTypes.float
+        }
 
-      let type = SQLiteTypes.text
-      if (firstNonKeywordCellType) {
-        if (firstNonKeywordCellType.constructor.parserFunctionName === "parseInt") type = SQLiteTypes.integer
-        else if (firstNonKeywordCellType.constructor.parserFunctionName === "parseFloat") type = SQLiteTypes.float
-      }
-
-      return {
-        columnName: def.cruxPathAsColumnName,
-        type
-      }
-    })
+        return {
+          columnName: def.cruxPathAsColumnName,
+          type
+        }
+      })
   }
 
   get sqliteInsertRows() {

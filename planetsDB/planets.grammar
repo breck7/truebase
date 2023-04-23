@@ -4,6 +4,12 @@ planetsdbParser
  string fileExtension planetsdb
  inScope abstractTrueBaseColumnParser
  catchAllParser trueBaseErrorParser
+ example
+  title Mars
+  diameter 6794
+  surfaceGravity 4
+  yearsToOrbitSun 1.881
+  moons 2
 
 distanceCell
  extends intCell

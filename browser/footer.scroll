@@ -11,3 +11,6 @@ stumpNoSnippet
   span ·
   a Search
    href BASE_URL/search.html
+  span ·
+  a Add
+   href BASE_URL/create.html

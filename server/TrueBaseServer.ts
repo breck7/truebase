@@ -486,11 +486,10 @@ import footer.scroll`
 
   virtualFiles: { [firstWord: string]: string } = {}
   scrollFileSystem = new ScrollFileSystem(this.virtualFiles)
-  dumpStaticSiteCommand() {
+  dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "staticSite")) {
     this.warmAll()
-    const basePath = path.join(this.settings.ignoreFolder, "staticSite")
-    Disk.mkdir(basePath)
-    Disk.writeObjectToDisk(basePath, this.virtualFiles)
+    Disk.mkdir(destinationPath)
+    Disk.writeObjectToDisk(destinationPath, this.virtualFiles)
   }
 
   warmAll() {
@@ -560,6 +559,7 @@ import footer.scroll`
   }
 
   listenProd() {
+    this.gitOn = true
     this.beforeListen()
     const { ignoreFolder } = this.settings
     const key = fs.readFileSync(path.join(ignoreFolder, "privkey.pem"))

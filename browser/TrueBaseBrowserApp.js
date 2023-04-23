@@ -213,12 +213,13 @@ class TrueBaseBrowserApp {
 
   renderCreatePage() {
     this.renderCodeEditorStuff()
-    document.getElementById("exampleSection").innerHTML = `Example:<br><pre>title Elixir
-appeared 2011
-type pl
-creators José Valim
-website https://elixir-lang.org/
-githubRepo https://github.com/elixir-lang/elixir</pre>`
+    try {
+      // todo: there's gotta be a better way
+      const example = new this.fileParser().root.definition.filter(node => node.has("root"))[0].examples[0].childrenToString()
+      document.getElementById("exampleSection").innerHTML = `Example:<br><pre>${example}</pre>`
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   renderCodeEditorStuff() {

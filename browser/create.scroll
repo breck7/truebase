@@ -1,0 +1,8 @@
+import header.scroll
+title Create a new file
+
+<div id="formHolder"></div>
+
+<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().renderCreatePage())</script>
+
+import footer.scroll

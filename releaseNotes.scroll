@@ -4,6 +4,11 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 16.1.0 2023-4-23
+- 🎉 create page now included
+- 🏥 better testing and error messages
+- 🏥 some bug fixes around editing and creating
+
 # 16.0.0 2023-4-22
 - 🎉 you can now run queries against computed columns
 - 🎉 you now define computed columns in grammar just like other columns:

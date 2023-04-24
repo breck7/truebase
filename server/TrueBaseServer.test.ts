@@ -39,6 +39,7 @@ reverse`
 }
 
 testTree.editing = async (equal: any) => {
+  // Arrange
   const tempBase = path.join(__dirname, "..", "ignore", "testTemp")
   const tempDir = path.join(tempBase, "planetsDB")
   const staticSiteDir = path.join(tempBase, "staticSite")
@@ -47,20 +48,86 @@ testTree.editing = async (equal: any) => {
   const pbDir = path.join(__dirname, "..", "planetsDB")
   fs.cpSync(pbDir, tempDir, { recursive: true })
   const PlanetsDB = new TrueBaseServer(path.join(tempDir, "planetsdb.truebase"))
-  // Act
-  PlanetsDB.formatCommand()
+  const folder = PlanetsDB.folder
+
   // Assert
   equal(PlanetsDB.statusPage.length > 0, true)
   equal(PlanetsDB.columnsCsv.length > 1, true)
+
+  // Act
+  equal(folder.hasChanges, false, "should have no changes")
+  PlanetsDB.formatCommand()
+  equal(folder.hasChanges, false, "should already be formatted")
 
   // Act
   PlanetsDB.dumpStaticSiteCommand(staticSiteDir)
   // Assert
   equal(Disk.exists(staticSiteDir), true)
 
+  // Act/Assert
+  try {
+    PlanetsDB.applyPatch(`foo.planetsdb
+ title Planet X`)
+    equal(false, true, "Should fail to update")
+  } catch (err) {
+    equal(err.message.includes("not found"), true, "Try updating a file that does not exist")
+  }
+  try {
+    PlanetsDB.applyPatch(`create
+  title Planet X`)
+    equal(false, true, "Should fail to create")
+  } catch (err) {
+    equal(err.message.includes("Not enough"), true, "Try creating a file without enough fields")
+  }
+  try {
+    PlanetsDB.applyPatch(`create
+ yearsToOrbitSun 2
+ diameter 23
+ moons 1`)
+    equal(false, true, "Should fail to create")
+  } catch (err) {
+    equal(err.message.includes(`"title" must be provided`), true, "Try creating a file without a title")
+  }
+  try {
+    PlanetsDB.applyPatch(`create
+ title Planet X
+ diameter abc
+ surfaceGravitError 2
+ moons one
+ unknown foo`)
+    equal(false, true, "Should fail to create")
+  } catch (err) {
+    equal(err.message.includes("Too many errors"), true, "Try creating a file with too many errors")
+  }
+  try {
+    PlanetsDB.applyPatch(`mars.planetsdb
+ title Planet X
+ diameter abc
+ surfaceGravitError 2
+ moons one
+ unknown foo`)
+    equal(false, true, "Should fail to patch")
+  } catch (err) {
+    equal(err.message.includes("Too many errors"), true, "Try updating a file with too many errors")
+  }
+
   // Act
-  PlanetsDB.gitOn = true
-  await PlanetsDB.git.init()
+  const patch = `create
+ title Planet X
+ diameter 49572
+ yearsToOrbitSun 2064.79
+mars.planetsdb
+ title Mars
+ diameter 6794
+ surfaceGravity 4
+ yearsToOrbitSun 1.881
+ moons 2`
+  const changes = PlanetsDB.applyPatch(patch)
+  equal(changes.length, 2, "Successfully create and update a file")
+
+  // Act
+  // PlanetsDB.gitOn = true
+  // await PlanetsDB.git.init()
 }
 
 if (!module.parent) TestRacer.testSingleFile(__filename, testTree)

@@ -26,6 +26,7 @@ const browserAppFolder = path.join(__dirname, "..", "browser")
 const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
 const delimiter = " DeLiM "
 
+import { UserFacingErrorMessages } from "./ErrorMessages"
 import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 
 import { TrueBaseServerSettingsObject } from "./TrueBaseSettings"
@@ -121,7 +122,7 @@ class TrueBaseServer {
 
       try {
         const { authorName, authorEmail } = this.parseGitAuthor(author)
-        if (!Utils.isValidEmail(authorEmail)) throw new Error(`Invalid email: "${Utils.htmlEscaped(authorEmail)}"`)
+        if (!Utils.isValidEmail(authorEmail)) throw new Error(UserFacingErrorMessages.invalidEmail(authorEmail))
 
         const changedFiles = this.applyPatch(patch)
         const hash = await this.saveCommitAndPush(
@@ -209,7 +210,7 @@ class TrueBaseServer {
       // git pull --rebase
       // git push
 
-      if (!Utils.isValidEmail(authorEmail)) throw new Error(`Invalid email: ${authorEmail}`)
+      if (!Utils.isValidEmail(authorEmail)) throw new Error(UserFacingErrorMessages.invalidEmail(authorEmail))
 
       // for (const filename of filenames) {
       //   await git.add(filename)
@@ -327,7 +328,7 @@ class TrueBaseServer {
     app.post("/sendLoginLink", async (req: any, res: any) => {
       try {
         const email = req.body.email
-        if (!Utils.isValidEmail(email)) throw new Error(`"${email}" is not a valid email.`)
+        if (!Utils.isValidEmail(email)) throw new Error(UserFacingErrorMessages.invalidEmail(email))
 
         const link = this.getOrCreateLoginLink(email)
         const from = `"${name}" <feedback@${domain}>`
@@ -431,9 +432,9 @@ import footer.scroll`
     const { folder } = this
     const tree = new TreeNode(patch)
 
-    const create = tree.getNode("create")
-    const changedFiles = []
-    if (create) {
+    const createFiles = tree.findNodes("create")
+    const changedFiles: TrueBaseFile[] = []
+    createFiles.forEach((create: any) => {
       const data = create.childrenToString()
 
       // todo: audit
@@ -441,14 +442,14 @@ import footer.scroll`
       const newFile = folder.createFile(validateSubmissionResults.content)
 
       changedFiles.push(newFile)
-    }
+    })
 
     tree.delete("create")
 
     tree.forEach((node: any) => {
       const id = Utils.removeFileExtension(node.getWord(0))
       const file = folder.getFile(id)
-      if (!file) throw new Error(`File '${id}' not found.`)
+      if (!file) throw new Error(UserFacingErrorMessages.fileNotFound(id))
 
       const validateSubmissionResults = this.validateSubmission(node.childrenToString())
       file.setChildren(validateSubmissionResults.content)
@@ -460,9 +461,22 @@ import footer.scroll`
     return changedFiles
   }
 
+  get minimumNewFacts() {
+    return 3
+  }
+
+  get maximumAllowedErrors() {
+    return 3
+  }
+
+  get patchSizeLimit() {
+    return 200000
+  }
+
   validateSubmission(content: string) {
+    const { minimumNewFacts, maximumAllowedErrors, patchSizeLimit } = this
     // Run some simple sanity checks.
-    if (content.length > 200000) throw new Error(`Submission too large`)
+    if (content.length > patchSizeLimit) throw new Error(UserFacingErrorMessages.patchSizeTooLarge(content.length, patchSizeLimit))
 
     // Remove all return characters
     content = Utils.removeEmptyLines(Utils.removeReturnChars(content))
@@ -470,14 +484,11 @@ import footer.scroll`
     const rootParser = this.folder.rootParser
     const parsed = new rootParser(content)
 
-    const errs = parsed.getAllErrors()
+    const errs = parsed.getAllErrors().concat(parsed.scopeErrors)
 
-    if (errs.length > 3) throw new Error(`Too many errors detected in submission: ${JSON.stringify(errs.map((err: any) => err.toObject()))}`)
+    if (errs.length > maximumAllowedErrors) throw new Error(UserFacingErrorMessages.tooManyErrors(errs.length, maximumAllowedErrors, errs))
 
-    const { scopeErrors } = parsed
-    if (scopeErrors.length > 3) throw new Error(`Too many scope errors detected in submission: ${JSON.stringify(scopeErrors.map((err: any) => err.toObject()))}`)
-
-    if (parsed.length < 3) throw new Error(`Must provide at least 3 facts about the language.`)
+    if (parsed.length < minimumNewFacts) throw new Error(UserFacingErrorMessages.notEnoughFacts(parsed.length, minimumNewFacts))
 
     return {
       content: parsed.sortFromSortTemplate().asString

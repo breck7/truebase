@@ -77,10 +77,6 @@ code
 import ../footer.scroll`
   }
 
-  writeScrollFileIfChanged(folder: string) {
-    Disk.writeIfChanged(path.join(folder, this.id + ".scroll"), this.toScroll())
-  }
-
   get missingRootColumns() {
     return (this.parent.columnDocumentation as ColumnInterfaceWithStats[])
       .filter(col => col.Computed === false)

@@ -7,6 +7,7 @@ const { TreeNode, TreeEvents } = require("jtree/products/TreeNode.js")
 const { HandGrammarProgram, GrammarConstants } = require("jtree/products/GrammarLanguage.js")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { Utils } = require("jtree/products/Utils.js")
+import { UserFacingErrorMessages, UserFacingWarningMessages } from "./ErrorMessages"
 import { TrueBaseSettingsObject } from "./TrueBaseSettings"
 const grammarParser = require("jtree/products/grammar.nodejs.js")
 
@@ -39,20 +40,6 @@ enum SQLiteTypes {
   integer = "INTEGER",
   float = "FLOAT",
   text = "TEXT"
-}
-
-const UserFacingWarningMessages = {
-  noFiles: (folderName: string) => `No files found in '${folderName}' folder`,
-  noFilesWithRightExtension: (extName: string) => `No files found with extension '${extName}'.`
-}
-
-const UserFacingErrorMessages = {
-  brokenPermalink: (subjectId: string, targetId: string) => `Broken permalink in '${subjectId}': No file '${targetId}' found`,
-  missingColumnSourceFile: (filePath: string) => `Could not find grammar file '${filePath}'`,
-  missingColumn: (colName: string, allColumnNames: string[]) => `No column found for '${colName}'. Available columns: ${allColumnNames.sort().join(" ")}`,
-  titleRequired: (content: string) => `A "title" must be provided when creating a new file. Content provided:\n ${content.replace(/\n/g, "\n ")}`,
-  duplicateId: (id: string) => `Already file with id: "${id}". Are you sure the database doesn't have this already? Perhaps update the title to something more unique for now.`,
-  returnCharFound: (fullPath: string) => `Return character '\\r' found in '${fullPath}'. Return chars are unneeded.`
 }
 
 class TrueBaseFile extends TreeNode {
@@ -171,14 +158,14 @@ import ../footer.scroll`
     return this
   }
 
-  getDiskVersion() {
+  get diskVersion() {
     return this._diskVersion
   }
 
   getDoc(terms: string[]) {
     return terms
       .map(term => {
-        const nodes = this.findNodes(this._getFilePath() + " " + term)
+        const nodes = this.findNodes(this.filepath + " " + term)
         return nodes.map((node: treeNode) => node.childrenToString()).join("\n")
       })
       .filter(identity => identity)
@@ -189,11 +176,14 @@ import ../footer.scroll`
     return typeof keywordPath === "object" ? this.setProperties(keywordPath) : super.set(keywordPath, content)
   }
 
-  save() {
-    const str = this.childrenToString()
-    if (this.getDiskVersion() === str) return this
+  get hasChanges() {
+    return this.diskVersion !== this.childrenToString()
+  }
 
-    Disk.write(this._getFilePath(), str)
+  save() {
+    if (!this.hasChanges) return this
+
+    Disk.write(this.filepath, this.childrenToString())
     this.setDiskVersion()
     return this
   }
@@ -205,12 +195,12 @@ import ../footer.scroll`
     return this.appendLine(prefix + line + "\n")
   }
 
-  private _getFilePath() {
+  get filepath() {
     return this.parent.makeFilePath(this.id)
   }
 
   get filename() {
-    return Disk.getFileName(this._getFilePath())
+    return Disk.getFileName(this.filepath)
   }
 
   createParserCombinator() {
@@ -364,6 +354,10 @@ class TrueBaseFolder extends TreeNode {
   get searchIndex() {
     if (!this.quickCache.searchIndex) this.quickCache.searchIndex = this.makeNameSearchIndex(this)
     return this.quickCache.searchIndex
+  }
+
+  get hasChanges() {
+    return this.getChildren().some((file: TrueBaseFile) => file.hasChanges)
   }
 
   get bytes() {

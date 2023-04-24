@@ -120,14 +120,26 @@ mars.planetsdb
  title Mars
  diameter 6794
  surfaceGravity 4
- yearsToOrbitSun 1.881
+ yearsToOrbitSun 1.88
  moons 2`
   const changes = PlanetsDB.applyPatch(patch)
   equal(changes.length, 2, "Successfully create and update a file")
 
   // Act
-  // PlanetsDB.gitOn = true
-  // await PlanetsDB.git.init()
+  PlanetsDB.gitOn = true
+  PlanetsDB.pullAndPushOn = false
+  await PlanetsDB.git.init()
+
+  const hash = await PlanetsDB.applyPatchCommitAndPush(
+    `mars.planetsdb
+ title Mars
+ diameter 6794
+ surfaceGravity 4
+ yearsToOrbitSun 1.9
+ moons 2`,
+    "Breck Yunits <breck7@gmail.com>"
+  )
+  equal(hash.length, 40)
 }
 
 if (!module.parent) TestRacer.testSingleFile(__filename, testTree)

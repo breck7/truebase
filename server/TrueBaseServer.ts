@@ -119,19 +119,8 @@ class TrueBaseServer {
       const { author } = req.body
       const patch = Utils.removeReturnChars(req.body.patch).trim()
       this.appendToPostLog(author, patch)
-
       try {
-        const { authorName, authorEmail } = this.parseGitAuthor(author)
-        if (!Utils.isValidEmail(authorEmail)) throw new Error(UserFacingErrorMessages.invalidEmail(authorEmail))
-
-        const changedFiles = this.applyPatch(patch)
-        const hash = await this.saveCommitAndPush(
-          changedFiles.map(file => file.filename),
-          authorName,
-          authorEmail
-        )
-        changedFiles.forEach(file => file.writeScrollFileIfChanged(path.join(this.settings.siteFolder, "truebase")))
-
+        const hash = this.applyPatchCommitAndPush(patch, author)
         res.redirect(`/thankYou.html?commit=${hash}`)
       } catch (error) {
         console.error(error)
@@ -146,6 +135,19 @@ class TrueBaseServer {
 
     app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.send(this.folder.typedMapJson))
     return this._app
+  }
+
+  async applyPatchCommitAndPush(patch: string, author: string) {
+    const { authorName, authorEmail } = this.parseGitAuthor(author)
+    if (!Utils.isValidEmail(authorEmail)) throw new Error(UserFacingErrorMessages.invalidEmail(authorEmail))
+
+    const changedFiles = this.applyPatch(patch)
+    const hash = await this.saveCommitAndPush(
+      changedFiles.map(file => file.filename),
+      authorName,
+      authorEmail
+    )
+    return hash
   }
 
   serveFolder(folder: string) {
@@ -212,28 +214,19 @@ class TrueBaseServer {
 
       if (!Utils.isValidEmail(authorEmail)) throw new Error(UserFacingErrorMessages.invalidEmail(authorEmail))
 
-      // for (const filename of filenames) {
-      //   await git.add(filename)
-      // }
+      for (const filename of filenames) {
+        await git.add(filename)
+      }
 
       const commitResult = await git.commit(commitMessage, filenames, {
         "--author": `${authorName} <${authorEmail}>`
       })
 
-      await this.git.pull("origin", "main")
-      await git.push()
-
-      // todo: verify that this is the users commit
-      const commitHash = require("child_process")
-        .execSync("git rev-parse HEAD", {
-          cwd: this.settings.siteFolder
-        })
-        .toString()
-        .trim()
+      await this.pullAndPush()
 
       return {
         success: true,
-        commitHash
+        commitHash: this.lastCommitHash // todo: verify that this is the users commit
       }
     } catch (error) {
       console.error(error)
@@ -242,6 +235,23 @@ class TrueBaseServer {
         error
       }
     }
+  }
+
+  pullAndPushOn = true
+
+  async pullAndPush() {
+    if (!this.pullAndPushOn) return true
+    await this.git.pull("origin", "main")
+    await this.git.push()
+  }
+
+  get lastCommitHash() {
+    return require("child_process")
+      .execSync("git rev-parse HEAD", {
+        cwd: this.settings.siteFolder
+      })
+      .toString()
+      .trim()
   }
 
   appendToPostLog(author = "", content = "") {

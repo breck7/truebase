@@ -520,11 +520,11 @@ import footer.scroll`
   }
 
   beforeListen() {
+    const { siteFolder } = this.settings
+    process.title = this.settings.trueBaseId
     this.warmAll()
 
     const { virtualFiles } = this
-
-    const { siteFolder } = this.settings
 
     let notFoundPage = ""
     if (virtualFiles[siteFolder + "/custom_404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/custom_404.scroll")

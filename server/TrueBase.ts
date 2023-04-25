@@ -211,25 +211,10 @@ import ../footer.scroll`
   }
 
   get topUnansweredQuestions() {
-    const columnsToFill: any = {}
-    const columnsInSimilarFiles = this.similarFiles.map((file: TrueBaseFile) => {
-      file.getFirstWords().forEach((columnName: string) => {
-        if (!columnsToFill[columnName]) columnsToFill[columnName] = { columnName, count: 0 }
-        columnsToFill[columnName].count++
-      })
-    })
+    const type = this.get("type")
+    if (type) return this.parent.getTopQuestionsForType(type).filter((entry: any) => !this.has(entry.column))
 
-    const sorted = lodash.sortBy(Object.values(columnsToFill), "count")
-    return sorted
-      .map((entry: any) => entry.columnName)
-      .filter((columnName: string) => !this.has(columnName))
-      .map((columnName: string) => {
-        const parserDef = this.parent.getParserDefFromColumnName(columnName)
-        return {
-          column: columnName,
-          question: parserDef.description
-        }
-      })
+    return this.parent.computeColumnStats(this.parent.getChildren()).filter((entry: any) => !this.has(entry.column))
   }
 
   get parsed() {
@@ -349,6 +334,32 @@ class TrueBaseFolder extends TreeNode {
     this.rootParser = this.grammarProgram.compileAndReturnRootParser()
     this.fileExtension = new this.rootParser().fileExtension
     return this
+  }
+
+  computeColumnStats(files: TrueBaseFile[]) {
+    const columnsToFill: any = {}
+    const columnsInSimilarFiles = files.map((file: TrueBaseFile) => {
+      file
+        .getFirstWords()
+        .filter((i: string) => i)
+        .forEach((columnName: string) => {
+          if (!columnsToFill[columnName]) columnsToFill[columnName] = { columnName, count: 0, parserDef: this.getParserDefFromColumnName(columnName) }
+          columnsToFill[columnName].count++
+        })
+    })
+
+    return lodash.sortBy(Object.values(columnsToFill), "count").map((entry: any) => {
+      return {
+        column: entry.columnName,
+        question: entry.parserDef.description
+      }
+    })
+  }
+
+  getTopQuestionsForType(type: string) {
+    if (!this.quickCache.questionsForType) this.quickCache.questionsForType = {}
+    if (!this.quickCache.questionsForType[type]) this.quickCache.questionsForType[type] = this.computeColumnStats(this.where("type", "includes", type))
+    return this.quickCache.questionsForType[type]
   }
 
   get filesWithInvalidFilenames() {

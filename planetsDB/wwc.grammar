@@ -200,10 +200,13 @@ abstractAnnualPopulationCountMapParser
 // Common computed types
 abstractComputedSumColumnParser
  boolean isComputed true
+ boolean suggestInAutocomplete false
  extends abstractIntColumnParser
 abstractComputedEstimateColumnParser
  boolean isComputed true
+ boolean suggestInAutocomplete false
  extends abstractCountColumnParser
 abstractComputedRankColumnParser
  boolean isComputed true
+ boolean suggestInAutocomplete false
  extends abstractIntColumnParser

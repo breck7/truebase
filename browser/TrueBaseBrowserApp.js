@@ -238,12 +238,28 @@ class TrueBaseBrowserApp {
 
     if (data.error) return (document.getElementById("formHolder").innerHTML = data.error)
 
-    document.getElementById("pageTitle").innerHTML = `Editing file <i>${filename}</i>`
+    const id = this.currentFileId
+    document.getElementById("pageTitle").innerHTML = `Improve <i><a href="/truebase/${id}.html">${filename}</a></i>`
 
     this.codeMirrorInstance.setValue(localValue ? localValue.childrenToString() : data.content)
-    document.getElementById("missingRecommendedColumnNames").innerHTML = `<br><b>Missing recommended columns:</b><br>${data.missingRecommendedColumnNames.join("<br>")}`
+    const title = new TreeNode(this.value).get("title") || filename
+    document.getElementById("topUnansweredQuestions").innerHTML = `<h3>Open questions about ${title}</h3>
+    ${data.topUnansweredQuestions
+      .slice(0, 8)
+      .map(question => `<div title="${question.column}">${question.question}</div>`)
+      .join("")}`
 
     document.getElementById("helpfulResearchLinks").innerHTML = data.helpfulResearchLinks
+
+    Mousetrap.bind("left", evt => {
+      window.location = `/editPrevious/${id}`
+      return false
+    })
+
+    Mousetrap.bind("right", evt => {
+      window.location = `/editNext/${id}`
+      return false
+    })
   }
 
   updateStagedStatus() {
@@ -294,8 +310,8 @@ class TrueBaseBrowserApp {
    <div id="tqlErrors"></div> <!-- todo: cleanup. -->
  </div>
  <div class="cell">
+   <div id="topUnansweredQuestions"></div>
    <div id="helpfulResearchLinks"></div>
-   <div id="missingRecommendedColumnNames"></div>
    <div id="exampleSection"></div>
  </div>
  <div>

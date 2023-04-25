@@ -109,10 +109,23 @@ class TrueBaseServer {
       res.send(
         JSON.stringify({
           content: file.childrenToString(),
-          missingRecommendedColumnNames: file.missingRecommendedColumnNames,
+          topUnansweredQuestions: file.topUnansweredQuestions,
           helpfulResearchLinks: file.helpfulResearchLinks
         })
       )
+    })
+
+    // Have some fast keyboard shortcuts for editing and QA'ing the edit experience.
+    app.get("/editNext/:id", (req: any, res: any, next: any) => {
+      const file = this.folder.getFile(req.params.id)
+      if (!file) return next()
+      res.redirect(`/edit.html?id=${file.next.id}`)
+    })
+
+    app.get("/editPrevious/:id", (req: any, res: any, next: any) => {
+      const file = this.folder.getFile(req.params.id)
+      if (!file) return next()
+      res.redirect(`/edit.html?id=${file.previous.id}`)
     })
 
     app.post("/saveCommitAndPush", async (req: any, res: any) => {

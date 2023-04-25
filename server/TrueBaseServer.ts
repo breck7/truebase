@@ -5,6 +5,7 @@ const numeral = require("numeral")
 const morgan = require("morgan")
 const https = require("https")
 const express = require("express")
+const compression = require("compression")
 const nodemailer = require("nodemailer")
 const bodyParser = require("body-parser")
 const simpleGit = require("simple-git")
@@ -62,6 +63,7 @@ class TrueBaseServer {
     if (this._app) return this._app
 
     const app = express()
+    app.use(compression())
     this._app = app
     const { ignoreFolder, siteFolder, grammarFolder, thingsFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)

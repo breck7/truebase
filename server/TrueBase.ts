@@ -50,8 +50,7 @@ class TrueBaseFile extends TreeNode {
   }
 
   get helpfulResearchLinks() {
-    const { id } = this
-    return `<a href="/truebase/${id}.html">/truebase/${id}.html</a>`
+    return ``
   }
 
   toScroll() {
@@ -82,10 +81,6 @@ import ../footer.scroll`
       .filter(col => col.Computed === false)
       .filter(col => !col.Column.includes("_"))
       .filter(col => !this.has(col.Column))
-  }
-
-  get missingRecommendedColumnNames() {
-    return this.missingRootColumns.filter(col => col.Recommended === true).map(col => col.Column)
   }
 
   get webPermalink() {
@@ -207,21 +202,34 @@ import ../footer.scroll`
     return this.parsed.topDownArray.filter((node: any) => node.shouldSerialize !== false).length
   }
 
+  get similarFiles() {
+    if (!this.has("type"))
+      // todo: add another similarity metric
+      return this.parent.getChildren()
+    const type = this.get("type")
+    return this.parent.where("type", "includes", type)
+  }
+
   get topUnansweredQuestions() {
-    // V1 algo is just that the questions with the most answers are the most important
-    // V2 should take into account the currently answered questions
-    const cols = lodash.sortBy(this.missingRootColumns, "Missing")
-    return cols
-      .map((col: ColumnInterfaceWithStats) => {
-        const column = col.Column
-        const parserDef = this.parent.getParserDefFromColumnName(column)
-        if (!parserDef) return false
+    const columnsToFill: any = {}
+    const columnsInSimilarFiles = this.similarFiles.map((file: TrueBaseFile) => {
+      file.getFirstWords().forEach((columnName: string) => {
+        if (!columnsToFill[columnName]) columnsToFill[columnName] = { columnName, count: 0 }
+        columnsToFill[columnName].count++
+      })
+    })
+
+    const sorted = lodash.sortBy(Object.values(columnsToFill), "count")
+    return sorted
+      .map((entry: any) => entry.columnName)
+      .filter((columnName: string) => !this.has(columnName))
+      .map((columnName: string) => {
+        const parserDef = this.parent.getParserDefFromColumnName(columnName)
         return {
-          column,
+          column: columnName,
           question: parserDef.description
         }
       })
-      .filter((i: any) => i)
   }
 
   get parsed() {

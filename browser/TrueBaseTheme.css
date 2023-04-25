@@ -281,8 +281,7 @@ body {
   width: 600px;
   height: 100px;
 }
-#helpfulResearchLinks,
-#missingRecommendedColumnNames {
+#helpfulResearchLinks {
   font-size: 80%;
 }
 

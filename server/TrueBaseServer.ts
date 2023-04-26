@@ -76,8 +76,8 @@ class TrueBaseServer {
     Disk.touch(requestTimesLog)
     app.use(morgan("tiny", { stream: fs.createWriteStream(requestTimesLog, { flags: "a" }) }))
 
-    app.use(bodyParser.urlencoded({ extended: false }))
-    app.use(bodyParser.json())
+    app.use(bodyParser.urlencoded({ extended: false, limit: "10mb" }))
+    app.use(bodyParser.json({ limit: "10mb" }))
     app.use((req: any, res: any, next: any) => {
       res.setHeader("Access-Control-Allow-Origin", "*")
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE")

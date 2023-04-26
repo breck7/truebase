@@ -783,7 +783,6 @@ css
 
 table ${delimiter}
  ${columnsCsvOutput.columnsMetadataTree.toDelimited(delimiter, columnsCsvOutput.columnMetadataColumnNames, false).replace(/\n/g, "\n  ")}
-}
 
 * The table above is also available as csv.
  link BASE_URL/columns.csv csv

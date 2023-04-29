@@ -175,8 +175,8 @@ class TrueBaseServer {
   }
 
   gitOn = false
-  GIT_DEFAULT_USERNAME = "TrueBaseBot"
-  GIT_DEFAULT_EMAIL = "bot@truebase.pub"
+  GIT_DEFAULT_USERNAME = "TrueBaseWebUI"
+  GIT_DEFAULT_EMAIL = "webui@truebase.pub"
 
   parseGitAuthor(field = `${this.GIT_DEFAULT_USERNAME} <${this.GIT_DEFAULT_EMAIL}>`) {
     const authorName = field

@@ -42,7 +42,7 @@ class TrueBaseBrowserApp {
       console.error(err)
     }
     const hash = Utils.getRandomCharacters(7)
-    return `Anon <${`anon.${user}.${hash}`}@${window.location.host}.com>`
+    return `Anon <${`anon.${user}.${hash}`}@${window.location.hostname}.com>`
   }
 
   render() {
@@ -387,6 +387,13 @@ class TrueBaseBrowserApp {
 
   get route() {
     return location.pathname.split("/")[1]
+  }
+
+  renderThankYouCommand(GIT_URL) {
+    // todo: clean up vars
+    const commit = new URLSearchParams(window.location.search).get("commit") || ""
+    document.getElementById("commitHash").innerHTML = `<a href="${GIT_URL}/commit/${commit}">${commit.substring(0, 7)}</a>`
+    this.shootConfettiCommand()
   }
 
   shootConfettiCommand(duration = 500) {

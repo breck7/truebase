@@ -127,7 +127,7 @@ mars.planetsdb
 
   // Act
   PlanetsDB.gitOn = true
-  PlanetsDB.pullAndPushOn = false
+  PlanetsDB.pushOnCommit = false
   await PlanetsDB.git.init()
 
   const hash = await PlanetsDB.applyPatchCommitAndPush(

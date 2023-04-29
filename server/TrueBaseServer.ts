@@ -135,7 +135,7 @@ class TrueBaseServer {
       const patch = Utils.removeReturnChars(req.body.patch).trim()
       this.appendToPostLog(author, patch)
       try {
-        const hash = this.applyPatchCommitAndPush(patch, author)
+        const hash = await this.applyPatchCommitAndPush(patch, author)
         res.redirect(`/thankYou.html?commit=${hash}`)
       } catch (error) {
         console.error(error)
@@ -175,8 +175,8 @@ class TrueBaseServer {
   }
 
   gitOn = false
-  GIT_DEFAULT_USERNAME = "TrueBaseBot"
-  GIT_DEFAULT_EMAIL = "bot@truebase.pub"
+  GIT_DEFAULT_USERNAME = "TrueBaseWebUI"
+  GIT_DEFAULT_EMAIL = "webui@truebase.pub"
 
   parseGitAuthor(field = `${this.GIT_DEFAULT_USERNAME} <${this.GIT_DEFAULT_EMAIL}>`) {
     const authorName = field
@@ -252,10 +252,10 @@ class TrueBaseServer {
     }
   }
 
-  pullAndPushOn = true
+  pushOnCommit = true
 
   async pullAndPush() {
-    if (!this.pullAndPushOn) return true
+    if (!this.pushOnCommit) return true
     await this.git.pull("origin", "main")
     await this.git.push()
   }

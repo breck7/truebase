@@ -1,13 +1,13 @@
 import header.scroll
 title Oops! - Page not found
 
-* Sorry but we cannot find the requested page.
+Sorry but we cannot find the requested page.
 
 import searchForm.scroll
 
 <script>document.getElementById("searchFormInput").value = (window.location.pathname + "").split("/").pop().replace(/\.[^\.]+$/, "").replace(/</g, "&lt;") </script>
 
-* You can report a broken link on the GitHub.
+You can report a broken link on the GitHub.
  GIT_URL/issues report a broken link
 
 import footer.scroll

@@ -11,23 +11,23 @@ import demos.scroll
 startColumns 2
 
 ? Where can I try it?
-* The examples above are live-you can play with them right on this page! PLDB.com and CancerDB.com are both powered by TrueBase.
+The examples above are live-you can play with them right on this page! PLDB.com and CancerDB.com are both powered by TrueBase.
  https://pldb.com PLDB.com
  https://cancerdb.com CancerDB
 
 ? Where are the Release Notes?
-* Here
+Here
  link releaseNotes.html
 
 ? I need a TrueBase for X, can you build one for me?
-* Yes. We offer a paid complete white-glove service for mission critical problems. You can also email pro@truebase.pub for a custom quote.
+Yes. We offer a paid complete white-glove service for mission critical problems. You can also email pro@truebase.pub for a custom quote.
  https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
 
 ? What is TrueBase?
-* TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but simpler and fully computable—every word is linked.
+TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but simpler and fully computable—every word is linked.
 
 ? Why TrueBase?
-* We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information warzone. TrueBase is the _only database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
+We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information warzone. TrueBase is the _only database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
 
 ? What are the features?
 - Data is stored in plain text
@@ -41,39 +41,39 @@ startColumns 2
 - Decentralized so every user can have their own complete copy
 
 ? How do I build a TrueBase on my own?
-* The cutting-edge option is to work from the demo PlanetsDB TrueBase:
+The cutting-edge option is to work from the demo PlanetsDB TrueBase:
 code
  git clone https://github.com/breck7/truebase
  cd truebase
  npm install .
  npm run local
 
-* Most people will want to use the Getting Started Guide. We are currently beta testing the Getting Started Guide. If you'd like to join the waitlist, please email waitlist@truebase.pub.
+Most people will want to use the Getting Started Guide. We are currently beta testing the Getting Started Guide. If you'd like to join the waitlist, please email waitlist@truebase.pub.
 
 ? How does it work, in theory?
-* TrueBase is built on top of new breakthrough research in computer languages. Unlike traditional languages and encodings, TrueBase has no noise and every word is interconnected. Adding more data not only increases utility but because everything is computable it becomes increasingly difficult to lie as the size of a TrueBase increases.
+TrueBase is built on top of new breakthrough research in computer languages. Unlike traditional languages and encodings, TrueBase has no noise and every word is interconnected. Adding more data not only increases utility but because everything is computable it becomes increasingly difficult to lie as the size of a TrueBase increases.
 
 ? How does TrueBase work, in practice?
-* In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand.
-* You put your data in Tree Notation form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible, making it timeless. No matter what format you need your data in the future it will be perfectly preserved in the simplest form possible. You will never regret putting your data in a TrueBase.
+In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand.
+You put your data in Tree Notation form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible, making it timeless. No matter what format you need your data in the future it will be perfectly preserved in the simplest form possible. You will never regret putting your data in a TrueBase.
  https://treenotation.org Tree Notation
-* A growing ecosystem of tooling makes it easy to augment your TrueBase with data from Large Language Models, web crawlers, and APIs, and run integrity checks, steadily making your TrueBase truer and truer.
-* You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like autocomplete and syntax highlighting.
+A growing ecosystem of tooling makes it easy to augment your TrueBase with data from Large Language Models, web crawlers, and APIs, and run integrity checks, steadily making your TrueBase truer and truer.
+You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like autocomplete and syntax highlighting.
  https://jtree.treenotation.org/langs/grammar Grammar Language
-* You can query your TrueBase using TQL (also a Tree Language).
+You can query your TrueBase using TQL (also a Tree Language).
  https://truebase.pub/tql TQL
-* You can display your data using Scroll (also a Tree Language).
+You can display your data using Scroll (also a Tree Language).
  https://scroll.pub Scroll
-* So there are many pieces to the TrueBase system, but really just one thing to learn: Tree Notation. Your data, your query language, your schemas, your display language are all in these simple plain text Tree Languages.
+So there are many pieces to the TrueBase system, but really just one thing to learn: Tree Notation. Your data, your query language, your schemas, your display language are all in these simple plain text Tree Languages.
 
 ? On what systems does TrueBase run?
-* TrueBase runs on Tree Languages, and currently the last mile code is written in Javascript. Therefore TrueBase can run on any device supporting modern Javascript.
+TrueBase runs on Tree Languages, and currently the last mile code is written in Javascript. Therefore TrueBase can run on any device supporting modern Javascript.
 
 ? Is TrueBase public domain?
-* Yes. TrueBase is public domain and is designed for public domain databases.
+Yes. TrueBase is public domain and is designed for public domain databases.
 
 ? Since TrueBase is so simple, what hasn't it been done before?
-* For large databases, TrueBase requires fast computers and fast SSD hard drives. TrueBase was not possible before the Apple M1s, which shipped in December 2020. Here is a post about early unsuccessful attempts at using TrueBase before Apple M1s.
+For large databases, TrueBase requires fast computers and fast SSD hard drives. TrueBase was not possible before the Apple M1s, which shipped in December 2020. Here is a post about early unsuccessful attempts at using TrueBase before Apple M1s.
  https://breckyunits.com/building-a-treebase-with-6.5-million-files.html early unsuccessful attempts
 
 permalink index.html

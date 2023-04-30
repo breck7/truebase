@@ -2,7 +2,7 @@ import header.scroll
 title Release Notes
 startColumns 4
 
-* Here's a list of the notable changes in TrueBase.
+Here's a list of the notable changes in TrueBase.
 
 # 16.5.1 2023-4-28
 - 🏥 remove extra ".com" in auto-generated committer name
@@ -83,7 +83,7 @@ startColumns 4
 - 🏥 Update Scroll
 
 # 14.1.0 2023-4-3
-* Maintenance release. Updated packages and specified NodeJs >= 16.
+Maintenance release. Updated packages and specified NodeJs >= 16.
 
 # 14.0.1 2023-4-2
 - 🏥 fix regression in browser editor app
@@ -157,7 +157,7 @@ startColumns 4
 - 🏥 init site now works.
 
 # 8.0.0 2023-3-12
-* This is a _major_ rewrite. The goals are to support: no build step, no Javascript code TrueBases, no delay in new data going live, better testing, and improved community features showing contributions. This release is *not* recommended. Wait for a few iterations for bugs to get ironed out.
+This is a _major_ rewrite. The goals are to support: no build step, no Javascript code TrueBases, no delay in new data going live, better testing, and improved community features showing contributions. This release is *not* recommended. Wait for a few iterations for bugs to get ironed out.
 - 🎉 `truebase` command line app with commands `create`, `delete`, `list`, `serve`, `test` and `help`
 - 🎉 Ability to create and run TrueBases using just `.truebase` settings file.
 - 🎉 New `dumpStaticSiteCommand` for dumping static site since it is not built by default anymore.
@@ -180,7 +180,7 @@ startColumns 4
 - 🏥 cloud fix
 
 # 7.0.0 2023-3-9
-* Warning: TrueBase is still in an unstable beta state. This release likely has some bugs.
+Warning: TrueBase is still in an unstable beta state. This release likely has some bugs.
 - 🎉 TrueBase now ships with a browser app and a Scroll theme
 - 🎉 Readme update
 - 🎉 Getting Started Guide beta now available

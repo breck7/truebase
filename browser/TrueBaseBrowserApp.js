@@ -18,31 +18,23 @@ class TrueBaseBrowserApp {
     return this.store.getItem(this.localStorageKeys.email)
   }
 
-  get author() {
-    try {
-      return this.store.getItem(this.localStorageKeys.author) || this.defaultAuthor
-    } catch (err) {
-      console.error(err)
-    }
-
-    return this.defaultAuthor
+  get isLoggedIn() {
+    return !!this.loggedInUser
   }
 
-  defaultAuthor = this.genDefaultAuthor()
-  genDefaultAuthor() {
-    let user = "region.platform.vendor"
+  get author() {
     try {
-      const region = Intl.DateTimeFormat().resolvedOptions().timeZone ?? ""
-      const platform = navigator.userAgentData?.platform ?? navigator.platform ?? ""
-      const vendor = navigator.vendor ?? ""
-      // make sure email address is not too long. i think 64 is the limit.
-      // so here length is max 45 + 7 + 4 + 4.
-      user = [region, platform, vendor].map(str => str.replace(/[^a-zA-Z]/g, "").substr(0, 15)).join(".")
+      const author = this.store.getItem(this.localStorageKeys.author)
+      if (author) return author
+      const email = this.loggedInUser
+      if (!email) return ""
+      const name = email.split("@")[0]
+      return `${name} <${email}>`
     } catch (err) {
       console.error(err)
     }
-    const hash = Utils.getRandomCharacters(7)
-    return `Anon <${`anon.${user}.${hash}`}@${window.location.hostname}>`
+
+    return ""
   }
 
   render() {
@@ -97,10 +89,11 @@ class TrueBaseBrowserApp {
 
   logoutCommand() {
     this.store.clear()
-    jQuery(".loginMessage").show()
-    jQuery(".loginMessage").html(`You are now logged out.`)
-    this.hideUserAccountsButtons()
-    this.revealUserAccountButtons()
+    this.redirectToLogoutPage()
+  }
+
+  redirectToLogoutPage() {
+    window.location = "/loggedOut.html"
   }
 
   async attemptLoginCommand() {
@@ -298,11 +291,13 @@ class TrueBaseBrowserApp {
   }
 
   renderForm() {
+    const { isLoggedIn } = this
     document.getElementById("formHolder").innerHTML = `<form method="POST" action="/saveCommitAndPush" id="stagedStatus" style="display: none;">
- <div>You have a patch ready to submit. Author is set as: <span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
+ <div>You have a patch ready to submit. ${isLoggedIn ? "Author is set as: " : "Login to submit."}<span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
  <textarea id="patch" name="patch" readonly></textarea><br>
  <input type="hidden" name="author" id="author" />
- <input type="submit" value="Commit and push" id="saveCommitAndPushButton" onClick="app.saveAuthorIfUnsaved()"/> <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>
+ ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "Login to submit."}
+  <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>
 </form>
 <div id="editForm">
  <div class="cell" id="leftCell">
@@ -360,14 +355,6 @@ class TrueBaseBrowserApp {
 
   get store() {
     return window.localStorage
-  }
-
-  saveAuthorIfUnsaved() {
-    try {
-      if (!this.store.getItem(this.localStorageKeys.author)) this.saveAuthor(this.defaultAuthor)
-    } catch (err) {
-      console.error(err)
-    }
   }
 
   saveAuthor(name) {

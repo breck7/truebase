@@ -327,7 +327,8 @@ class TrueBaseServer {
     if (!this.trueBaseUsers.has(email)) {
       const password = Utils.getRandomCharacters(16)
       const created = new Date().toString()
-      const loginLink = `https://${this.settings.domain}/login.html?email=${email}&password=${password}`
+      const protocol = this.port === 443 ? "https" : "http"
+      const loginLink = `${protocol}://${this.settings.domain}/login.html?email=${email}&password=${password}`
       Disk.append(this.userPasswordPath, `${email}\n password ${password}\n created ${created}\n loginLink ${loginLink}\n`)
       this.trueBaseUsers.appendLineAndChildren(email, {
         password,
@@ -596,6 +597,7 @@ import footer.scroll`
 
   listenProd() {
     this.gitOn = true
+    this.port = 443
     this.beforeListen()
     const { ignoreFolder } = this.settings
     const key = fs.readFileSync(path.join(ignoreFolder, "privkey.pem"))
@@ -608,7 +610,7 @@ import footer.scroll`
         },
         this.app
       )
-      .listen(443)
+      .listen(this.port)
 
     const redirectApp = express()
     redirectApp.use((req: any, res: any) => res.redirect(301, `https://${req.headers.host}${req.url}`))
@@ -621,7 +623,9 @@ import footer.scroll`
     this.stopListening()
   }
 
+  port?: number
   startDevServerCommand(port = this.settings.devPort) {
+    port = port
     this.listen(port)
   }
 

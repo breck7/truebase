@@ -3,9 +3,9 @@ title Error!
 
 css .errorClass {color: red;}
 
-* Sorry! Something has gone wrong:
+Sorry! Something has gone wrong:
 
-* Error
+Error
  class errorClass
  id errorHolder
 

@@ -67,7 +67,7 @@ title ${title}
 
 ${description ? description : ""}
 
-* Edit
+Edit
  link /edit.html?id=${this.id}
 
 code

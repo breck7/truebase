@@ -422,7 +422,7 @@ ${encodedDescription ? `description ${encodedDescription}` : ""}
 html <form method="get" action="search.html" class="tqlForm"><textarea id="tqlInput" name="q"></textarea><input type="submit" value="Search"></form>
 html <div id="tqlErrors"></div>
 
-* Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s.
+Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s.
  class trueBaseThemeSearchResultsHeader
 
 ${title ? `# ${encodedTitle}` : ""}
@@ -431,7 +431,7 @@ ${description ? `* ${encodedDescription}` : ""}
 table ${delimiter}
  ${results.replace(/\n/g, "\n ")}
 
-* Results as JSON, CSV, TSV or Tree
+Results as JSON, CSV, TSV or Tree
  link search.json?q=${encodedQuery} JSON
  link search.csv?q=${encodedQuery} CSV
  link search.tsv?q=${encodedQuery} TSV
@@ -771,10 +771,10 @@ css
    text-overflow: ellipsis;
  }
 
-* Download TRUEBASE_ID.csv
+Download TRUEBASE_ID.csv
  link TRUEBASE_ID.csv
 
-* SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format(
+SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format(
       "0.0b"
     )} uncompressed. Every row is an entity and every entity is one row. You can also download the typed tree structured data as JSON.
  link TRUEBASE_ID.json JSON
@@ -784,7 +784,7 @@ css
 table ${delimiter}
  ${columnsCsvOutput.columnsMetadataTree.toDelimited(delimiter, columnsCsvOutput.columnMetadataColumnNames, false).replace(/\n/g, "\n  ")}
 
-* The table above is also available as csv.
+The table above is also available as csv.
  link BASE_URL/columns.csv csv
 
 import footer.scroll`

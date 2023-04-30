@@ -42,7 +42,7 @@ class TrueBaseBrowserApp {
       console.error(err)
     }
     const hash = Utils.getRandomCharacters(7)
-    return `Anon <${`anon.${user}.${hash}`}@${window.location.hostname}.com>`
+    return `Anon <${`anon.${user}.${hash}`}@${window.location.hostname}>`
   }
 
   render() {

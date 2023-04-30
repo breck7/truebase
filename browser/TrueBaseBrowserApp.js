@@ -20,7 +20,13 @@ class TrueBaseBrowserApp {
 
   get author() {
     try {
-      return this.store.getItem(this.localStorageKeys.author) || this.defaultAuthor
+      const author = this.store.getItem(this.localStorageKeys.author)
+      if (author) return author
+      const email = this.loggedInUser
+      if (!email) return this.defaultAuthor
+
+      const name = email.split("@")[0]
+      return `${name} <${email}>`
     } catch (err) {
       console.error(err)
     }
@@ -97,10 +103,11 @@ class TrueBaseBrowserApp {
 
   logoutCommand() {
     this.store.clear()
-    jQuery(".loginMessage").show()
-    jQuery(".loginMessage").html(`You are now logged out.`)
-    this.hideUserAccountsButtons()
-    this.revealUserAccountButtons()
+    this.redirectToLogoutPage()
+  }
+
+  redirectToLogoutPage() {
+    window.location = "/loggedOut.html"
   }
 
   async attemptLoginCommand() {

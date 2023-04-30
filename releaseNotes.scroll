@@ -4,6 +4,9 @@ startColumns 4
 
 * Here's a list of the notable changes in TrueBase.
 
+# 16.5.1 2023-4-28
+- 🏥 remove extra ".com" in auto-generated committer name
+
 # 16.5.0 2023-4-28
 - 🎉 improvements to thank you page
 - 🎉 commits from web ui now are labeled as made by TrueBaseWebUI

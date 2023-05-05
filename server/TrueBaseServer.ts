@@ -21,6 +21,7 @@ const genericTqlParser = require("../tql/tql.nodejs.js")
 let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
 if (!Disk.exists(nodeModulesFolder)) nodeModulesFolder = path.join(__dirname, "..", "..") // Hacky. Todo: cleanup
 const jtreeFolder = path.join(nodeModulesFolder, "jtree")
+const zlib = require("zlib")
 
 const browserAppFolder = path.join(__dirname, "..", "browser")
 
@@ -758,7 +759,11 @@ import footer.scroll`
     const { folder, virtualFiles } = this
     const { columnsCsvOutput } = folder
     const mainCsvFilename = `${trueBaseId}.csv`
-    virtualFiles["/" + mainCsvFilename] = folder.makeCsv(mainCsvFilename)
+    const mainCsvContent = folder.makeCsv(mainCsvFilename)
+    virtualFiles["/" + mainCsvFilename] = mainCsvContent
+    const compressedContent = zlib.gzipSync(Buffer.from(mainCsvContent))
+    const compressedLink = "/" + mainCsvFilename + ".zip"
+    virtualFiles[compressedLink] = compressedContent
     virtualFiles["/columns.csv"] = this.columnsCsv
     const delimiter = `!~DELIM~!`
 
@@ -778,9 +783,9 @@ css
 Download TRUEBASE_ID.csv
  link TRUEBASE_ID.csv
 
-SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(folder.makeCsv(`${trueBaseId}.csv`).length).format(
-      "0.0b"
-    )} uncompressed. Every row is an entity and every entity is one row. You can also download the typed tree structured data as JSON.
+SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
+      compressedContent.length
+    ).format("0.0b")} <a href="${compressedLink}">compressed</a>). Every row is an entity and every entity is one row. You can also download the typed tree structured data as JSON.
  link TRUEBASE_ID.json JSON
 
 # Column Documentation

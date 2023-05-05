@@ -211,8 +211,8 @@ import ../footer.scroll`
   }
 
   get topUnansweredQuestions() {
-    const type = this.get("type")
-    if (type) return this.parent.getTopQuestionsForType(type).filter((entry: any) => !this.has(entry.column))
+    const types = this.get("type")
+    if (types) return this.parent.getTopQuestionsForTypes(types).filter((entry: any) => !this.has(entry.column))
 
     return this.parent.computeColumnStats(this.parent.getChildren()).filter((entry: any) => !this.has(entry.column))
   }
@@ -356,10 +356,10 @@ class TrueBaseFolder extends TreeNode {
     })
   }
 
-  getTopQuestionsForType(type: string) {
+  getTopQuestionsForTypes(types: string) {
     if (!this.quickCache.questionsForType) this.quickCache.questionsForType = {}
-    if (!this.quickCache.questionsForType[type]) this.quickCache.questionsForType[type] = this.computeColumnStats(this.where("type", "includes", type))
-    return this.quickCache.questionsForType[type]
+    if (!this.quickCache.questionsForType[types]) this.quickCache.questionsForType[types] = this.computeColumnStats(this.where("type", "=", types))
+    return this.quickCache.questionsForType[types]
   }
 
   get filesWithInvalidFilenames() {

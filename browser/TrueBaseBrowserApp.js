@@ -219,8 +219,7 @@ class TrueBaseBrowserApp {
     this.renderForm()
     this.startCodeMirrorEditor()
     this.bindStageButton()
-    this.updateStagedStatus()
-    this.updateAuthor()
+    this.renderStage()
   }
 
   async initEditData() {
@@ -255,13 +254,23 @@ class TrueBaseBrowserApp {
     })
   }
 
-  updateStagedStatus() {
+  renderStage() {
+    const { isLoggedIn, stagedFiles } = this
+    const fileCount = stagedFiles.length
     const el = document.getElementById("stagedStatus")
-    const { stagedFiles } = this
     el.style.display = "none"
     if (!stagedFiles.length) return
-    document.getElementById("patch").value = stagedFiles.asString
+    el.innerHTML = `<div>You have <b>${fileCount} staged file${fileCount > 1 ? "s" : ""}</b> ready to submit. ${
+      isLoggedIn ? "Author: " : "Login to submit."
+    }<span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
+ <textarea id="patch" name="patch" readonly></textarea><br>
+ <input type="hidden" name="author" id="author" />
+ ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "Login to submit."}
+  <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>`
     el.style.display = "block"
+    document.getElementById("patch").value = stagedFiles.asString
+    document.getElementById("authorLabel").innerHTML = Utils.htmlEscaped(this.author)
+    document.getElementById("author").value = this.author
   }
 
   bindStageButton() {
@@ -270,7 +279,6 @@ class TrueBaseBrowserApp {
       const tree = this.stagedFiles
       tree.touchNode(this.filename).setChildren(this.value)
       this.setStage(tree.asString)
-      this.updateStagedStatus()
     }
 
     Mousetrap.bind("mod+s", evt => {
@@ -282,7 +290,7 @@ class TrueBaseBrowserApp {
 
   setStage(str) {
     this.store.setItem(this.localStorageKeys.staged, str)
-    document.getElementById("patch").value = str
+    this.renderStage()
   }
 
   get stagedFiles() {
@@ -291,14 +299,7 @@ class TrueBaseBrowserApp {
   }
 
   renderForm() {
-    const { isLoggedIn } = this
-    document.getElementById("formHolder").innerHTML = `<form method="POST" action="/saveCommitAndPush" id="stagedStatus" style="display: none;">
- <div>You have a patch ready to submit. ${isLoggedIn ? "Author is set as: " : "Login to submit."}<span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
- <textarea id="patch" name="patch" readonly></textarea><br>
- <input type="hidden" name="author" id="author" />
- ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "Login to submit."}
-  <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>
-</form>
+    document.getElementById("formHolder").innerHTML = `<form method="POST" action="/saveCommitAndPush" id="stagedStatus" style="display: none;"></form>
 <div id="editForm">
  <div class="cell" id="leftCell">
    <textarea id="fileContent"></textarea>
@@ -317,7 +318,6 @@ class TrueBaseBrowserApp {
 
   clearChanges() {
     if (confirm("Are you sure you want to delete all local changes? This cannot be undone.")) this.setStage("")
-    this.updateStagedStatus()
   }
 
   async startCodeMirrorEditor() {
@@ -348,11 +348,6 @@ class TrueBaseBrowserApp {
     return document.getElementById("leftCell").width
   }
 
-  updateAuthor() {
-    document.getElementById("authorLabel").innerHTML = Utils.htmlEscaped(this.author)
-    document.getElementById("author").value = this.author
-  }
-
   get store() {
     return window.localStorage
   }
@@ -369,7 +364,7 @@ class TrueBaseBrowserApp {
     const newValue = prompt(`Enter author name and email formatted like "Breck Yunits <by@breckyunits.com>". This information is recorded in the public Git log.`, this.author)
     if (newValue === "") this.saveAuthor(this.defaultAuthor)
     if (newValue) this.saveAuthor(newValue)
-    this.updateAuthor()
+    this.renderStage()
   }
 
   get route() {

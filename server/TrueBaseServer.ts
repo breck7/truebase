@@ -634,14 +634,14 @@ import footer.scroll`
   }
 
   get jsFiles() {
-    const { grammarIgnoreFolder } = this
+    const { grammarIgnoreFolder, grammarId } = this
     return `${jtreeFolder}/products/Utils.browser.js
 ${jtreeFolder}/products/TreeNode.browser.js
 ${jtreeFolder}/products/GrammarLanguage.browser.js
 ${jtreeFolder}/products/GrammarCodeMirrorMode.browser.js
 ${jtreeFolder}/sandbox/lib/codemirror.js
 ${jtreeFolder}/sandbox/lib/show-hint.js
-${grammarIgnoreFolder}/${this.folder.fileExtension}.browser.js
+${grammarIgnoreFolder}/${grammarId}.browser.js
 ${grammarIgnoreFolder}/tql.browser.js
 ${browserAppFolder}/libs.js
 ${browserAppFolder}/autocompleter.js

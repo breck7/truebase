@@ -385,7 +385,7 @@ class TrueBaseFolder extends TreeNode {
     const complete = lodash.sum(columnDocumentation.map(col => col.Values))
     const missing = lodash.sum(columnDocumentation.map(col => col.Missing))
     const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
-    const urlCells = this.cellIndex["urlCell"].length
+    const urlCells = this.cellIndex["urlCell"] ? this.cellIndex["urlCell"].length : 0
     return `dashboard
  ${numeral(this.length).format("0,0")} Files
  ${numeral(this.bytes).format("0,0")} Bytes

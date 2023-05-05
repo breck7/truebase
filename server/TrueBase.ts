@@ -20,6 +20,7 @@ declare type parserDef = treeNode
 interface ColumnInterface {
   Column: string
   ColumnLink: string
+  Type: string
   Source: string
   SourceLink: string
   Description: string
@@ -211,8 +212,8 @@ import ../footer.scroll`
   }
 
   get topUnansweredQuestions() {
-    const type = this.get("type")
-    if (type) return this.parent.getTopQuestionsForType(type).filter((entry: any) => !this.has(entry.column))
+    const types = this.get("type")
+    if (types) return this.parent.getTopQuestionsForTypes(types).filter((entry: any) => !this.has(entry.column))
 
     return this.parent.computeColumnStats(this.parent.getChildren()).filter((entry: any) => !this.has(entry.column))
   }
@@ -356,10 +357,10 @@ class TrueBaseFolder extends TreeNode {
     })
   }
 
-  getTopQuestionsForType(type: string) {
+  getTopQuestionsForTypes(types: string) {
     if (!this.quickCache.questionsForType) this.quickCache.questionsForType = {}
-    if (!this.quickCache.questionsForType[type]) this.quickCache.questionsForType[type] = this.computeColumnStats(this.where("type", "includes", type))
-    return this.quickCache.questionsForType[type]
+    if (!this.quickCache.questionsForType[types]) this.quickCache.questionsForType[types] = this.computeColumnStats(this.where("type", "=", types))
+    return this.quickCache.questionsForType[types]
   }
 
   get filesWithInvalidFilenames() {
@@ -543,7 +544,7 @@ class TrueBaseFolder extends TreeNode {
 
   get columnsCsvOutput() {
     const columnsMetadataTree = new TreeNode(this.columnDocumentation)
-    const columnMetadataColumnNames = ["Index", "Column", "ColumnLink", "Values", "Coverage", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
+    const columnMetadataColumnNames = ["Index", "Column", "ColumnLink", "Values", "Coverage", "Type", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
 
     const columnsCsv = columnsMetadataTree.toDelimited(",", columnMetadataColumnNames)
 
@@ -569,6 +570,7 @@ class TrueBaseFolder extends TreeNode {
       const colDefId = parserDef.getLine()
       const Description = parserDef.description
       const Source = parserDef.getFrom("string sourceDomain")
+      const Type = parserDef.constantsObject.typeForCsvDocs
       const columnsToSelect = Column.includes("_") ? [Column, Column.split("_")[0]].join("+") : Column
       const ColumnLink = `search.html?q=select+${columnsToSelect}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
       const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
@@ -580,6 +582,7 @@ class TrueBaseFolder extends TreeNode {
       return {
         Column,
         ColumnLink,
+        Type,
         Source,
         SourceLink,
         Description,

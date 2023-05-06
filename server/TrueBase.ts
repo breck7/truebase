@@ -270,6 +270,10 @@ neighbors
     return obj
   }
 
+  get filledColumnNames() {
+    return Object.keys(this.asObject)
+  }
+
   // For CSV export
   get asObject() {
     if (this.quickCache.asObject) return this.quickCache.asObject

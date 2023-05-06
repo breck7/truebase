@@ -94,6 +94,12 @@ lengthParser
  extends abstractComputedSumColumnParser
  description How many facts do we have about this planet?
 
+idParser
+ description What is the name of this file without the extension?
+ extends abstractStringColumnParser
+ boolean isComputed true
+ boolean suggestInAutocomplete false
+
 nicknamesParser
  extends abstractStringListColumnParser
  listDelimiter  & 

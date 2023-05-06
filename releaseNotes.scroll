@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 16.9.0 2023-5-5
+- 🎉 new `compare` keyword in TQL
+
 # 16.8.0 2023-5-5
 - 🎉 added documentation to each column type in CSV docs
 - 🎉 compressed zip file of CSV now exported as well

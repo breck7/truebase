@@ -37,6 +37,21 @@ declare type stringMap = { [firstWord: string]: string }
 
 const resolvePath = (folder: string, baseDir: string) => (path.isAbsolute(folder) ? path.normalize(folder) : path.resolve(path.join(baseDir, folder)))
 
+const transposeArray = (arrayOfObjects: any[]) => {
+  let transposed: any = {}
+
+  arrayOfObjects.forEach(obj => {
+    for (let property in obj) {
+      if (property !== "id") {
+        if (!transposed[property]) transposed[property] = { Column: property }
+        transposed[property][obj.id] = obj[property]
+      }
+    }
+  })
+
+  return Object.values(transposed)
+}
+
 class TrueBaseServer {
   _folder: TrueBaseFolder
   _app: any
@@ -715,9 +730,11 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const { ignoreFolder } = this.settings
     const { folder, virtualFiles, grammarIgnoreFolder, grammarId } = this
     if (!Disk.exists(grammarIgnoreFolder)) Disk.mkdir(grammarIgnoreFolder)
+    const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
     const tqlPath = path.join(__dirname, "..", "tql", "tql.grammar")
     const extendedTqlGrammar = new TreeNode(Disk.read(tqlPath))
     extendedTqlGrammar.getNode("columnNameCell").set("enum", folder.colNamesForCsv.join(" "))
+    extendedTqlGrammar.getNode("trueBaseIdCell").set("enum", ids)
     const extendedTqlName = `${grammarId}Tql`
     extendedTqlGrammar.getNode("tqlParser").setWord(`${extendedTqlName}Parser`)
     const extendedTqlFileName = `${extendedTqlName}.grammar`
@@ -730,7 +747,6 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const jsPath = GrammarCompiler.compileGrammarForNodeJs(extendedTqlPath, grammarIgnoreFolder + "/", true)
     this.extendedTqlParser = require(jsPath)
 
-    const ids = folder.map((file: TrueBaseFile) => file.id).join(" ")
     const grammar = new TreeNode(folder.grammarCode)
     grammar.getNode("trueBaseIdCell").set("enum", ids)
     const grammarFileName = `${grammarId}.grammar`
@@ -953,23 +969,27 @@ class SearchServer {
     return (<any>this)[format](decodeURIComponent(originalQuery).replace(/\r/g, ""))
   }
 
+  columnsToCompare(files: TrueBaseFile[]) {
+    // Todo: return the most interesting columns to compare first.
+    return lodash.uniq(lodash.flatten(files.map(file => file.filledColumnNames)))
+  }
+
   search(treeQLCode: string, tqlParser: any = genericTqlParser) {
     const { searchCache } = this
     if (searchCache[treeQLCode]) return searchCache[treeQLCode]
 
+    const queryAsTree = new TreeNode(treeQLCode)
     const startTime = Date.now()
     let hits = []
     let errors = ""
     let columnNames: string[] = []
-    let title = ""
-    let description = ""
     try {
-      const treeQLProgram = new tqlParser(treeQLCode)
+      const isCompareQuery = queryAsTree.has("compare")
+      const adjustedQuery = isCompareQuery ? treeQLCode + `\nwhere id oneOf ${queryAsTree.get("compare")}` : treeQLCode
+      const treeQLProgram = new tqlParser(adjustedQuery)
       const programErrors = treeQLProgram.scopeErrors.concat(treeQLProgram.getAllErrors())
       if (programErrors.length) throw new Error(programErrors.map((err: any) => err.message).join(" "))
       const sortBy = treeQLProgram.get("sortBy")
-      title = treeQLProgram.get("title")
-      description = treeQLProgram.get("description")
       let rawHits = treeQLProgram.filterFolder(this.folder)
       if (sortBy) {
         const sortByFns = sortBy.split(" ").map((columnName: string) => (file: any) => file.getTypedValue(columnName))
@@ -980,6 +1000,7 @@ class SearchServer {
       // By default right now we basically add: select title titleLink
       // We will probably ditch that in the future and make it explicit.
       if (treeQLProgram.has("selectAll")) columnNames = treeQLProgram.rootGrammarTree.get("columnNameCell enum")?.split(" ") ?? Object.keys(rawHits[0]?.typed || undefined) ?? ["title"]
+      else if (isCompareQuery) columnNames = this.columnsToCompare(rawHits)
       else columnNames = ["title", "titleLink"].concat((treeQLProgram.get("select") || "").split(" ").filter((i: string) => i))
 
       let matchingFilesAsObjectsWithSelectedColumns = rawHits.map((file: any) => {
@@ -1009,12 +1030,18 @@ class SearchServer {
       })
 
       hits = matchingFilesAsObjectsWithSelectedColumns
+
+      if (isCompareQuery) {
+        columnNames = hits.map((obj: any) => obj.id)
+        columnNames.unshift("Column")
+        hits = transposeArray(hits)
+      }
     } catch (err) {
       errors = err.toString()
       console.error(err)
     }
 
-    searchCache[treeQLCode] = { hits, queryTime: numeral((Date.now() - startTime) / 1000).format("0.00"), columnNames, errors, title, description }
+    searchCache[treeQLCode] = { hits, queryTime: numeral((Date.now() - startTime) / 1000).format("0.00"), columnNames, errors, title: queryAsTree.get("title"), description: queryAsTree.get("description") }
     return searchCache[treeQLCode]
   }
 

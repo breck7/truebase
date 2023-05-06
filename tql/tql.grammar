@@ -1,3 +1,4 @@
+// Cells
 keywordCell
  highlightScope keyword
 comparisonCell
@@ -6,8 +7,7 @@ stringCell
  highlightScope string
 trueBaseIdCell
  description A global identifier for this entity in a TrueBase. Currently a very restricted character set to ensure compatibility between a wide variety of URLs and filesystems.
- regex [a-z0-9\-]+
- highlightScope string
+ highlightScope constant
 regexCell
  highlightScope string
 numberCell
@@ -25,11 +25,13 @@ columnNameCell
  description The column to search on.
  highlightScope constant.numeric
 blankCell
+
+// Parsers
 tqlParser
  root
  description TrueBase Query Language (TQL) is a new language for querying a TrueBase.
  catchAllParser catchAllErrorParser
- inScope abstractQueryParser blankLineParser commentParser abstractModifierParser abstractMetaParser
+ inScope abstractQueryParser blankLineParser commentParser abstractModifierParser abstractMetaParser compareParser
  javascript
   get tests() {
     const tests = this.filter(node => node.toPredicate).map(node => {
@@ -43,13 +45,6 @@ tqlParser
     const predicate = file => tests.every(fn => fn(file))
     return trueBaseFolder.filter(file => predicate(file))
   }
-abstractQueryParser
- cells keywordCell
- inScope abstractQueryParser commentParser
- javascript
-  toPredicate() {
-    return () => true
-  }
 catchAllErrorParser
  baseParser errorParser
 blankLineParser
@@ -60,6 +55,22 @@ blankLineParser
  pattern ^$
  tags doNotSynthesize
  boolean shouldSerialize false
+commentParser
+ description Comments are ignored.
+ crux #
+ cells commentCell
+ catchAllCellType commentCell
+ catchAllParser commentParser
+ boolean suggestInAutocomplete false
+
+abstractQueryParser
+ cells keywordCell
+ inScope abstractQueryParser commentParser
+ javascript
+  toPredicate() {
+    return () => true
+  }
+
 whereParser
  description Find files whose value in the given column meet this condition.
  extends abstractQueryParser
@@ -93,6 +104,7 @@ whereParser
         return value ? textQueryValue.split(" ").includes(value.toString()) : false
     }
   }
+
 includesTextParser
  extends abstractQueryParser
  description Find files that include this text somewhere. Case insensitive.
@@ -108,6 +120,7 @@ doesNotIncludeTextParser
  extends includesTextParser
  crux doesNotInclude
  boolean flip true
+
 columnIsMissingParser
  description Find files whose value in the given column is missing.
  extends abstractQueryParser
@@ -123,6 +136,7 @@ columnIsNotMissingParser
  extends columnIsMissingParser
  crux notMissing
  boolean flip true
+
 matchesRegexParser
  description Find files that match this regex on a full text search.
  extends abstractQueryParser
@@ -133,16 +147,40 @@ matchesRegexParser
     const regex = new RegExp(this.content ?? "")
     return file => regex.test(file.asString)
   }
-commentParser
- description Comments are ignored.
- crux #
- cells commentCell
- catchAllCellType commentCell
- catchAllParser commentParser
- boolean suggestInAutocomplete false
+
 abstractModifierParser
  cells keywordCell
  cruxFromId
+
+// Sort and limit
+reverseParser
+ extends abstractModifierParser
+ description Reverse the order of results.
+ single
+limitParser
+ extends abstractModifierParser
+ description Return a maximum of this many results.
+ cells keywordCell numberCell
+ single
+
+// Add a column
+addColumnParser
+ description Add a custom column using Javascript template strings.
+ cells keywordCell customColumnNameCell
+ catchAllCellType javascriptCell
+ extends abstractModifierParser
+ example
+  addColumn GoogleSearch <a href="https://www.google.com/search?q=${row.title}">Search Google for ${row.title}</a>
+
+// Compare command
+compareParser
+ single
+ cruxFromId
+ description Autogenerate an interesting comparison between the selected entities.
+ catchAllCellType trueBaseIdCell
+ cells keywordCell
+
+// Columns specific
 abstractColumnModifierParser
  extends abstractModifierParser
  catchAllCellType columnNameCell
@@ -152,13 +190,6 @@ selectParser
 selectAllParser
  description Select all the columns
  extends abstractColumnModifierParser
-addColumnParser
- description Add a custom column using Javascript template strings.
- cells keywordCell customColumnNameCell
- catchAllCellType javascriptCell
- extends abstractModifierParser
- example
-  addColumn GoogleSearch <a href="https://www.google.com/search?q=${row.title}">Search Google for ${row.title}</a>
 renameParser
  cells keywordCell columnNameCell customColumnNameCell
  example
@@ -169,15 +200,8 @@ sortByParser
  description Sort by these columns.
  extends abstractColumnModifierParser
  single
-reverseParser
- extends abstractModifierParser
- description Reverse the order of results.
- single
-limitParser
- extends abstractModifierParser
- description Return a maximum of this many results.
- cells keywordCell numberCell
- single
+
+// Display elements
 abstractMetaParser
  cells keywordCell
  catchAllCellType stringCell

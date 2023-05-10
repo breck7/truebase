@@ -11,6 +11,14 @@ import searchForm.scroll
 
 replace BASE_URL .
 
+New questions
+ link questions.html
+ class headerLink
+
+import newQuestions.scroll
+
+import homepageFeature.scroll
+
 </center>
 
 import footer.scroll

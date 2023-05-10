@@ -50,6 +50,12 @@ class TrueBaseCli {
     tbServer.startDevServerCommand()
   }
 
+  testPerf(cwd) {
+    const settingsPath = this.firstSettingsPath(cwd)
+    const tbServer = new TrueBaseServer(settingsPath)
+    tbServer.testPerfCommand()
+  }
+
   testCommand(cwd) {
     const settingsPath = this.firstSettingsPath(cwd)
     if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
@@ -65,10 +71,12 @@ class TrueBaseCli {
 name ${trueBaseId}
 domain localhost
 grammarFolder ./grammar
-thingsFolder ./things
+rowsFolder ./rows
+questionsFolder ./questions
 ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
+    initFolder[`/questions/how-many-planets-are-there.tql`] = `title How many planets are there?`
     initFolder[`/grammar/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}
@@ -79,7 +87,7 @@ titleParser
  extends abstractStringColumnParser
 diameterParser
  extends abstractIntColumnParser`
-    initFolder[`/things/earth.${trueBaseId}`] = `title Earth
+    initFolder[`/rows/earth.${trueBaseId}`] = `title Earth
 diameter 12756`
     initFolder[`/site/settings.scroll`] = `importOnly
 

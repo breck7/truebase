@@ -5,8 +5,7 @@ const { TestRacer } = require("jtree/products/TestRacer.js")
 const { TrueBaseFolder } = require("../server/TrueBase.js")
 const tql = require("./tql.nodejs.js")
 
-const baseFolder = path.join(__dirname, "..", "planetsDB")
-const folder = new TrueBaseFolder().setSettings({ grammarFolder: baseFolder, thingsFolder: baseFolder }).loadFolder()
+const folder = new TrueBaseFolder().setSettingsFromPath(path.join(__dirname, "..", "planetsDB", "planetsdb.truebase")).loadFolder()
 
 const testTree = {}
 

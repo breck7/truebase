@@ -17,6 +17,7 @@ testTree.all = equal => {
     Disk.mkdir(tempDir)
     cli.initCommand(tempDir)
     cli.testCommand(tempDir)
+    cli.testPerf(tempDir)
     equal(true, true, "no errors")
   } catch (err) {
     equal(false, true, "Expected no errors")

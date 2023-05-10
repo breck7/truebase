@@ -231,7 +231,7 @@ class TrueBaseBrowserApp {
     if (data.error) return (document.getElementById("formHolder").innerHTML = data.error)
 
     const id = this.currentFileId
-    document.getElementById("pageTitle").innerHTML = `Improve <i><a href="/truebase/${id}.html">${filename}</a></i>`
+    document.getElementById("pageTitle").innerHTML = `Improve <i><a href="/rows/${id}.html">${filename}</a></i>`
 
     this.codeMirrorInstance.setValue(localValue ? localValue.childrenToString() : data.content)
     const title = new TreeNode(this.value).get("title") || filename
@@ -260,12 +260,10 @@ class TrueBaseBrowserApp {
     const el = document.getElementById("stagedStatus")
     el.style.display = "none"
     if (!stagedFiles.length) return
-    el.innerHTML = `<div>You have <b>${fileCount} staged file${fileCount > 1 ? "s" : ""}</b> ready to submit. ${
-      isLoggedIn ? "Author: " : "Login to submit."
-    }<span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
+    el.innerHTML = `<div>You have <b>${fileCount} staged file${fileCount > 1 ? "s" : ""}</b> ready to submit. ${isLoggedIn ? "Author: " : ""}<span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
  <textarea id="patch" name="patch" readonly></textarea><br>
  <input type="hidden" name="author" id="author" />
- ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "Login to submit."}
+ ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "<a href='/loginOrJoin.html'>Login</a> to submit."}
   <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>`
     el.style.display = "block"
     document.getElementById("patch").value = stagedFiles.asString

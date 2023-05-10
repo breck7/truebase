@@ -63,7 +63,8 @@ class TrueBaseServer {
     const settings = TreeNode.fromDisk(settingsFilepath).toObject()
     const dirname = path.dirname(settingsFilepath)
     settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
-    settings.thingsFolder = resolvePath(settings.thingsFolder, dirname)
+    settings.rowsFolder = resolvePath(settings.rowsFolder, dirname)
+    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
     settings.ignoreFolder = resolvePath(settings.ignoreFolder, dirname)
     settings.siteFolder = resolvePath(settings.siteFolder, dirname)
     this.settings = settings
@@ -81,7 +82,7 @@ class TrueBaseServer {
     const app = express()
     app.use(compression())
     this._app = app
-    const { ignoreFolder, siteFolder, grammarFolder, thingsFolder } = this.settings
+    const { ignoreFolder, siteFolder, grammarFolder, rowsFolder, questionsFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
     const requestLog = path.join(ignoreFolder, "access.log")
@@ -116,7 +117,8 @@ class TrueBaseServer {
     this.serveFolder(browserAppFolder)
     this.serveFolder(siteFolder)
     this.serveFolderNested("/grammar/", grammarFolder)
-    this.serveFolderNested("/things/", thingsFolder)
+    this.serveFolderNested("/rows/", rowsFolder)
+    this.serveFolderNested("/questions/", questionsFolder)
     this._initSearch()
     this._initUserAccounts()
 
@@ -162,7 +164,7 @@ class TrueBaseServer {
     app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.scrollToHtml(this.statusPage)))
 
     // Short urls:
-    app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/truebase/${req.params.id.toLowerCase()}.html`) : next()))
+    app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/rows/${req.params.id.toLowerCase()}.html`) : next()))
 
     app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.send(this.folder.typedMapJson))
     return this._app
@@ -436,8 +438,8 @@ title ${encodedTitle ? encodedTitle : "Search Results"}
 
 ${encodedDescription ? `description ${encodedDescription}` : ""}
 
-html <form method="get" action="search.html" class="tqlForm"><textarea id="tqlInput" name="q"></textarea><input type="submit" value="Search"></form>
-html <div id="tqlErrors"></div>
+<form method="get" action="search.html" class="tqlForm"><textarea id="tqlInput" name="q"></textarea><input type="submit" value="Search"></form>
+<div id="tqlErrors"></div>
 
 Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s.
  class trueBaseThemeSearchResultsHeader
@@ -454,7 +456,7 @@ Results as JSON, CSV, TSV or Tree
  link search.tsv?q=${encodedQuery} TSV
  link search.tree?q=${encodedQuery} Tree
 
-html <script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().renderSearchPage())</script>
+<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().renderSearchPage())</script>
 
 import footer.scroll`
 
@@ -562,14 +564,30 @@ import footer.scroll`
     if (virtualFiles[siteFolder + "/custom_404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/custom_404.scroll")
     else notFoundPage = this.compileScrollFile(browserAppFolder + "/custom_404.scroll")
 
+    // Rows used to have the "/truebase" prefix until version 17. Keep this redirect in for a bit to not break external links.
+    this.app.get("/truebase/:id", (req: any, res: any, next: any) => res.status(302).redirect(`/rows/${req.params.id}`))
+
     // Do not convert the file to a Scroll until requested
-    this.app.get("/truebase/:filename", (req: any, res: any, next: any) => {
+    this.app.get("/rows/:filename", (req: any, res: any, next: any) => {
       const virtualPath = siteFolder + "/" + req.params.filename
       if (virtualFiles[virtualPath]) return res.send(virtualFiles[virtualPath])
 
       const id = req.params.filename.replace(".html", "")
       const file = this.folder.getFile(id)
-      if (file) virtualFiles[siteFolder + `/truebase/${file.id}.scroll`] = file.toScroll()
+      if (file) virtualFiles[siteFolder + `/rows/${file.id}.scroll`] = file.toScroll()
+      next()
+    })
+
+    const questionCache: any = {}
+    this.app.get("/questions/:filename", (req: any, res: any, next: any) => {
+      if (questionCache[req.params.filename]) return res.send(questionCache[req.params.filename])
+
+      const question = this.folder.questionsTree.getNode(req.params.filename.replace(".html", ""))
+      if (question) {
+        questionCache[req.params.filename] = this.searchToHtml(question.childrenToString(), `${req.protocol}://${req.get("host")}${req.originalUrl}`)
+        return res.send(questionCache[req.params.filename])
+      }
+
       next()
     })
 
@@ -678,7 +696,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
         return {
           label: file.get("title"),
           id: file.id,
-          url: `/truebase/${file.id}.html`
+          url: `/rows/${file.id}.html`
         }
       }),
       undefined,
@@ -710,6 +728,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
     defaultScrollFiles.forEach((file: string) => (virtualFiles[siteFolder + "/" + path.basename(file)] = Disk.read(file)))
     this.warmCsvFiles()
+    this.warmQuestionsPage()
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return
@@ -770,6 +789,24 @@ ${this.folder.dashboard}
 import footer.scroll`
   }
 
+  warmQuestionsPage() {
+    const { trueBaseId, siteFolder } = this.settings
+    const mapQuestion = (question: any) => `${question.get("title")}
+ class question
+ link /questions/${question.getLine().replace(".tql", "")}.html`
+
+    this.virtualFiles[siteFolder + "/newQuestions.scroll"] = `importOnly
+
+${this.folder.questionsTree.map(mapQuestion).join("\n")}`
+
+    this.virtualFiles[siteFolder + "/questions.scroll"] = `import header.scroll
+title SITE_NAME Questions
+
+import newQuestions.scroll
+
+import footer.scroll`
+  }
+
   warmCsvFiles() {
     const { trueBaseId, siteFolder } = this.settings
     const { folder, virtualFiles } = this
@@ -784,7 +821,7 @@ import footer.scroll`
     const delimiter = `!~DELIM~!`
 
     const csvTemplate = `import header.scroll
-title SITE_NAME CSV File Documentation
+title SITE_NAME Column Documentation
 
 css
  .scrollTableComponent td {

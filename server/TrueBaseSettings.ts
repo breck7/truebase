@@ -1,6 +1,7 @@
 export interface TrueBaseSettingsObject {
 	grammarFolder: string
-	thingsFolder: string
+	rowsFolder: string
+	questionsFolder: string
 	columnOrder?: string // Define a custom CSV column order. Any columns not listed will be appended according to least sparse.
 }
 

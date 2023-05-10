@@ -4,6 +4,14 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 17.0.0 2023-5-10
+- 🎉 introduce questions as a first class entity
+- 🎉 upstream login page from PLDB
+- 🎉 upgrade Scroll for better list styles
+- 🎉 new `setSettingsFromPath` method on TrueBaseFolder
+- ⚠️ BREAKING: all occurences of `thingsFolder` should now be `rowsFolder`
+- ⚠️ BREAKING: `/truebase/` routes are now `/rows/` routes. Redirect code added so old links still work.
+
 # 16.10.0 2023-5-8
 - 🎉 update Scroll to get program links
 
@@ -156,7 +164,7 @@ Maintenance release. Updated packages and specified NodeJs >= 16.
 - 🏥 fix broken view source links on things pages and CSV documentation pages
 - ⚠️ BREAKING: removed `setDir` and `setGrammarDir` methods on `TrueBaseFolder`. Use `setSettings` instead.
 - ⚠️ BREAKING: removed `getFileName` method on `TrueBaseFile`. Use new `filename` getter instead.
-- ⚠️ BREAKING: use `thingsViewSourcePath` `grammarViewSourcePath` `computedsViewSourcePath` props for correctly setting source urls
+- ⚠️ BREAKING: use `rowsViewSourcePath` `grammarViewSourcePath` `computedsViewSourcePath` props for correctly setting source urls
 
 # 10.0.0 2023-3-13
 - ⚠️ BREAKING: removed `makeVarSection` method.

@@ -9,6 +9,16 @@ body {
   box-sizing: border-box;
 }
 
+.headerLink a {
+  color: black;
+  line-height: 140%;
+}
+
+.question {
+  text-align: center;
+  margin: 0;
+}
+
 .trueBaseThemeHeader {
   margin-bottom: 10px;
 }

@@ -43,11 +43,13 @@ enum SQLiteTypes {
   text = "TEXT"
 }
 
+const resolvePath = (folder: string, baseDir: string) => (path.isAbsolute(folder) ? path.normalize(folder) : path.resolve(path.join(baseDir, folder)))
+
 class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
   get sourceUrl() {
-    return this.parent.thingsViewSourcePath + this.filename
+    return this.parent.rowsViewSourcePath + this.filename
   }
 
   get helpfulResearchLinks() {
@@ -85,7 +87,7 @@ import ../footer.scroll`
   }
 
   get webPermalink() {
-    return `/truebase/${this.permalink}`
+    return `/rows/${this.permalink}`
   }
 
   get permalink() {
@@ -325,13 +327,14 @@ class TrueBaseFolder extends TreeNode {
   fileExtension = ""
 
   // todo: move these to .truebase settings file
-  thingsViewSourcePath = `/things/`
+  rowsViewSourcePath = `/rows/`
   grammarViewSourcePath = `/grammar/`
 
   settings: TrueBaseSettingsObject
   setSettings(settings: TrueBaseSettingsObject) {
     this.settings = settings
-    this.dir = settings.thingsFolder
+    this.dir = settings.rowsFolder
+    this.questionsFolder = settings.questionsFolder
     this.grammarDir = settings.grammarFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
     this.grammarCode = new grammarParser(rawCode).format().asString
@@ -339,6 +342,29 @@ class TrueBaseFolder extends TreeNode {
     this.rootParser = this.grammarProgram.compileAndReturnRootParser()
     this.fileExtension = new this.rootParser().fileExtension
     return this
+  }
+
+  setSettingsFromPath(settingsFilepath: string) {
+    const settings = TreeNode.fromDisk(settingsFilepath).toObject()
+    const dirname = path.dirname(settingsFilepath)
+    settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
+    settings.rowsFolder = resolvePath(settings.rowsFolder, dirname)
+    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    return this.setSettings(settings)
+  }
+
+  _questionsTree: any
+  get questionsTree() {
+    if (this._questionsTree) return this._questionsTree
+
+    const allFiles = Disk.getFiles(this.questionsFolder)
+    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.questionsFolder))
+
+    const files = Disk.getFiles(this.questionsFolder).filter((file: string) => file.endsWith(".tql"))
+    if (!files.length) this.warn(UserFacingWarningMessages.noFilesWithRightExtension(".tql"))
+
+    this._questionsTree = new TreeNode(this._readFiles(files))
+    return this._questionsTree
   }
 
   computeColumnStats(files: TrueBaseFile[]) {
@@ -392,15 +418,16 @@ class TrueBaseFolder extends TreeNode {
     const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
     const urlCells = this.cellIndex["urlCell"] ? this.cellIndex["urlCell"].length : 0
     return `dashboard
- ${numeral(this.length).format("0,0")} Files
- ${numeral(this.bytes).format("0,0")} Bytes
- ${numeral(this.numberOfLines).format("0,0")} Lines
- ${numeral(this.numberOfWords).format("0,0")} Words
+ ${numeral(this.questionsTree.length).format("0,0")} Questions
  ${this.colNamesForCsv.length} Columns
+ ${numeral(this.length).format("0,0")} Rows
  ${numeral(complete).format("0,0")} Filled
  ${numeral(missing).format("0,0")} Missing
- ${numeral(linksToOtherFiles).format("0,0")} File links
- ${numeral(urlCells).format("0,0")} URLs`
+ ${numeral(linksToOtherFiles).format("0,0")} Row links
+ ${numeral(urlCells).format("0,0")} URLs
+ ${numeral(this.bytes).format("0,0")} Bytes
+ ${numeral(this.numberOfLines).format("0,0")} Lines
+ ${numeral(this.numberOfWords).format("0,0")} Words`
   }
 
   get cellIndex() {
@@ -770,7 +797,7 @@ class TrueBaseFolder extends TreeNode {
     if (this._isLoaded) return this
 
     const allFiles = Disk.getFiles(this.dir)
-    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.thingsFolder))
+    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.rowsFolder))
 
     const files = this._filterFiles(Disk.getFiles(this.dir))
     if (!files.length) this.warn(UserFacingWarningMessages.noFilesWithRightExtension(this.fileExtension))

@@ -161,7 +161,7 @@ class TrueBaseServer {
       }
     })
 
-    app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.scrollToHtml(this.statusPage)))
+    app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.parseScroll(this.statusPage).html))
 
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/rows/${req.params.id.toLowerCase()}.html`) : next()))
@@ -460,14 +460,14 @@ Results as JSON, CSV, TSV or Tree
 
 import footer.scroll`
 
-    return this.scrollToHtml(scrollCode)
+    return this.parseScroll(scrollCode).html
   }
 
-  scrollToHtml(scrollCode: string, virtualFilePath = `${this.settings.siteFolder}/random-${Utils.getRandomCharacters(24)}.scroll`) {
+  parseScroll(scrollCode: string, virtualFilePath = `${this.settings.siteFolder}/random-${Utils.getRandomCharacters(24)}.scroll`) {
     // todo: eliminate need for virtualFilePath?
     // I believe we have that because we need import paths to work correctly. And perhaps to mix default files with overrides.
     this.virtualFiles[virtualFilePath] = scrollCode
-    return new ScrollFile(scrollCode, virtualFilePath, this.scrollFileSystem).html
+    return new ScrollFile(scrollCode, virtualFilePath, this.scrollFileSystem)
   }
 
   extendedTqlParser: any
@@ -918,28 +918,22 @@ import footer.scroll`
       areEqual(grammarErrors.length, 0, `no errors in ${this.grammarId} grammar`)
     }
 
-    testTree.ensureNoErrorsInScrollExtensions = (areEqual: any) => {
-      const { grammarErrors } = new ScrollCli().getErrorsInFolder(siteFolder)
-      if (grammarErrors.length) console.log(grammarErrors)
-      areEqual(grammarErrors.length, 0, "no errors in scroll extensions")
-    }
-
     testTree.ensureGoodFilenames = (areEqual: any) => {
       areEqual(this.folder.filesWithInvalidFilenames.length, 0, `all ${this.folder.length} filenames are valid`)
     }
 
-    testTree.ensureNoErrorsInBlog = (areEqual: any) => {
-      const checkScroll = (folderPath: string) => {
-        // Do not check all ~5K generated scroll files for errors b/c redundant and wastes time.
-        // Just check the Javascript one below.
-        if (folderPath.includes("truebase")) return
-        const { grammarErrors, scrollErrors } = new ScrollCli().getErrorsInFolder(folderPath)
-        areEqual(grammarErrors.length + scrollErrors.length, 0, `no scroll errors in ${folderPath}`)
-        //areEqual(folder.errors.length, 0, `no errors in ${folderPath}`)
-      }
-
-      const cli = new ScrollCli().silence()
-      Object.keys(cli.findScrollsInDirRecursive(siteFolder)).map(checkScroll)
+    testTree.ensureNoScrollErrors = (areEqual: any) => {
+      this.beforeListen()
+      Object.keys(this.virtualFiles)
+        .filter(file => file.endsWith(".scroll"))
+        .forEach(key => {
+          const scrollFile = this.parseScroll(this.virtualFiles[key], key)
+          const errors = scrollFile.scrollProgram.getAllErrors().map((err: any) => {
+            return { filename: scrollFile.filename, ...err.toObject() }
+          })
+          if (errors.length) console.error(errors)
+          areEqual(errors.length, 0)
+        })
     }
 
     testTree.ensureNoErrorsInDb = (areEqual: any) => {

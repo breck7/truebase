@@ -18,9 +18,7 @@ const grammarParser = require("jtree/products/grammar.nodejs.js")
 const { ScrollCli, ScrollFile, ScrollFileSystem } = require("scroll-cli")
 
 const genericTqlParser = require("../tql/tql.nodejs.js")
-let nodeModulesFolder = path.join(__dirname, "..", "node_modules")
-if (!Disk.exists(nodeModulesFolder)) nodeModulesFolder = path.join(__dirname, "..", "..") // Hacky. Todo: cleanup
-const jtreeFolder = path.join(nodeModulesFolder, "jtree")
+const jtreeProductsFolder = path.dirname(require.resolve("jtree"))
 const zlib = require("zlib")
 
 const browserAppFolder = path.join(__dirname, "..", "browser")
@@ -669,12 +667,12 @@ import footer.scroll`
 
   get jsFiles() {
     const { grammarIgnoreFolder, grammarId } = this
-    return `${jtreeFolder}/products/Utils.browser.js
-${jtreeFolder}/products/TreeNode.browser.js
-${jtreeFolder}/products/GrammarLanguage.browser.js
-${jtreeFolder}/products/GrammarCodeMirrorMode.browser.js
-${jtreeFolder}/sandbox/lib/codemirror.js
-${jtreeFolder}/sandbox/lib/show-hint.js
+    return `${jtreeProductsFolder}/Utils.browser.js
+${jtreeProductsFolder}/TreeNode.browser.js
+${jtreeProductsFolder}/GrammarLanguage.browser.js
+${jtreeProductsFolder}/GrammarCodeMirrorMode.browser.js
+${jtreeProductsFolder}/../sandbox/lib/codemirror.js
+${jtreeProductsFolder}/../sandbox/lib/show-hint.js
 ${grammarIgnoreFolder}/${grammarId}.browser.js
 ${grammarIgnoreFolder}/tql.browser.js
 ${browserAppFolder}/libs.js
@@ -683,7 +681,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
   }
 
   get cssFiles() {
-    return [path.join(jtreeFolder, "sandbox/lib/codemirror.css"), path.join(jtreeFolder, "sandbox/lib/codemirror.show-hint.css"), path.join(browserAppFolder, "TrueBaseTheme.css")]
+    return [path.join(jtreeProductsFolder, "../sandbox/lib/codemirror.css"), path.join(jtreeProductsFolder, "../sandbox/lib/codemirror.show-hint.css"), path.join(browserAppFolder, "TrueBaseTheme.css")]
   }
 
   get combinedCss() {

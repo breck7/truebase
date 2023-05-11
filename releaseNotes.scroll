@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 17.0.2 2023-5-11
+- 🏥 prod path fix
+
 # 17.0.1 2023-5-10
 - 🏥 ensure test command checks all Scroll files including virtual ones
 

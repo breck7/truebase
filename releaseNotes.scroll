@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 17.1.0 2023-5-11
+- 🏥 put query in textarea on question page
+
 # 17.0.2 2023-5-11
 - 🏥 prod path fix
 

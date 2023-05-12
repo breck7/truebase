@@ -180,7 +180,6 @@ class TrueBaseBrowserApp {
     })
 
     this.codeMirrorInstance.setSize(400, 100)
-    this.codeMirrorInstance.setValue((new URLSearchParams(window.location.search).get("q") || "").replace(/\r/g, ""))
     this.codeMirrorInstance.on("keyup", () => this._onCodeKeyUp())
   }
 

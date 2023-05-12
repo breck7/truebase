@@ -50,6 +50,8 @@ const transposeArray = (arrayOfObjects: any[]) => {
   return Object.values(transposed)
 }
 
+const escapeHtml = (str: string) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;")
+
 class TrueBaseServer {
   _folder: TrueBaseFolder
   _app: any
@@ -436,7 +438,11 @@ title ${encodedTitle ? encodedTitle : "Search Results"}
 
 ${encodedDescription ? `description ${encodedDescription}` : ""}
 
-<form method="get" action="search.html" class="tqlForm"><textarea id="tqlInput" name="q"></textarea><input type="submit" value="Search"></form>
+html
+ <form method="get" action="/search.html" class="tqlForm">
+ <textarea id="tqlInput" name="q">${escapeHtml(originalQuery.replace(/\r/g, "").replace(/\n/g, "\n "))}</textarea>
+ <input type="submit" value="Search"></form>
+
 <div id="tqlErrors"></div>
 
 Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s.

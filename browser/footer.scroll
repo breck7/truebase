@@ -23,10 +23,10 @@ stumpNoSnippet
    href BASE_URL/loginOrJoin.html
    class notLoggedIn
   a Logout
-   onclick new TrueBaseBrowserApp().logoutCommand()
+   onclick TrueBaseBrowserApp.getApp().logoutCommand()
    class loggedIn
    id logoutButton
    href #
 
 <script src="BASE_URL/combined.js" defer></script>
-<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().revealUserAccountButtons())</script>
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().render().revealUserAccountButtons())</script>

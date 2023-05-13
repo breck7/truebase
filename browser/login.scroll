@@ -2,6 +2,6 @@ import header.scroll
 title Logging in
  id loginResult
 
-<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().attemptLoginCommand())</script>
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().attemptLoginCommand())</script>
 
 import footer.scroll

@@ -1,13 +1,15 @@
 class TrueBaseBrowserApp {
-  constructor() {
-    window.app = this
+  static getApp() {
+    if (!window.app) window.app = new TrueBaseBrowserApp()
+    return window.app
   }
 
   localStorageKeys = {
     email: "email",
     password: "password",
     staged: "staged",
-    author: "author"
+    author: "author",
+    confetti: "confetti"
   }
 
   get store() {
@@ -170,9 +172,31 @@ class TrueBaseBrowserApp {
 
   renderSearchPage() {
     this.startTQLCodeMirror()
+    if (this.isLoggedIn) {
+      if (this.store.getItem(this.localStorageKeys.confetti) === "true") {
+        this.store.clear(this.localStorageKeys.confetti)
+        this.shootConfettiCommand()
+      }
+      jQuery("#publishQuestion").html(`<button onclick="app.publishQuestionCommand()">Publish question</button>`)
+    }
   }
 
-  async startTQLCodeMirror() {
+  async publishQuestionCommand() {
+    const response = await fetch("/publishQuestion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ author: this.author, question: this.value })
+    })
+    const json = await response.json()
+    if (response.status === 200) {
+      this.store.setItem(this.localStorageKeys.confetti, "true")
+      window.location = `/questions/${json.permalink}.html`
+    } else jQuery("#publishQuestion").html(`<span class="error">Error: ${response}</span>`)
+  }
+
+  startTQLCodeMirror() {
     this.fileParser = tqlParser
     this.codeMirrorInstance = new GrammarCodeMirrorMode("custom", () => tqlParser, undefined, CodeMirror).register().fromTextAreaWithAutocomplete(document.getElementById("tqlInput"), {
       lineWrapping: false,

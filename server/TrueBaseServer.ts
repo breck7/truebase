@@ -161,6 +161,16 @@ class TrueBaseServer {
       }
     })
 
+    app.post("/publishQuestion", async (req: any, res: any) => {
+      try {
+        const { permalink, hash } = await this.saveQuestion(req.body.question, req.body.author)
+        res.send(JSON.stringify({ permalink, hash }, null, 2))
+      } catch (error) {
+        console.error(error)
+        res.status(500).redirect(`/error.html?error=${encodeURIComponent(error)}`)
+      }
+    })
+
     app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.parseScroll(this.statusPage).html))
 
     // Short urls:
@@ -168,6 +178,18 @@ class TrueBaseServer {
 
     app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.send(this.folder.typedMapJson))
     return this._app
+  }
+
+  async saveQuestion(questionString: string, author: string) {
+    const question = new TreeNode(Utils.removeReturnChars(questionString).trim())
+    const permalink = Utils.titleToPermalink(question.get("title"))
+    const filepath = path.join(this.settings.questionsFolder, permalink + ".tql")
+    const { authorName, authorEmail } = this.parseGitAuthor(author)
+    Disk.write(filepath, questionString)
+    const hash = await this.saveCommitAndPush([filepath], authorName, authorEmail)
+    delete this.folder._questionsTree // todo: cleanup
+    delete this.questionsCache[permalink + ".html"]
+    return { hash, permalink }
   }
 
   async applyPatchCommitAndPush(patch: string, author: string) {
@@ -445,7 +467,7 @@ html
 
 <div id="tqlErrors"></div>
 
-Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s.
+Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s. <span id="publishQuestion"></span>
  class trueBaseThemeSearchResultsHeader
 
 ${title ? `# ${encodedTitle}` : ""}
@@ -460,7 +482,7 @@ Results as JSON, CSV, TSV or Tree
  link search.tsv?q=${encodedQuery} TSV
  link search.tree?q=${encodedQuery} Tree
 
-<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().render().renderSearchPage())</script>
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().render().renderSearchPage())</script>
 
 import footer.scroll`
 
@@ -582,14 +604,13 @@ import footer.scroll`
       next()
     })
 
-    const questionCache: any = {}
     this.app.get("/questions/:filename", (req: any, res: any, next: any) => {
-      if (questionCache[req.params.filename]) return res.send(questionCache[req.params.filename])
+      if (this.questionsCache[req.params.filename]) return res.send(this.questionsCache[req.params.filename])
 
       const question = this.folder.questionsTree.getNode(req.params.filename.replace(".html", ""))
       if (question) {
-        questionCache[req.params.filename] = this.searchToHtml(question.childrenToString(), `${req.protocol}://${req.get("host")}${req.originalUrl}`)
-        return res.send(questionCache[req.params.filename])
+        this.questionsCache[req.params.filename] = this.searchToHtml(question.childrenToString(), `${req.protocol}://${req.get("host")}${req.originalUrl}`)
+        return res.send(this.questionsCache[req.params.filename])
       }
 
       next()
@@ -612,6 +633,8 @@ import footer.scroll`
       res.status(404).send(notFoundPage)
     })
   }
+
+  questionsCache: any = {}
 
   compileScrollFile(filepath: string) {
     const file = this.scrollFileSystem.getScrollFile(filepath)

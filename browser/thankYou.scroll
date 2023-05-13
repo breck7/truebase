@@ -3,7 +3,7 @@ title Thank you!
 
 Success! Your contributions have been committed: <span id="commitHash"></span>
 
-<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().renderThankYouCommand("GIT_URL"))</script>
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().renderThankYouCommand("GIT_URL"))</script>
 
 From all of us at SITE_NAME, as well as all future readers, thank you!
 

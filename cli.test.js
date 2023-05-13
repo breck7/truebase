@@ -6,13 +6,17 @@ const { TestRacer } = require("jtree/products/TestRacer.js")
 const { Disk } = require("jtree/products/Disk.node.js")
 const { TrueBaseCli } = require("./cli.js")
 
-const tempDir = path.join(__dirname, "testBase")
+const tempDir = path.join(__dirname, "ignore", "testBase")
 
 const testTree = {}
 
 testTree.all = equal => {
   // Arrange
   try {
+    if (Disk.exists(tempDir))
+      // Cleanup
+      fs.rmSync(tempDir, { recursive: true })
+
     const cli = new TrueBaseCli()
     Disk.mkdir(tempDir)
     cli.initCommand(tempDir)
@@ -23,9 +27,6 @@ testTree.all = equal => {
     equal(false, true, "Expected no errors")
     console.error(err)
   }
-
-  // Cleanup
-  fs.rmSync(tempDir, { recursive: true })
 }
 
 if (!module.parent) TestRacer.testSingleFile(__filename, testTree)

@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 17.2.0 2023-5-12
+- 🎉 add question editing
+
 # 17.1.0 2023-5-11
 - 🏥 put query in textarea on question page
 

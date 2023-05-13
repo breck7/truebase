@@ -3,6 +3,6 @@ title Add a new row
 
 <div id="formHolder"></div>
 
-<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().renderCreatePage())</script>
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().renderCreatePage())</script>
 
 import footer.scroll

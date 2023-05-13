@@ -4,6 +4,6 @@ title Edit file
 
 <div id="formHolder"></div>
 
-<script>document.addEventListener("DOMContentLoaded", () => new TrueBaseBrowserApp().renderEditPage())</script>
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().renderEditPage())</script>
 
 import footer.scroll

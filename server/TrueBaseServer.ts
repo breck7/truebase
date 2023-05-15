@@ -477,10 +477,10 @@ table ${delimiter}
  ${results.replace(/\n/g, "\n ")}
 
 Results as JSON, CSV, TSV or Tree
- link search.json?q=${encodedQuery} JSON
- link search.csv?q=${encodedQuery} CSV
- link search.tsv?q=${encodedQuery} TSV
- link search.tree?q=${encodedQuery} Tree
+ link /search.json?q=${encodedQuery} JSON
+ link /search.csv?q=${encodedQuery} CSV
+ link /search.tsv?q=${encodedQuery} TSV
+ link /search.tree?q=${encodedQuery} Tree
 
 <script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().render().renderSearchPage())</script>
 

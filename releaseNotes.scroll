@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 17.2.2 2023-5-14
+- 🏥 fix links on the search results page
+
 # 17.2.1 2023-5-12
 - 🏥 CI fix
 - 🏥 GitHub link fix

@@ -80,20 +80,4 @@ permalink index.html
 
 import footer.scroll
 
-css
- .beta {font-size: 10px;vertical-align: super;}
- iframe {
-    height: 600px;
-    width: 600px;
-    border: 0;
-    transform: scale(0.5); 
-    transform-origin: 0 0;
- }
- .iframeHolder {
-   width: 300px;
-   height: 300px;
-   box-shadow: 2px 2px 2px 2px rgba(0,0,0,.2);
-   border-radius: 8px;
-   margin: 10px;
-   display: inline-block;
- }
+css .beta {font-size: 10px;vertical-align: super;}

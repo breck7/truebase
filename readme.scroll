@@ -20,14 +20,19 @@ Here
  link releaseNotes.html
 
 ? I need a TrueBase for X, can you build one for me?
-Yes. We offer a paid complete white-glove service for mission critical problems. You can also email pro@truebase.pub for a custom quote.
+Yes. We offer a paid complete white-glove service for moonshot problems. You can also email moonshots@truebase.pub for a custom quote.
  https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
 
 ? What is TrueBase?
-TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but simpler and fully computable—every word is linked.
+TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (rows and column schemas) that compile to a single giant table ("the model") that can answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.
+
+? What is the relationship between TrueBase and LLMs?
+TrueBase will benefit greatly from LLMs. First, they will provide a powerful and easy new way to query a TrueBase using natural language. Second, they will help experts building TrueBases add data, identify and fix mistakes, and even help improve the schemas of a TrueBase.
+
+TrueBases may also help solve the "hallucination problem" in LLMs by providing trustworthy datatables that can be queried and referenced when answering prompts.
 
 ? Why TrueBase?
-We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information warzone. TrueBase is the _only database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth.
+We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information warzone. TrueBase is the _database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth. Certain "scientific" fields are easily corrupted by money—we are designing TrueBase to mathematically solve these problems.
 
 ? What are the features?
 - Data is stored in plain text
@@ -39,6 +44,8 @@ We live in an age of lies: of propaganda, advertisements, paywalls, trackers, li
 - Every word is error checked
 - Everything is public domain
 - Decentralized so every user can have their own complete copy
+- All data readily available as CSV, JSON, SQLite and Tree Notation
+- Read and write data using file system or via the WebUI
 
 ? How do I build a TrueBase on my own?
 The cutting-edge option is to work from the demo PlanetsDB TrueBase:
@@ -51,7 +58,31 @@ code
 Most people will want to use the Getting Started Guide. We are currently beta testing the Getting Started Guide. If you'd like to join the waitlist, please email waitlist@truebase.pub.
 
 ? How does it work, in theory?
-TrueBase is built on top of new breakthrough research in computer languages. Unlike traditional languages and encodings, TrueBase has no noise and every word is interconnected. Adding more data not only increases utility but because everything is computable it becomes increasingly difficult to lie as the size of a TrueBase increases.
+TrueBase helps people build the smallest expert models that can truthfully answer the most valuable questions.
+
+### Lack of noise
+TrueBase is very minimal. It's built on Tree Notation, a syntax-free notation that can support any data structure. The focus is on structured data (with a small amount of unstructured fields to help data editors). Because of this TrueBase allows for expert models that weigh-in at megabytes, not terabytes.
+
+### Triangle of Truth
+Traditional encyclopedias are weakly linked articles about things. Question sites are weakly typed narrative answers to user questions. TrueBase is different.
+
+TrueBase is focused on computable structured data. We call this the "triangle of truth": Questions, Rows and Columns.
+
+#### Questions
+Everything starts with questions that people want to know the answer to.
+
+#### Rows
+To answer those questions, rows are added to the database. But it's not enough just to just list and describe the things.
+
+#### Columns
+In TrueBase columns are key. A typical TrueBase will add hundreds, to thousands, to tens of thousands of columns.
+
+Our *critical column theory* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a column indicating who paid for a study.
+
+So in a TrueBase, it's just as easy to add a column as it is to add a row. Sometimes adding the right column can completely flip the answer to the question someone might have, or indicate that the question cannot yet be truthfully answered, more so than dozens of confirmatory columns.
+
+### Interconnectedness
+Interconnectedness of the data is very important. When you put the effort in to integrate disparate data into one model, the resulting model is worth more than the sum of its parts. Not only does it become more useful because it's easier to compute over, but it also becomes increasingly difficult to lie as the size of a TrueBase increases due to the increasing number of logical constraints that the data would have to violate. A big TrueBase is hard to vary.
 
 ? How does TrueBase work, in practice?
 In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand.

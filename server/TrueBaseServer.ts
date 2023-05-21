@@ -142,6 +142,8 @@ class TrueBaseServer {
       res.redirect(`/edit.html?id=${file.next.id}`)
     })
 
+    app.get("/visData.json", (req: any, res: any, next: any) => res.send(JSON.stringify(this.folder.sparsityVectors, undefined, 2)))
+
     app.get("/editPrevious/:id", (req: any, res: any, next: any) => {
       const file = this.folder.getFile(req.params.id)
       if (!file) return next()
@@ -812,6 +814,16 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 title SITE_NAME Stats
 
 ${this.folder.dashboard}
+
+startColumns 1
+# SITE_NAME Visualized
+<center>
+<div id="modelVis"></div>
+</center>
+The image above has a pixel for each column and row in the database. The top left pixel represents the column with the most observations. The pixels then flow left to right, then top down, showing the observation count for the column with the next most observations. After a pixel for each column is shown then a pixel is shown for each row.
+endColumns
+
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().fetchAndVisualizeDb())</script>
 
 import footer.scroll`
   }

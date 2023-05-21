@@ -399,6 +399,86 @@ class TrueBaseBrowserApp {
     this.shootConfettiCommand()
   }
 
+  async fetchAndVisualizeDb() {
+    const response = await fetch("/visData.json", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    const json = await response.json()
+    if (response.status === 200) {
+      this.visualizeDb(json.columns, json.rows)
+    }
+  }
+
+  visualizeDb(columnValues, rowValues, elementId = "modelVis") {
+    // Use the golden ratio for visually appealing image dimensions
+    let goldenRatio = 1.618
+    let width = Math.round(Math.sqrt((columnValues.length + rowValues.length) * goldenRatio))
+    let height = Math.round(width / goldenRatio)
+    let canvas = document.createElement("canvas")
+    canvas.width = width
+    canvas.height = height
+    let ctx = canvas.getContext("2d")
+    let imageData = ctx.createImageData(width, height)
+
+    const scale = `#ebedf0 8
+#c7e9c0 16
+#a1d99b 32
+#74c476 64
+#41ab5d 128
+#238b45 256
+#005a32 512`
+
+    const hexToRGBA = hex => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16), 255]
+
+    const thresholds = []
+    const colors = []
+    scale.split("\n").map(line => {
+      const parts = line.split(" ")
+      thresholds.push(parseFloat(parts[1]))
+      colors.push(hexToRGBA(parts[0]))
+    })
+    const colorCount = colors.length
+    const heatMap = value => {
+      if (isNaN(value)) return "" // #ebedf0
+      for (let index = 0; index < colorCount; index++) {
+        const threshold = thresholds[index]
+        if (value <= threshold) return colors[index]
+      }
+      return colors[colorCount - 1]
+    }
+
+    for (let i = 0; i < columnValues.length; i++) {
+      let x = i % width
+      let y = Math.floor(i / width)
+      let pixelIndex = (y * width + x) * 4
+      let color = heatMap(columnValues[i])
+      if (pixelIndex < imageData.data.length) {
+        imageData.data.set(color, pixelIndex)
+      }
+    }
+
+    let offset = Math.ceil(columnValues.length / width) * width
+
+    for (let i = 0; i < rowValues.length; i++) {
+      let x = (i + offset) % width
+      let y = Math.floor((i + offset) / width)
+      let pixelIndex = (y * width + x) * 4
+      let color = heatMap(rowValues[i])
+      if (pixelIndex < imageData.data.length) {
+        imageData.data.set(color, pixelIndex)
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0)
+
+    // Append the image to a specific element on your HTML page
+    document.getElementById(elementId).appendChild(canvas)
+  }
+
   shootConfettiCommand(duration = 500) {
     var count = 200
     var defaults = {

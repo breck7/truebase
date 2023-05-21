@@ -627,6 +627,15 @@ class TrueBaseFolder extends TreeNode {
     return cols
   }
 
+  get sparsityVectors() {
+    const columns = lodash.sortBy(this.columnDocumentation.map(col => col.Values)).reverse()
+    const rows = lodash.sortBy(this.map((file: TrueBaseFile) => file.filledColumnNames.length)).reverse()
+    return {
+      columns,
+      rows
+    }
+  }
+
   get columnDocumentation(): ColumnInterfaceWithStats[] {
     if (this.quickCache.columnDocumentation) return this.quickCache.columnDocumentation
 

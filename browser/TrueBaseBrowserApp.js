@@ -177,23 +177,23 @@ class TrueBaseBrowserApp {
         this.store.clear(this.localStorageKeys.confetti)
         this.shootConfettiCommand()
       }
-      jQuery("#publishQuestion").html(`<button onclick="app.publishQuestionCommand()">Publish question</button>`)
+      jQuery("#publishQuery").html(`<button onclick="app.publishQueryCommand()">Publish query</button>`)
     }
   }
 
-  async publishQuestionCommand() {
-    const response = await fetch("/publishQuestion", {
+  async publishQueryCommand() {
+    const response = await fetch("/publishQuery", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ author: this.author, question: this.value })
+      body: JSON.stringify({ author: this.author, query: this.value })
     })
     const json = await response.json()
     if (response.status === 200) {
       this.store.setItem(this.localStorageKeys.confetti, "true")
-      window.location = `/questions/${json.permalink}.html`
-    } else jQuery("#publishQuestion").html(`<span class="error">Error: ${response}</span>`)
+      window.location = `/queries/${json.permalink}.html`
+    } else jQuery("#publishQuery").html(`<span class="error">Error: ${response}</span>`)
   }
 
   startTQLCodeMirror() {

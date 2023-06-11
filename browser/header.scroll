@@ -23,8 +23,6 @@ stumpNoSnippet
     name q
     placeholder Search
     autocomplete off
-  a Questions
-   href BASE_URL/questions.html
   a Columns
    href BASE_URL/csv.html
   a Rows

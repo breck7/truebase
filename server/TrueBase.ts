@@ -334,7 +334,7 @@ class TrueBaseFolder extends TreeNode {
   setSettings(settings: TrueBaseSettingsObject) {
     this.settings = settings
     this.dir = settings.rowsFolder
-    this.questionsFolder = settings.questionsFolder
+    this.queriesFolder = settings.queriesFolder
     this.grammarDir = settings.grammarFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
     this.grammarCode = new grammarParser(rawCode).format().asString
@@ -349,22 +349,22 @@ class TrueBaseFolder extends TreeNode {
     const dirname = path.dirname(settingsFilepath)
     settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
     settings.rowsFolder = resolvePath(settings.rowsFolder, dirname)
-    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    settings.queriesFolder = resolvePath(settings.queriesFolder, dirname)
     return this.setSettings(settings)
   }
 
-  _questionsTree: any
-  get questionsTree() {
-    if (this._questionsTree) return this._questionsTree
+  _queriesTree: any
+  get queriesTree() {
+    if (this._queriesTree) return this._queriesTree
 
-    const allFiles = Disk.getFiles(this.questionsFolder)
-    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.questionsFolder))
+    const allFiles = Disk.getFiles(this.queriesFolder)
+    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.queriesFolder))
 
-    const files = Disk.getFiles(this.questionsFolder).filter((file: string) => file.endsWith(".tql"))
+    const files = Disk.getFiles(this.queriesFolder).filter((file: string) => file.endsWith(".tql"))
     if (!files.length) this.warn(UserFacingWarningMessages.noFilesWithRightExtension(".tql"))
 
-    this._questionsTree = new TreeNode(this._readFiles(files))
-    return this._questionsTree
+    this._queriesTree = new TreeNode(this._readFiles(files))
+    return this._queriesTree
   }
 
   computeColumnStats(files: TrueBaseFile[]) {
@@ -418,13 +418,13 @@ class TrueBaseFolder extends TreeNode {
     const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
     const urlCells = this.cellIndex["urlCell"] ? this.cellIndex["urlCell"].length : 0
     return `dashboard
- ${numeral(this.questionsTree.length).format("0,0")} Questions
  ${this.colNamesForCsv.length} Columns
  ${numeral(this.length).format("0,0")} Rows
  ${numeral(complete).format("0,0")} Filled
  ${numeral(missing).format("0,0")} Missing
  ${numeral(linksToOtherFiles).format("0,0")} Row links
  ${numeral(urlCells).format("0,0")} URLs
+ ${numeral(this.queriesTree.length).format("0,0")} Queries
  ${numeral(this.bytes).format("0,0")} Bytes
  ${numeral(this.numberOfLines).format("0,0")} Lines
  ${numeral(this.numberOfWords).format("0,0")} Words`

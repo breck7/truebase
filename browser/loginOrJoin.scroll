@@ -5,7 +5,7 @@ import header.scroll
 
 css .loginForm { margin: 30px;} button,input {font-size: 24px;}
 
-Join SITE_NAME to post questions and/or contribute data.
+Join SITE_NAME to contribute data and/or save queries.
  style text-align: center;
 
 <div class="loginForm">

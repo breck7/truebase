@@ -64,7 +64,7 @@ class TrueBaseServer {
     const dirname = path.dirname(settingsFilepath)
     settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
     settings.rowsFolder = resolvePath(settings.rowsFolder, dirname)
-    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    settings.queriesFolder = resolvePath(settings.queriesFolder, dirname)
     settings.ignoreFolder = resolvePath(settings.ignoreFolder, dirname)
     settings.siteFolder = resolvePath(settings.siteFolder, dirname)
     this.settings = settings
@@ -82,7 +82,7 @@ class TrueBaseServer {
     const app = express()
     app.use(compression())
     this._app = app
-    const { ignoreFolder, siteFolder, grammarFolder, rowsFolder, questionsFolder } = this.settings
+    const { ignoreFolder, siteFolder, grammarFolder, rowsFolder, queriesFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
     const requestLog = path.join(ignoreFolder, "access.log")
@@ -118,7 +118,7 @@ class TrueBaseServer {
     this.serveFolder(siteFolder)
     this.serveFolderNested("/grammar/", grammarFolder)
     this.serveFolderNested("/rows/", rowsFolder)
-    this.serveFolderNested("/questions/", questionsFolder)
+    this.serveFolderNested("/queries/", queriesFolder)
     this._initSearch()
     this._initUserAccounts()
 
@@ -163,9 +163,9 @@ class TrueBaseServer {
       }
     })
 
-    app.post("/publishQuestion", async (req: any, res: any) => {
+    app.post("/publishQuery", async (req: any, res: any) => {
       try {
-        const { permalink, hash } = await this.saveQuestion(req.body.question, req.body.author)
+        const { permalink, hash } = await this.saveQuery(req.body.query, req.body.author)
         res.send(JSON.stringify({ permalink, hash }, null, 2))
       } catch (error) {
         console.error(error)
@@ -182,15 +182,15 @@ class TrueBaseServer {
     return this._app
   }
 
-  async saveQuestion(questionString: string, author: string) {
-    const question = new TreeNode(Utils.removeReturnChars(questionString).trim())
-    const permalink = Utils.titleToPermalink(question.get("title"))
-    const filepath = path.join(this.settings.questionsFolder, permalink + ".tql")
+  async saveQuery(queryString: string, author: string) {
+    const query = new TreeNode(Utils.removeReturnChars(queryString).trim())
+    const permalink = Utils.titleToPermalink(query.get("title"))
+    const filepath = path.join(this.settings.queriesFolder, permalink + ".tql")
     const { authorName, authorEmail } = this.parseGitAuthor(author)
-    Disk.write(filepath, questionString)
+    Disk.write(filepath, queryString)
     const hash = await this.saveCommitAndPush([filepath], authorName, authorEmail)
-    delete this.folder._questionsTree // todo: cleanup
-    delete this.questionsCache[permalink + ".html"]
+    delete this.folder._queriesTree // todo: cleanup
+    delete this.queryCache[permalink + ".html"]
     return { hash, permalink }
   }
 
@@ -469,7 +469,7 @@ html
 
 <div id="tqlErrors"></div>
 
-Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s. <span id="publishQuestion"></span>
+Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s. <span id="publishQuery"></span>
  class trueBaseThemeSearchResultsHeader
 
 ${title ? `# ${encodedTitle}` : ""}
@@ -606,13 +606,13 @@ import footer.scroll`
       next()
     })
 
-    this.app.get("/questions/:filename", (req: any, res: any, next: any) => {
-      if (this.questionsCache[req.params.filename]) return res.send(this.questionsCache[req.params.filename])
+    this.app.get("/queries/:filename", (req: any, res: any, next: any) => {
+      if (this.queryCache[req.params.filename]) return res.send(this.queryCache[req.params.filename])
 
-      const question = this.folder.questionsTree.getNode(req.params.filename.replace(".html", ""))
-      if (question) {
-        this.questionsCache[req.params.filename] = this.searchToHtml(question.childrenToString(), `${req.protocol}://${req.get("host")}${req.originalUrl}`)
-        return res.send(this.questionsCache[req.params.filename])
+      const query = this.folder.queriesTree.getNode(req.params.filename.replace(".html", ""))
+      if (query) {
+        this.queryCache[req.params.filename] = this.searchToHtml(query.childrenToString(), `${req.protocol}://${req.get("host")}${req.originalUrl}`)
+        return res.send(this.queryCache[req.params.filename])
       }
 
       next()
@@ -636,7 +636,7 @@ import footer.scroll`
     })
   }
 
-  questionsCache: any = {}
+  queryCache: any = {}
 
   compileScrollFile(filepath: string) {
     const file = this.scrollFileSystem.getScrollFile(filepath)
@@ -757,7 +757,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     const defaultScrollFiles = Disk.getFiles(browserAppFolder).filter((file: string) => file.endsWith(".scroll"))
     defaultScrollFiles.forEach((file: string) => (virtualFiles[siteFolder + "/" + path.basename(file)] = Disk.read(file)))
     this.warmCsvFiles()
-    this.warmQuestionsPage()
+    this.warmQueriesPage()
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return
@@ -828,20 +828,20 @@ endColumns
 import footer.scroll`
   }
 
-  warmQuestionsPage() {
+  warmQueriesPage() {
     const { trueBaseId, siteFolder } = this.settings
-    const mapQuestion = (question: any) => `${question.get("title")}
- class question
- link /questions/${question.getLine().replace(".tql", "")}.html`
+    const mapQuery = (query: any) => `${query.get("title")}
+ class query
+ link /queries/${query.getLine().replace(".tql", "")}.html`
 
-    this.virtualFiles[siteFolder + "/newQuestions.scroll"] = `importOnly
+    this.virtualFiles[siteFolder + "/newQueries.scroll"] = `importOnly
 
-${this.folder.questionsTree.map(mapQuestion).join("\n")}`
+${this.folder.queriesTree.map(mapQuery).join("\n")}`
 
-    this.virtualFiles[siteFolder + "/questions.scroll"] = `import header.scroll
-title SITE_NAME Questions
+    this.virtualFiles[siteFolder + "/queries.scroll"] = `import header.scroll
+title SITE_NAME Queries
 
-import newQuestions.scroll
+import newQueries.scroll
 
 import footer.scroll`
   }

@@ -3,7 +3,7 @@ name PlanetsDB
 domain localhost:5678
 grammarFolder .
 rowsFolder .
-questionsFolder .
+queriesFolder .
 ignoreFolder ../ignore
 siteFolder .
 devPort 5678

@@ -440,6 +440,11 @@ class TrueBaseServer {
 
     app.get("/s/:query", (req: any, res: any) => res.redirect(`/search.html?q=includes+${req.params.query}`))
 
+    // The version 17 -> 18 change breaks "/questions/" links.
+    // Add this redirect for a certain time to mitigate that.
+    app.get("/questions/:question", (req: any, res: any) => res.redirect(`/queries/${req.params.question}`))
+    app.get("/questions.html", (req: any, res: any) => res.redirect(`/queries.html`))
+
     app.get("/fullTextSearch", (req: any, res: any) => res.redirect(`/search.html?q=includes+${req.query.q}`))
 
     return this

@@ -11,11 +11,11 @@ import searchForm.scroll
 
 replace BASE_URL .
 
-New questions
- link questions.html
+Saved queries
+ link queries.html
  class headerLink
 
-import newQuestions.scroll
+import newQueries.scroll
 
 import homepageFeature.scroll
 

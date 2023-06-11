@@ -72,11 +72,11 @@ name ${trueBaseId}
 domain localhost
 grammarFolder ./grammar
 rowsFolder ./rows
-questionsFolder ./questions
+queriesFolder ./queries
 ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
-    initFolder[`/questions/how-many-planets-are-there.tql`] = `title How many planets are there?`
+    initFolder[`/queries/how-many-planets-are-there.tql`] = `title How many planets are there?`
     initFolder[`/grammar/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}

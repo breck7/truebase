@@ -13,7 +13,7 @@ const testTree: any = {}
 const settings: TrueBaseSettingsObject = {
   grammarFolder: planetsFolderPath,
   rowsFolder: planetsFolderPath,
-  questionsFolder: planetsFolderPath
+  queriesFolder: planetsFolderPath
 }
 
 const getFolder = () => new TrueBaseFolder().setSettings(settings)
@@ -91,7 +91,7 @@ testTree.fileSystemEvents = async (equal: any) => {
   const settings: TrueBaseSettingsObject = {
     grammarFolder: testDbIgnoreFolder,
     rowsFolder: testDbIgnoreFolder,
-    questionsFolder: testDbIgnoreFolder
+    queriesFolder: testDbIgnoreFolder
   }
 
   const folder = new TrueBaseFolder().setSettings(settings).silence()

@@ -24,7 +24,7 @@ Yes. We offer a paid complete white-glove service for moonshot problems. You can
  https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
 
 ? What is TrueBase?
-TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (rows and column schemas) that compile to a single giant table ("the model") that can answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.
+TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (rows and column schemas) that compile to a single giant table ("the model") that can be used to answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.
 
 ? What is the relationship between TrueBase and LLMs?
 TrueBase will benefit greatly from LLMs. First, they will provide a powerful and easy new way to query a TrueBase using natural language. Second, they will help experts building TrueBases add data, identify and fix mistakes, and even help improve the schemas of a TrueBase.
@@ -66,20 +66,20 @@ TrueBase is very minimal. It's built on Tree Notation, a syntax-free notation th
 ### Triangle of Truth
 Traditional encyclopedias are weakly linked articles about things. Question sites are weakly typed narrative answers to user questions. TrueBase is different.
 
-TrueBase is focused on computable structured data. We call this the "triangle of truth": Questions, Rows and Columns.
-
-#### Questions
-Everything starts with questions that people want to know the answer to.
+TrueBase is focused on computable structured data. We call this the "triangle of truth": Rows, Columns and Questions.
 
 #### Rows
-To answer those questions, rows are added to the database. But it's not enough just to just list and describe the things.
+First we start adding rows to the database. Each row is a simple file about a thing. But it's not enough just to just list and describe the things.
 
 #### Columns
-In TrueBase columns are key. A typical TrueBase will add hundreds, to thousands, to tens of thousands of columns.
+Structured columns are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of columns.
 
-Our *critical column theory* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a column indicating who paid for a study.
+Our *critical column bet* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a column indicating who paid for a study.
 
 So in a TrueBase, it's just as easy to add a column as it is to add a row. Sometimes adding the right column can completely flip the answer to the question someone might have, or indicate that the question cannot yet be truthfully answered, more so than dozens of confirmatory columns.
+
+#### Questions
+Questions are the fun part. Once we have a lot of data, you can use that to answer questions you might have in a data driven way. You can download and export the data in any format you wish or just query using the built-in TQL language to create your reports and answer your questions.
 
 ### Interconnectedness
 Interconnectedness of the data is very important. When you put the effort in to integrate disparate data into one model, the resulting model is worth more than the sum of its parts. Not only does it become more useful because it's easier to compute over, but it also becomes increasingly difficult to lie as the size of a TrueBase increases due to the increasing number of logical constraints that the data would have to violate. A big TrueBase is hard to vary.

@@ -63,6 +63,36 @@ class TrueBaseCli {
     tbServer.testCommand()
   }
 
+  batchCommand(cwd) {
+    const settingsPath = this.firstSettingsPath(cwd)
+    if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
+    const tbServer = new TrueBaseServer(settingsPath)
+    const folder = tbServer.settings.ignoreFolder
+    this.log(`Scanning '${folder}' for batch.csv, batch.tsv, batch.psv, and batch.tree files`)
+
+    const exists = extension => {
+      const fullPath = path.join(folder, `batch.${extension}`)
+      const exists = Disk.exists(fullPath)
+      if (exists) this.log(`Found '${fullPath}'`)
+      return exists ? fullPath : false
+    }
+
+    // todo: add support for updating as well
+    const processEntry = (node, index) => {
+      tbServer.folder.createFile(node.childrenToString())
+      this.log(`Processing ${index}`)
+    }
+
+    const csv = exists("csv")
+    if (csv) TreeNode.fromCsv(Disk.read(csv)).forEach(processEntry)
+    const tsv = exists("tsv")
+    if (tsv) TreeNode.fromTsv(Disk.read(tsv)).forEach(processEntry)
+    const psv = exists("psv")
+    if (psv) TreeNode.fromDelimited(Disk.read(psv), "|").forEach(processEntry)
+    const tree = exists("tree")
+    if (tree) TreeNode.fromDisk(tree).forEach(processEntry)
+  }
+
   async initCommand(cwd) {
     const trueBaseId = cwd.split("/").pop()
     if (!trueBaseId) return this.log(`❌ cannot make a truebase in top folder`)
@@ -70,14 +100,14 @@ class TrueBaseCli {
     initFolder[`${trueBaseId}${SETTINGS_EXTENSION}`] = `trueBaseId ${trueBaseId}
 name ${trueBaseId}
 domain localhost
-grammarFolder ./grammar
+grammarFolder ./columns
 rowsFolder ./rows
 queriesFolder ./queries
 ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
     initFolder[`/queries/how-many-planets-are-there.tql`] = `title How many planets are there?`
-    initFolder[`/grammar/${trueBaseId}.grammar`] = `${trueBaseId}Parser
+    initFolder[`/columns/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}
  string fileExtension ${trueBaseId}
@@ -103,7 +133,7 @@ git GIT_URL
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email feedback@DOMAIN_NAME
 baseUrl https://DOMAIN_NAME/`
-    initFolder[`/grammar/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
+    initFolder[`/columns/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
     Disk.writeObjectToDisk(cwd, initFolder)
     require("child_process").execSync("git init", { cwd })
     return this.log(`\n👍 Initialized new TrueBase in '${cwd}'.`)

@@ -906,17 +906,6 @@ import footer.scroll`
     this.folder.forEach((file: TrueBaseFile) => file.prettifyAndSave())
   }
 
-  createFromTreeCommand() {
-    TreeNode.fromDisk(path.join(this.settings.ignoreFolder, "create.tree")).forEach((node: any) => this.folder.createFile(node.childrenToString()))
-  }
-
-  createFromCsvCommand() {
-    TreeNode.fromCsv(Disk.read(path.join(this.settings.ignoreFolder, "create.csv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
-  }
-
-  createFromTsvCommand() {
-    TreeNode.fromTsv(Disk.read(path.join(this.settings.ignoreFolder, "create.tsv"))).forEach((node: any) => this.folder.createFile(node.childrenToString()))
-  }
   // Example: new PlanetsDB().changeListDelimiterCommand("originCommunity", " && ")
   changeListDelimiterCommand(field: string, newDelimiter: string) {
     this.folder.forEach((file: any) => {

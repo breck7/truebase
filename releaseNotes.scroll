@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 18.1.0 2023-6-11
+- 🎉 added a `batch` command to the CLI for bulk importing new rows
+
 # 18.0.1 2023-6-11
 - 🏥 add `questions` to `queries` redirects to mitigate broken links
 

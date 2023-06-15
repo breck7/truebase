@@ -145,8 +145,6 @@ class TrueBaseServer {
       res.redirect(`/edit.html?id=${file.next.id}`)
     })
 
-    app.get("/visData.json", (req: any, res: any, next: any) => res.send(JSON.stringify(this.folder.sparsityVectors, undefined, 2)))
-
     app.get("/editPrevious/:id", (req: any, res: any, next: any) => {
       const file = this.folder.getFile(req.params.id)
       if (!file) return next()
@@ -179,7 +177,6 @@ class TrueBaseServer {
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/rows/${req.params.id.toLowerCase()}.html`) : next()))
 
-    app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.send(this.folder.typedMapJson))
     return this._app
   }
 
@@ -611,6 +608,11 @@ import footer.scroll`
     this.warmGrammarFiles()
     this.warmJsAndCss()
     this.warmSiteFolder()
+
+    const { virtualFiles } = this
+
+    virtualFiles["/visData.json"] = JSON.stringify(this.folder.sparsityVectors, undefined, 2)
+    virtualFiles[`/${this.settings.trueBaseId}.json`] = this.folder.typedMapJson
   }
 
   beforeListen() {

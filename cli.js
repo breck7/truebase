@@ -115,6 +115,7 @@ ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
     initFolder[`/queries/how-many-planets-are-there.tql`] = `title How many planets are there?`
+    initFolder[`/queries/all.tql`] = `title What are all the rows?`
     initFolder[`/columns/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}

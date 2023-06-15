@@ -1,4 +1,5 @@
 const fs = require("fs")
+const fse = require("fs-extra")
 const path = require("path")
 const lodash = require("lodash")
 const numeral = require("numeral")
@@ -15,7 +16,7 @@ const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const grammarParser = require("jtree/products/grammar.nodejs.js")
-const { ScrollCli, ScrollFile, ScrollFileSystem } = require("scroll-cli")
+const { ScrollFile, ScrollFileSystem } = require("scroll-cli")
 
 const genericTqlParser = require("../tql/tql.nodejs.js")
 const jtreeProductsFolder = path.dirname(require.resolve("jtree"))
@@ -76,6 +77,11 @@ class TrueBaseServer {
     return this._folder.loadFolder()
   }
 
+  get staticFolders() {
+    const { siteFolder, grammarFolder, rowsFolder, queriesFolder } = this.settings
+    return [{ folder: browserAppFolder }, { folder: siteFolder }, { folder: grammarFolder, nested: "/grammar/" }, { folder: rowsFolder, nested: "/rows/" }, { folder: queriesFolder, nested: "/queries/" }]
+  }
+
   get app() {
     if (this._app) return this._app
 
@@ -114,12 +120,9 @@ class TrueBaseServer {
       if (mimeType) res.setHeader("content-type", mimeType)
       next()
     })
-    this.serveFolder(browserAppFolder)
-    this.serveFolder(siteFolder)
-    this.serveFolderNested("/grammar/", grammarFolder)
-    this.serveFolderNested("/rows/", rowsFolder)
-    this.serveFolderNested("/queries/", queriesFolder)
-    this._initSearch()
+    this.staticFolders.forEach(folder => this.serveFolder(folder.folder, folder.nested))
+
+    this._addSearchRoutes()
     this._initUserAccounts()
 
     app.get("/edit.json", (req: any, res: any) => {
@@ -205,13 +208,10 @@ class TrueBaseServer {
     return hash
   }
 
-  serveFolder(folder: string) {
-    this.app.use(express.static(folder))
+  serveFolder(folder: string, nested?: string) {
+    if (nested) this.app.use(nested, express.static(folder))
+    else this.app.use(express.static(folder))
     return this
-  }
-
-  serveFolderNested(nestedPath: string, folder: string) {
-    this.app.use(nestedPath, express.static(folder))
   }
 
   gitOn = false
@@ -417,9 +417,12 @@ class TrueBaseServer {
   }
 
   _initSearch() {
-    const { app } = this
-    const searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
-    this.searchServer = searchServer
+    this.searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
+  }
+
+  _addSearchRoutes() {
+    const { app, searchServer } = this
+    this._initSearch()
     app.get("/search.json", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
     app.get("/search.csv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
     app.get("/search.tsv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
@@ -572,15 +575,31 @@ import footer.scroll`
 
   virtualFiles: { [firstWord: string]: string } = {}
   scrollFileSystem = new ScrollFileSystem(this.virtualFiles)
-  dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "staticSite")) {
+  async dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "staticSite")) {
+    const { virtualFiles } = this
     const { siteFolder } = this.settings
     this.warmAll()
-    Object.keys(this.virtualFiles)
+
+    this.folder.forEach((file: any) => (virtualFiles[siteFolder + `/rows/${file.id}.scroll`] = file.toScroll()))
+
+    this._initSearch()
+    this.folder.queriesTree.forEach((query: any) => (virtualFiles[`/queries/${query.getLine().replace(".tql", "")}.html`] = this.searchToHtml(query.childrenToString())))
+
+    Object.keys(virtualFiles)
       .filter(key => key.endsWith(".scroll"))
+      .filter(key => !virtualFiles[key].match(/^importOnly/))
       .forEach(key => this.compileScrollFile(key))
     Disk.mkdir(destinationPath)
     const flatMap: any = {}
-    Object.keys(this.virtualFiles).forEach(key => (flatMap[key.replace(siteFolder, "")] = this.virtualFiles[key]))
+
+    this.staticFolders.forEach(async staticFolder => {
+      // Copy all the files in the folder to the destination folder.
+      const { folder, nested } = staticFolder
+      // Use the fs module or the best possible npm package for this kind of job
+      await fse.copy(folder, destinationPath + (nested ? nested : ""), { overwrite: true })
+    })
+
+    Object.keys(virtualFiles).forEach(key => (flatMap[key.replace(siteFolder, "")] = virtualFiles[key]))
     Disk.writeObjectToDisk(destinationPath, flatMap)
   }
 

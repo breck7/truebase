@@ -63,6 +63,14 @@ class TrueBaseCli {
     tbServer.testCommand()
   }
 
+  staticCommand(cwd) {
+    // Generate a static HTML version of the site
+    const settingsPath = this.firstSettingsPath(cwd)
+    if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
+    const tbServer = new TrueBaseServer(settingsPath)
+    tbServer.dumpStaticSiteCommand(path.join(cwd, "static"))
+  }
+
   batchCommand(cwd) {
     const settingsPath = this.firstSettingsPath(cwd)
     if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
@@ -107,6 +115,7 @@ ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
     initFolder[`/queries/how-many-planets-are-there.tql`] = `title How many planets are there?`
+    initFolder[`/queries/all.tql`] = `title What are all the rows?`
     initFolder[`/columns/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}

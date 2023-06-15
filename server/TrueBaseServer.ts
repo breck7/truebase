@@ -1,4 +1,5 @@
 const fs = require("fs")
+const fse = require("fs-extra")
 const path = require("path")
 const lodash = require("lodash")
 const numeral = require("numeral")
@@ -15,7 +16,7 @@ const { Utils } = require("jtree/products/Utils.js")
 const { TreeNode } = require("jtree/products/TreeNode.js")
 const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const grammarParser = require("jtree/products/grammar.nodejs.js")
-const { ScrollCli, ScrollFile, ScrollFileSystem } = require("scroll-cli")
+const { ScrollFile, ScrollFileSystem } = require("scroll-cli")
 
 const genericTqlParser = require("../tql/tql.nodejs.js")
 const jtreeProductsFolder = path.dirname(require.resolve("jtree"))
@@ -76,6 +77,11 @@ class TrueBaseServer {
     return this._folder.loadFolder()
   }
 
+  get staticFolders() {
+    const { siteFolder, grammarFolder, rowsFolder, queriesFolder } = this.settings
+    return [{ folder: browserAppFolder }, { folder: siteFolder }, { folder: grammarFolder, nested: "/grammar/" }, { folder: rowsFolder, nested: "/rows/" }, { folder: queriesFolder, nested: "/queries/" }]
+  }
+
   get app() {
     if (this._app) return this._app
 
@@ -114,12 +120,9 @@ class TrueBaseServer {
       if (mimeType) res.setHeader("content-type", mimeType)
       next()
     })
-    this.serveFolder(browserAppFolder)
-    this.serveFolder(siteFolder)
-    this.serveFolderNested("/grammar/", grammarFolder)
-    this.serveFolderNested("/rows/", rowsFolder)
-    this.serveFolderNested("/queries/", queriesFolder)
-    this._initSearch()
+    this.staticFolders.forEach(folder => this.serveFolder(folder.folder, folder.nested))
+
+    this._addSearchRoutes()
     this._initUserAccounts()
 
     app.get("/edit.json", (req: any, res: any) => {
@@ -141,8 +144,6 @@ class TrueBaseServer {
       if (!file) return next()
       res.redirect(`/edit.html?id=${file.next.id}`)
     })
-
-    app.get("/visData.json", (req: any, res: any, next: any) => res.send(JSON.stringify(this.folder.sparsityVectors, undefined, 2)))
 
     app.get("/editPrevious/:id", (req: any, res: any, next: any) => {
       const file = this.folder.getFile(req.params.id)
@@ -173,12 +174,9 @@ class TrueBaseServer {
       }
     })
 
-    app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.parseScroll(this.statusPage).html))
-
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/rows/${req.params.id.toLowerCase()}.html`) : next()))
 
-    app.get(`/${this.settings.trueBaseId}.json`, (req: any, res: any) => res.send(this.folder.typedMapJson))
     return this._app
   }
 
@@ -207,13 +205,10 @@ class TrueBaseServer {
     return hash
   }
 
-  serveFolder(folder: string) {
-    this.app.use(express.static(folder))
+  serveFolder(folder: string, nested?: string) {
+    if (nested) this.app.use(nested, express.static(folder))
+    else this.app.use(express.static(folder))
     return this
-  }
-
-  serveFolderNested(nestedPath: string, folder: string) {
-    this.app.use(nestedPath, express.static(folder))
   }
 
   gitOn = false
@@ -419,9 +414,12 @@ class TrueBaseServer {
   }
 
   _initSearch() {
-    const { app } = this
-    const searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
-    this.searchServer = searchServer
+    this.searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
+  }
+
+  _addSearchRoutes() {
+    const { app, searchServer } = this
+    this._initSearch()
     app.get("/search.json", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "json", req.ip)))
     app.get("/search.csv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "csv", req.ip)))
     app.get("/search.tsv", (req: any, res: any) => res.send(searchServer.logAndRunSearch(req.query.q, "tsv", req.ip)))
@@ -574,16 +572,47 @@ import footer.scroll`
 
   virtualFiles: { [firstWord: string]: string } = {}
   scrollFileSystem = new ScrollFileSystem(this.virtualFiles)
-  dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "staticSite")) {
+  async dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "static")) {
+    const { virtualFiles } = this
+    const { siteFolder } = this.settings
     this.warmAll()
+
+    this.folder.forEach((file: any) => (virtualFiles[siteFolder + `/rows/${file.id}.scroll`] = file.toScroll()))
+
+    this._initSearch()
+    this.folder.queriesTree.forEach((query: any) => (virtualFiles[`/queries/${query.getLine().replace(".tql", "")}.html`] = this.searchToHtml(query.childrenToString())))
+
+    Object.keys(virtualFiles)
+      .filter(key => key.endsWith(".scroll"))
+      .filter(key => !virtualFiles[key].match(/^importOnly/))
+      .forEach(key => this.compileScrollFile(key))
     Disk.mkdir(destinationPath)
-    Disk.writeObjectToDisk(destinationPath, this.virtualFiles)
+    const flatMap: any = {}
+
+    this.staticFolders.forEach(async staticFolder => {
+      // Copy all the files in the folder to the destination folder.
+      const { folder, nested } = staticFolder
+      // Use the fs module or the best possible npm package for this kind of job
+      try {
+        await fse.copy(folder, destinationPath + (nested ? nested : ""), { overwrite: true })
+      } catch (err) {
+        console.log(err)
+      }
+    })
+
+    Object.keys(virtualFiles).forEach(key => (flatMap[key.replace(siteFolder, "")] = virtualFiles[key]))
+    Disk.writeObjectToDisk(destinationPath, flatMap)
   }
 
   warmAll() {
     this.warmGrammarFiles()
     this.warmJsAndCss()
     this.warmSiteFolder()
+
+    const { virtualFiles } = this
+
+    virtualFiles["/visData.json"] = JSON.stringify(this.folder.sparsityVectors, undefined, 2)
+    virtualFiles[`/${this.settings.trueBaseId}.json`] = this.folder.typedMapJson
   }
 
   beforeListen() {
@@ -594,8 +623,8 @@ import footer.scroll`
     const { virtualFiles } = this
 
     let notFoundPage = ""
-    if (virtualFiles[siteFolder + "/custom_404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/custom_404.scroll")
-    else notFoundPage = this.compileScrollFile(browserAppFolder + "/custom_404.scroll")
+    if (virtualFiles[siteFolder + "/404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/404.scroll")
+    else notFoundPage = this.compileScrollFile(browserAppFolder + "/404.scroll")
 
     // Rows used to have the "/truebase" prefix until version 17. Keep this redirect in for a bit to not break external links.
     this.app.get("/truebase/:id", (req: any, res: any, next: any) => res.status(302).redirect(`/rows/${req.params.id}`))
@@ -763,6 +792,8 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     defaultScrollFiles.forEach((file: string) => (virtualFiles[siteFolder + "/" + path.basename(file)] = Disk.read(file)))
     this.warmCsvFiles()
     this.warmQueriesPage()
+
+    virtualFiles[`${siteFolder}/stats.scroll`] = this.statusPage
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return

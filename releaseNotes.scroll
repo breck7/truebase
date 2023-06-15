@@ -4,6 +4,12 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 19.0.0 2023-6-15
+- 🎉 added the `static` command. TrueBase can once again be used to build a static site.
+ - Note: search does *not* currently working when building a static site. In progress.
+ - Note: redirects are not currently working in the static site. In progress.
+- ⚠️ BREAKING: if you were using a `custom_404.scroll` that should be renamed to `404.scroll`. This ensures it will work in static sites when using GitHub hosting.
+
 # 18.1.0 2023-6-11
 - 🎉 added a `batch` command to the CLI for bulk importing new rows
 

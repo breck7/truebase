@@ -278,7 +278,10 @@ class TrueBaseBrowserApp {
   }
 
   renderStage() {
-    const { isLoggedIn, stagedFiles } = this
+    const { stagedFiles } = this
+
+    const isLoggedIn = false // Temporarily disabling login
+
     const fileCount = stagedFiles.length
     const el = document.getElementById("stagedStatus")
     el.style.display = "none"
@@ -286,7 +289,7 @@ class TrueBaseBrowserApp {
     el.innerHTML = `<div>You have <b>${fileCount} staged file${fileCount > 1 ? "s" : ""}</b> ready to submit. ${isLoggedIn ? "Author: " : ""}<span id="authorLabel" class="linkButton" onClick="app.changeAuthor()"></span></div>
  <textarea id="patch" name="patch" readonly></textarea><br>
  <input type="hidden" name="author" id="author" />
- ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "<a href='/loginOrJoin.html'>Login</a> to submit."}
+ ${isLoggedIn ? '<input type="submit" value="Commit and push" id="saveCommitAndPushButton"/>' : "" /* "<a href='/loginOrJoin.html'>Login</a> to submit." */}
   <a class="linkButton" onClick="app.clearChanges()">Clear local changes</a>`
     el.style.display = "block"
     document.getElementById("patch").value = stagedFiles.asString

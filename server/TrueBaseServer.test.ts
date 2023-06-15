@@ -42,7 +42,7 @@ testTree.editing = async (equal: any) => {
   // Arrange
   const tempBase = path.join(__dirname, "..", "ignore", "testTemp")
   const tempDir = path.join(tempBase, "planetsDB")
-  const staticSiteDir = path.join(tempBase, "staticSite")
+  const staticSiteDir = path.join(tempBase, "static")
   fs.rmSync(tempDir, { recursive: true, force: true })
   Disk.mkdir(tempDir)
   const pbDir = path.join(__dirname, "..", "planetsDB")

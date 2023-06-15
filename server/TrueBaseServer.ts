@@ -575,7 +575,7 @@ import footer.scroll`
 
   virtualFiles: { [firstWord: string]: string } = {}
   scrollFileSystem = new ScrollFileSystem(this.virtualFiles)
-  async dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "staticSite")) {
+  async dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "static")) {
     const { virtualFiles } = this
     const { siteFolder } = this.settings
     this.warmAll()
@@ -596,7 +596,11 @@ import footer.scroll`
       // Copy all the files in the folder to the destination folder.
       const { folder, nested } = staticFolder
       // Use the fs module or the best possible npm package for this kind of job
-      await fse.copy(folder, destinationPath + (nested ? nested : ""), { overwrite: true })
+      try {
+        await fse.copy(folder, destinationPath + (nested ? nested : ""), { overwrite: true })
+      } catch (err) {
+        console.log(err)
+      }
     })
 
     Object.keys(virtualFiles).forEach(key => (flatMap[key.replace(siteFolder, "")] = virtualFiles[key]))

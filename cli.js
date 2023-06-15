@@ -63,6 +63,14 @@ class TrueBaseCli {
     tbServer.testCommand()
   }
 
+  staticCommand(cwd) {
+    // Generate a static HTML version of the site
+    const settingsPath = this.firstSettingsPath(cwd)
+    if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)
+    const tbServer = new TrueBaseServer(settingsPath)
+    tbServer.dumpStaticSiteCommand(path.join(cwd, "static"))
+  }
+
   batchCommand(cwd) {
     const settingsPath = this.firstSettingsPath(cwd)
     if (!settingsPath) return this.log(`❌ No TrueBase found in ${cwd}`)

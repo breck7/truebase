@@ -173,8 +173,6 @@ class TrueBaseServer {
       }
     })
 
-    app.get("/stats.html", (req: any, res: any, next: any) => res.send(this.parseScroll(this.statusPage).html))
-
     // Short urls:
     app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/rows/${req.params.id.toLowerCase()}.html`) : next()))
 
@@ -575,9 +573,15 @@ import footer.scroll`
   virtualFiles: { [firstWord: string]: string } = {}
   scrollFileSystem = new ScrollFileSystem(this.virtualFiles)
   dumpStaticSiteCommand(destinationPath = path.join(this.settings.ignoreFolder, "staticSite")) {
+    const { siteFolder } = this.settings
     this.warmAll()
+    Object.keys(this.virtualFiles)
+      .filter(key => key.endsWith(".scroll"))
+      .forEach(key => this.compileScrollFile(key))
     Disk.mkdir(destinationPath)
-    Disk.writeObjectToDisk(destinationPath, this.virtualFiles)
+    const flatMap: any = {}
+    Object.keys(this.virtualFiles).forEach(key => (flatMap[key.replace(siteFolder, "")] = this.virtualFiles[key]))
+    Disk.writeObjectToDisk(destinationPath, flatMap)
   }
 
   warmAll() {
@@ -594,8 +598,8 @@ import footer.scroll`
     const { virtualFiles } = this
 
     let notFoundPage = ""
-    if (virtualFiles[siteFolder + "/custom_404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/custom_404.scroll")
-    else notFoundPage = this.compileScrollFile(browserAppFolder + "/custom_404.scroll")
+    if (virtualFiles[siteFolder + "/404.scroll"]) notFoundPage = this.compileScrollFile(siteFolder + "/404.scroll")
+    else notFoundPage = this.compileScrollFile(browserAppFolder + "/404.scroll")
 
     // Rows used to have the "/truebase" prefix until version 17. Keep this redirect in for a bit to not break external links.
     this.app.get("/truebase/:id", (req: any, res: any, next: any) => res.status(302).redirect(`/rows/${req.params.id}`))
@@ -763,6 +767,8 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
     defaultScrollFiles.forEach((file: string) => (virtualFiles[siteFolder + "/" + path.basename(file)] = Disk.read(file)))
     this.warmCsvFiles()
     this.warmQueriesPage()
+
+    virtualFiles[`${siteFolder}/stats.scroll`] = this.statusPage
 
     Disk.recursiveReaddirSync(siteFolder, (filename: string) => {
       if (!filename.endsWith(".scroll")) return

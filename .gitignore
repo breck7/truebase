@@ -6,3 +6,4 @@ ignore/
 .nyc_output/
 coverage/
 *.html
+static/

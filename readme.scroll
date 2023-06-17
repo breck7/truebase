@@ -11,8 +11,8 @@ import demos.scroll
 startColumns 2
 
 ? Where can I try it?
-The examples above are live-you can play with them right on this page! PLDB.com and CancerDB.com are both powered by TrueBase.
- https://pldb.com PLDB.com
+The examples above are live-you can play with them right on this page! PLDB.pub and CancerDB.com are both powered by TrueBase.
+ https://pldb.pub PLDB.pub
  https://cancerdb.com CancerDB
 
 ? Where are the Release Notes?
@@ -24,15 +24,15 @@ Yes. We offer a paid complete white-glove service for moonshot problems. You can
  https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
 
 ? What is TrueBase?
-TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (rows and column schemas) that compile to a single giant table ("the model") that can be used to answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.
+TrueBase is a new kind of database designed for modeling complex systems. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (concepts which adhere to column schemas) that compile to a single table ("the model") that can be used to answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.
 
 ? What is the relationship between TrueBase and LLMs?
 TrueBase will benefit greatly from LLMs. First, they will provide a powerful and easy new way to query a TrueBase using natural language. Second, they will help experts building TrueBases add data, identify and fix mistakes, and even help improve the schemas of a TrueBase.
 
-TrueBases may also help solve the "hallucination problem" in LLMs by providing trustworthy datatables that can be queried and referenced when answering prompts.
+TrueBases may also help solve the "hallucination problem" in LLMs by providing trustworthy data that can be queried and referenced when answering prompts.
 
 ? Why TrueBase?
-We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information warzone. TrueBase is the _database that makes no compromises on truth_. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth. Certain "scientific" fields are easily corrupted by money—we are designing TrueBase to mathematically solve these problems.
+Modeling complex systems is hard. In addition to just dealing with complexity one has to worry about propaganda, advertisements, paywalls, trackers, licenses, proprietary formats and so forth. TrueBase is designed to be a simply way to slowly build complex models while making no compromises on truth.
 
 ? What are the features?
 - Data is stored in plain text
@@ -66,27 +66,27 @@ TrueBase is very minimal. It's built on Tree Notation, a syntax-free notation th
 ### Triangle of Truth
 Traditional encyclopedias are weakly linked articles about things. Question sites are weakly typed narrative answers to user questions. TrueBase is different.
 
-TrueBase is focused on computable structured data. We call this the "triangle of truth": Rows, Columns and Questions.
+TrueBase is focused on computable structured data. We call this the "triangle of truth": Concepts, Questions and Models.
 
-#### Rows
-First we start adding rows to the database. Each row is a simple file about a thing. But it's not enough just to just list and describe the things.
-
-#### Columns
-Structured columns are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of columns.
-
-Our *critical column bet* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a column indicating who paid for a study.
-
-So in a TrueBase, it's just as easy to add a column as it is to add a row. Sometimes adding the right column can completely flip the answer to the question someone might have, or indicate that the question cannot yet be truthfully answered, more so than dozens of confirmatory columns.
+#### Concepts
+First we start adding concepts to the database. Each concept is a single file about a thing. But it's not enough just to just list and describe the things.
 
 #### Questions
-Questions are the fun part. Once we have a lot of data, you can use that to answer questions you might have in a data driven way. You can download and export the data in any format you wish or just query using the built-in TQL language to create your reports and answer your questions.
+Structured questions are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of questions.
+
+Our *critical question bet* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a question indicating who paid for a study.
+
+So in a TrueBase, it's just as easy to add a question as it is to add a concept. Sometimes adding a new question can completely flip the model or change the certainty of a model, more so than adding more answers to existing questions.
+
+#### Models
+Models are the fun part. Once we have a lot of data, you can use that to build your own models about how things work.
 
 ### Interconnectedness
 Interconnectedness of the data is very important. When you put the effort in to integrate disparate data into one model, the resulting model is worth more than the sum of its parts. Not only does it become more useful because it's easier to compute over, but it also becomes increasingly difficult to lie as the size of a TrueBase increases due to the increasing number of logical constraints that the data would have to violate. A big TrueBase is hard to vary.
 
 ? How does TrueBase work, in practice?
 In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand.
-You put your data in Tree Notation form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible, making it timeless. No matter what format you need your data in the future it will be perfectly preserved in the simplest form possible. You will never regret putting your data in a TrueBase.
+You put your data in Tree Notation form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible. This also helps make it timeless as no matter what format you need your data in the future it will be preserved in the simplest form possible. You will never regret putting your data in a TrueBase.
  https://treenotation.org Tree Notation
 A growing ecosystem of tooling makes it easy to augment your TrueBase with data from Large Language Models, web crawlers, and APIs, and run integrity checks, steadily making your TrueBase truer and truer.
 You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like autocomplete and syntax highlighting.

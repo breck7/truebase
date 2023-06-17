@@ -51,7 +51,7 @@ This release renames the "questions" concept to "queries" and downgrades its vis
 - 🎉 upstream login page from PLDB
 - 🎉 upgrade Scroll for better list styles
 - 🎉 new `setSettingsFromPath` method on TrueBaseFolder
-- ⚠️ BREAKING: all occurences of `thingsFolder` should now be `rowsFolder`
+- ⚠️ BREAKING: all occurences of `thingsFolder` should now be `conceptsFolder`
 - ⚠️ BREAKING: `/truebase/` routes are now `/rows/` routes. Redirect code added so old links still work.
 
 # 16.10.0 2023-5-8

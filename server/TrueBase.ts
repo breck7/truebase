@@ -10,6 +10,7 @@ const { Utils } = require("jtree/products/Utils.js")
 import { UserFacingErrorMessages, UserFacingWarningMessages } from "./ErrorMessages"
 import { TrueBaseSettingsObject } from "./TrueBaseSettings"
 const grammarParser = require("jtree/products/grammar.nodejs.js")
+const genericTqlParser = require("../tql/tql.nodejs.js")
 
 declare type stringMap = { [firstWord: string]: any }
 declare type fileName = string
@@ -897,4 +898,202 @@ class TrueBaseFolder extends TreeNode {
   }
 }
 
-export { TrueBaseFile, TrueBaseFolder, TrueBaseSettingsObject }
+const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
+const escapeHtml = (str: string) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;")
+const delimiter = " DeLiM "
+
+const transposeArray = (arrayOfObjects: any[]) => {
+  let transposed: any = {}
+
+  arrayOfObjects.forEach(obj => {
+    for (let property in obj) {
+      if (property !== "id") {
+        if (!transposed[property]) transposed[property] = { Column: property }
+        transposed[property][obj.id] = obj[property]
+      }
+    }
+  })
+
+  return Object.values(transposed)
+}
+
+class SearchServer {
+  constructor(trueBaseFolder: TrueBaseFolder, ignoreFolder: string, tqlParser = genericTqlParser) {
+    this.folder = trueBaseFolder
+    this.ignoreFolder = ignoreFolder
+    this.searchRequestLog = path.join(this.ignoreFolder, "searchLog.tree")
+    this.tqlParser = tqlParser
+  }
+
+  searchRequestLog: any
+  searchCache: any = {}
+  ignoreFolder: string
+  folder: TrueBaseFolder
+  tqlParser: any
+
+  _touchedLog = false
+  logQuery(originalQuery: string, ip: string, format = "html") {
+    const tree = `search
+ time ${Date.now()}
+ ip ${ip}
+ format ${format}
+ query
+  ${originalQuery.replace(/\n/g, "\n  ")} 
+`
+
+    if (!this._touchedLog) {
+      Disk.touch(this.searchRequestLog)
+      this._touchedLog = true
+    }
+
+    fs.appendFile(this.searchRequestLog, tree, function () {})
+    return this
+  }
+
+  logAndRunSearch(originalQuery = "", format = "object", ip = "") {
+    this.logQuery(originalQuery, ip, format)
+    return (<any>this)[format](decodeURIComponent(originalQuery).replace(/\r/g, ""))
+  }
+
+  columnsToCompare(files: TrueBaseFile[]) {
+    // Todo: return the most interesting columns to compare first.
+    return lodash.uniq(lodash.flatten(files.map(file => file.filledColumnNames)))
+  }
+
+  // todo: cleanup
+  searchToScroll(originalQuery: string, canonicalLink = "") {
+    const { hits, queryTime, columnNames, errors, title, description } = this.search(decodeURIComponent(originalQuery).replace(/\r/g, ""))
+    const { folder } = this
+    const results = new TreeNode(hits)._toDelimited(delimiter, columnNames, delimitedEscapeFunction)
+    const encodedTitle = Utils.escapeScrollAndHtml(title)
+    const encodedDescription = Utils.escapeScrollAndHtml(description)
+    const encodedQuery = encodeURIComponent(originalQuery)
+    const scrollCode = `import header.scroll
+
+canonicalLink ${canonicalLink}
+
+title ${encodedTitle ? encodedTitle : "Search Results"}
+ hidden
+
+${encodedDescription ? `description ${encodedDescription}` : ""}
+
+html
+ <form method="get" action="/search.html" class="tqlForm">
+ <textarea id="tqlInput" name="q">${escapeHtml(originalQuery.replace(/\r/g, "").replace(/\n/g, "\n "))}</textarea>
+ <input type="submit" value="Search"></form>
+
+<div id="tqlErrors"></div>
+
+Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s. <span id="publishQuery"></span>
+ class trueBaseThemeSearchResultsHeader
+
+${title ? `# ${encodedTitle}` : ""}
+${description ? `* ${encodedDescription}` : ""}
+
+table ${delimiter}
+ ${results.replace(/\n/g, "\n ")}
+
+Results as JSON, CSV, TSV or Tree
+ link /search.json?q=${encodedQuery} JSON
+ link /search.csv?q=${encodedQuery} CSV
+ link /search.tsv?q=${encodedQuery} TSV
+ link /search.tree?q=${encodedQuery} Tree
+
+<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().render().renderSearchPage())</script>
+
+import footer.scroll`
+
+    return scrollCode
+  }
+
+  search(treeQLCode: string) {
+    const { searchCache, tqlParser } = this
+    if (searchCache[treeQLCode]) return searchCache[treeQLCode]
+
+    const queryAsTree = new TreeNode(treeQLCode)
+    const startTime = Date.now()
+    let hits = []
+    let errors = ""
+    let columnNames: string[] = []
+    try {
+      const isCompareQuery = queryAsTree.has("compare")
+      const adjustedQuery = isCompareQuery ? treeQLCode + `\nwhere id oneOf ${queryAsTree.get("compare")}` : treeQLCode
+      const treeQLProgram = new tqlParser(adjustedQuery)
+      const programErrors = treeQLProgram.scopeErrors.concat(treeQLProgram.getAllErrors())
+      if (programErrors.length) throw new Error(programErrors.map((err: any) => err.message).join(" "))
+      const sortBy = treeQLProgram.get("sortBy")
+      let rawHits = treeQLProgram.filterFolder(this.folder)
+      if (sortBy) {
+        const sortByFns = sortBy.split(" ").map((columnName: string) => (file: any) => file.getTypedValue(columnName))
+        rawHits = lodash.sortBy(rawHits, sortByFns)
+      }
+      if (treeQLProgram.has("reverse")) rawHits.reverse()
+
+      // By default right now we basically add: select title titleLink
+      // We will probably ditch that in the future and make it explicit.
+      if (treeQLProgram.has("selectAll")) columnNames = treeQLProgram.rootGrammarTree.get("columnNameCell enum")?.split(" ") ?? Object.keys(rawHits[0]?.typed || undefined) ?? ["title"]
+      else if (isCompareQuery) columnNames = this.columnsToCompare(rawHits)
+      else columnNames = ["title", "titleLink"].concat((treeQLProgram.get("select") || "").split(" ").filter((i: string) => i))
+
+      let matchingFilesAsObjectsWithSelectedColumns = rawHits.map((file: any) => {
+        const obj = file.selectAsObject(columnNames)
+        obj.titleLink = file.webPermalink
+        return obj
+      })
+
+      const limit = treeQLProgram.get("limit")
+      if (limit) matchingFilesAsObjectsWithSelectedColumns = matchingFilesAsObjectsWithSelectedColumns.slice(0, parseInt(limit))
+
+      treeQLProgram.findNodes("addColumn").forEach((node: any) => {
+        const newName = node.getWord(1)
+        const code = node.getWordsFrom(2).join(" ")
+        matchingFilesAsObjectsWithSelectedColumns.forEach((row: any, index: number) => (row[newName] = eval(`\`${code}\``)))
+        columnNames.push(newName)
+      })
+
+      treeQLProgram.findNodes("rename").forEach((node: any) => {
+        const oldName = node.getWord(1)
+        const newName = node.getWord(2)
+        matchingFilesAsObjectsWithSelectedColumns.forEach((obj: any) => {
+          obj[newName] = obj[oldName]
+          delete obj[oldName]
+          columnNames = columnNames.map(columnName => (oldName === columnName ? newName : columnName))
+        })
+      })
+
+      hits = matchingFilesAsObjectsWithSelectedColumns
+
+      if (isCompareQuery) {
+        columnNames = hits.map((obj: any) => obj.id)
+        columnNames.unshift("Column")
+        hits = transposeArray(hits)
+      }
+    } catch (err) {
+      errors = err.toString()
+      console.error(err)
+    }
+
+    searchCache[treeQLCode] = { hits, queryTime: numeral((Date.now() - startTime) / 1000).format("0.00"), columnNames, errors, title: queryAsTree.get("title"), description: queryAsTree.get("description") }
+    return searchCache[treeQLCode]
+  }
+
+  json(treeQLCode: string) {
+    return JSON.stringify(this.search(treeQLCode).hits, undefined, 2)
+  }
+
+  tree(treeQLCode: string) {
+    return new TreeNode(this.search(treeQLCode).hits).asString
+  }
+
+  csv(treeQLCode: string) {
+    const { hits, columnNames } = this.search(treeQLCode)
+    return new TreeNode(hits).toDelimited(",", columnNames, delimitedEscapeFunction)
+  }
+
+  tsv(treeQLCode: string) {
+    const { hits, columnNames } = this.search(treeQLCode)
+    return new TreeNode(hits).toDelimited("\t", columnNames, delimitedEscapeFunction)
+  }
+}
+
+export { TrueBaseFile, TrueBaseFolder, TrueBaseSettingsObject, SearchServer }

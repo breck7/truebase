@@ -1,6 +1,5 @@
 #!/usr/bin/env ts-node
 
-import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
 import { TrueBaseServer } from "./TrueBaseServer"
 
 const path = require("path")
@@ -21,10 +20,10 @@ testTree.search = (equal: any) => {
 where diameter > 1
 sortBy diameter
 reverse`
-  const resultsAdvanced = PlanetsDB.searchToHtml(searchQuery)
+  const resultsAdvanced = searchServer.searchToScroll(searchQuery)
   equal(resultsAdvanced.includes("Mars"), true)
   // Test Cache
-  equal(PlanetsDB.searchToHtml(searchQuery).includes("Mars"), true)
+  equal(searchServer.searchToScroll(searchQuery).includes("Mars"), true)
   // Test formats
   equal(searchServer.json(searchQuery).length > 1, true)
   equal(searchServer.tree(searchQuery).length > 1, true)

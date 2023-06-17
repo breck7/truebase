@@ -1,7 +1,6 @@
 const fs = require("fs")
 const fse = require("fs-extra")
 const path = require("path")
-const lodash = require("lodash")
 const numeral = require("numeral")
 const morgan = require("morgan")
 const https = require("https")
@@ -18,40 +17,19 @@ const { GrammarCompiler } = require("jtree/products/GrammarCompiler.js")
 const grammarParser = require("jtree/products/grammar.nodejs.js")
 const { ScrollFile, ScrollFileSystem } = require("scroll-cli")
 
-const genericTqlParser = require("../tql/tql.nodejs.js")
 const jtreeProductsFolder = path.dirname(require.resolve("jtree"))
 const zlib = require("zlib")
 
 const browserAppFolder = path.join(__dirname, "..", "browser")
 
-const delimitedEscapeFunction = (value: any) => (value.includes("\n") ? value.split("\n")[0] : value)
-const delimiter = " DeLiM "
-
 import { UserFacingErrorMessages } from "./ErrorMessages"
-import { TrueBaseFolder, TrueBaseFile } from "./TrueBase"
+import { TrueBaseFolder, TrueBaseFile, SearchServer } from "./TrueBase"
 
 import { TrueBaseServerSettingsObject } from "./TrueBaseSettings"
 
 declare type stringMap = { [firstWord: string]: string }
 
 const resolvePath = (folder: string, baseDir: string) => (path.isAbsolute(folder) ? path.normalize(folder) : path.resolve(path.join(baseDir, folder)))
-
-const transposeArray = (arrayOfObjects: any[]) => {
-  let transposed: any = {}
-
-  arrayOfObjects.forEach(obj => {
-    for (let property in obj) {
-      if (property !== "id") {
-        if (!transposed[property]) transposed[property] = { Column: property }
-        transposed[property][obj.id] = obj[property]
-      }
-    }
-  })
-
-  return Object.values(transposed)
-}
-
-const escapeHtml = (str: string) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;")
 
 class TrueBaseServer {
   _folder: TrueBaseFolder
@@ -414,7 +392,15 @@ class TrueBaseServer {
   }
 
   _initSearch() {
-    this.searchServer = new SearchServer(this.folder, this.settings.ignoreFolder)
+    if (!this.extendedTqlParser) throw new Error("Extended TQL needs to be built first.") // Todo: cleanup
+    this.searchServer = new SearchServer(this.folder, this.settings.ignoreFolder, this.extendedTqlParser)
+  }
+
+  searchCommand() {
+    // todo: cleanup
+    this.warmGrammarFiles()
+    this._initSearch()
+    console.log(this.searchServer.csv(process.argv.slice(3).join(" ")))
   }
 
   _addSearchRoutes() {
@@ -446,52 +432,6 @@ class TrueBaseServer {
     app.get("/fullTextSearch", (req: any, res: any) => res.redirect(`/search.html?q=includes+${req.query.q}`))
 
     return this
-  }
-
-  // todo: cleanup
-  searchToHtml(originalQuery: string, canonicalLink = "") {
-    const { hits, queryTime, columnNames, errors, title, description } = this.searchServer.search(decodeURIComponent(originalQuery).replace(/\r/g, ""), this.extendedTqlParser)
-    const { folder } = this
-    const results = new TreeNode(hits)._toDelimited(delimiter, columnNames, delimitedEscapeFunction)
-    const encodedTitle = Utils.escapeScrollAndHtml(title)
-    const encodedDescription = Utils.escapeScrollAndHtml(description)
-    const encodedQuery = encodeURIComponent(originalQuery)
-    const scrollCode = `import header.scroll
-
-canonicalLink ${canonicalLink}
-
-title ${encodedTitle ? encodedTitle : "Search Results"}
- hidden
-
-${encodedDescription ? `description ${encodedDescription}` : ""}
-
-html
- <form method="get" action="/search.html" class="tqlForm">
- <textarea id="tqlInput" name="q">${escapeHtml(originalQuery.replace(/\r/g, "").replace(/\n/g, "\n "))}</textarea>
- <input type="submit" value="Search"></form>
-
-<div id="tqlErrors"></div>
-
-Searched ${numeral(folder.length).format("0,0")} files and found ${hits.length} matches in ${queryTime}s. <span id="publishQuery"></span>
- class trueBaseThemeSearchResultsHeader
-
-${title ? `# ${encodedTitle}` : ""}
-${description ? `* ${encodedDescription}` : ""}
-
-table ${delimiter}
- ${results.replace(/\n/g, "\n ")}
-
-Results as JSON, CSV, TSV or Tree
- link /search.json?q=${encodedQuery} JSON
- link /search.csv?q=${encodedQuery} CSV
- link /search.tsv?q=${encodedQuery} TSV
- link /search.tree?q=${encodedQuery} Tree
-
-<script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().render().renderSearchPage())</script>
-
-import footer.scroll`
-
-    return this.parseScroll(scrollCode).html
   }
 
   parseScroll(scrollCode: string, virtualFilePath = `${this.settings.siteFolder}/random-${Utils.getRandomCharacters(24)}.scroll`) {
@@ -671,6 +611,10 @@ import footer.scroll`
   }
 
   queryCache: any = {}
+
+  searchToHtml(originalQuery: string, canonicalLink = "") {
+    return this.parseScroll(this.searchServer.searchToScroll(originalQuery, canonicalLink)).html
+  }
 
   compileScrollFile(filepath: string) {
     const file = this.scrollFileSystem.getScrollFile(filepath)
@@ -967,10 +911,6 @@ import footer.scroll`
     })
   }
 
-  searchCommand() {
-    console.log(new SearchServer(this.folder, this.settings.ignoreFolder).csv(process.argv.slice(3).join(" ")))
-  }
-
   get testTree() {
     const { siteFolder } = this.settings
     const testTree: any = {}
@@ -1025,137 +965,6 @@ import footer.scroll`
       runner.finish()
     }
     testAll()
-  }
-}
-
-class SearchServer {
-  constructor(trueBaseFolder: TrueBaseFolder, ignoreFolder: string) {
-    this.folder = trueBaseFolder
-    this.ignoreFolder = ignoreFolder
-    this.searchRequestLog = path.join(this.ignoreFolder, "searchLog.tree")
-  }
-
-  searchRequestLog: any
-  searchCache: any = {}
-  ignoreFolder: string
-  folder: TrueBaseFolder
-
-  _touchedLog = false
-  logQuery(originalQuery: string, ip: string, format = "html") {
-    const tree = `search
- time ${Date.now()}
- ip ${ip}
- format ${format}
- query
-  ${originalQuery.replace(/\n/g, "\n  ")} 
-`
-
-    if (!this._touchedLog) {
-      Disk.touch(this.searchRequestLog)
-      this._touchedLog = true
-    }
-
-    fs.appendFile(this.searchRequestLog, tree, function () {})
-    return this
-  }
-
-  logAndRunSearch(originalQuery = "", format = "object", ip = "") {
-    this.logQuery(originalQuery, ip, format)
-    return (<any>this)[format](decodeURIComponent(originalQuery).replace(/\r/g, ""))
-  }
-
-  columnsToCompare(files: TrueBaseFile[]) {
-    // Todo: return the most interesting columns to compare first.
-    return lodash.uniq(lodash.flatten(files.map(file => file.filledColumnNames)))
-  }
-
-  search(treeQLCode: string, tqlParser: any = genericTqlParser) {
-    const { searchCache } = this
-    if (searchCache[treeQLCode]) return searchCache[treeQLCode]
-
-    const queryAsTree = new TreeNode(treeQLCode)
-    const startTime = Date.now()
-    let hits = []
-    let errors = ""
-    let columnNames: string[] = []
-    try {
-      const isCompareQuery = queryAsTree.has("compare")
-      const adjustedQuery = isCompareQuery ? treeQLCode + `\nwhere id oneOf ${queryAsTree.get("compare")}` : treeQLCode
-      const treeQLProgram = new tqlParser(adjustedQuery)
-      const programErrors = treeQLProgram.scopeErrors.concat(treeQLProgram.getAllErrors())
-      if (programErrors.length) throw new Error(programErrors.map((err: any) => err.message).join(" "))
-      const sortBy = treeQLProgram.get("sortBy")
-      let rawHits = treeQLProgram.filterFolder(this.folder)
-      if (sortBy) {
-        const sortByFns = sortBy.split(" ").map((columnName: string) => (file: any) => file.getTypedValue(columnName))
-        rawHits = lodash.sortBy(rawHits, sortByFns)
-      }
-      if (treeQLProgram.has("reverse")) rawHits.reverse()
-
-      // By default right now we basically add: select title titleLink
-      // We will probably ditch that in the future and make it explicit.
-      if (treeQLProgram.has("selectAll")) columnNames = treeQLProgram.rootGrammarTree.get("columnNameCell enum")?.split(" ") ?? Object.keys(rawHits[0]?.typed || undefined) ?? ["title"]
-      else if (isCompareQuery) columnNames = this.columnsToCompare(rawHits)
-      else columnNames = ["title", "titleLink"].concat((treeQLProgram.get("select") || "").split(" ").filter((i: string) => i))
-
-      let matchingFilesAsObjectsWithSelectedColumns = rawHits.map((file: any) => {
-        const obj = file.selectAsObject(columnNames)
-        obj.titleLink = file.webPermalink
-        return obj
-      })
-
-      const limit = treeQLProgram.get("limit")
-      if (limit) matchingFilesAsObjectsWithSelectedColumns = matchingFilesAsObjectsWithSelectedColumns.slice(0, parseInt(limit))
-
-      treeQLProgram.findNodes("addColumn").forEach((node: any) => {
-        const newName = node.getWord(1)
-        const code = node.getWordsFrom(2).join(" ")
-        matchingFilesAsObjectsWithSelectedColumns.forEach((row: any, index: number) => (row[newName] = eval(`\`${code}\``)))
-        columnNames.push(newName)
-      })
-
-      treeQLProgram.findNodes("rename").forEach((node: any) => {
-        const oldName = node.getWord(1)
-        const newName = node.getWord(2)
-        matchingFilesAsObjectsWithSelectedColumns.forEach((obj: any) => {
-          obj[newName] = obj[oldName]
-          delete obj[oldName]
-          columnNames = columnNames.map(columnName => (oldName === columnName ? newName : columnName))
-        })
-      })
-
-      hits = matchingFilesAsObjectsWithSelectedColumns
-
-      if (isCompareQuery) {
-        columnNames = hits.map((obj: any) => obj.id)
-        columnNames.unshift("Column")
-        hits = transposeArray(hits)
-      }
-    } catch (err) {
-      errors = err.toString()
-      console.error(err)
-    }
-
-    searchCache[treeQLCode] = { hits, queryTime: numeral((Date.now() - startTime) / 1000).format("0.00"), columnNames, errors, title: queryAsTree.get("title"), description: queryAsTree.get("description") }
-    return searchCache[treeQLCode]
-  }
-
-  json(treeQLCode: string) {
-    return JSON.stringify(this.search(treeQLCode).hits, undefined, 2)
-  }
-
-  tree(treeQLCode: string) {
-    return new TreeNode(this.search(treeQLCode).hits).asString
-  }
-
-  csv(treeQLCode: string) {
-    const { hits, columnNames } = this.search(treeQLCode)
-    return new TreeNode(hits).toDelimited(",", columnNames, delimitedEscapeFunction)
-  }
-
-  tsv(treeQLCode: string) {
-    const { hits, columnNames } = this.search(treeQLCode)
-    return new TreeNode(hits).toDelimited("\t", columnNames, delimitedEscapeFunction)
   }
 }
 

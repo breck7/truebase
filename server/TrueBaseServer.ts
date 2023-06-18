@@ -41,8 +41,8 @@ class TrueBaseServer {
   constructor(settingsFilepath: string, folder?: TrueBaseFolder) {
     const settings = TreeNode.fromDisk(settingsFilepath).toObject()
     const dirname = path.dirname(settingsFilepath)
-    settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
-    settings.rowsFolder = resolvePath(settings.rowsFolder, dirname)
+    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    settings.conceptsFolder = resolvePath(settings.conceptsFolder, dirname)
     settings.queriesFolder = resolvePath(settings.queriesFolder, dirname)
     settings.ignoreFolder = resolvePath(settings.ignoreFolder, dirname)
     settings.siteFolder = resolvePath(settings.siteFolder, dirname)
@@ -56,8 +56,8 @@ class TrueBaseServer {
   }
 
   get staticFolders() {
-    const { siteFolder, grammarFolder, rowsFolder, queriesFolder } = this.settings
-    return [{ folder: browserAppFolder }, { folder: siteFolder }, { folder: grammarFolder, nested: "/grammar/" }, { folder: rowsFolder, nested: "/rows/" }, { folder: queriesFolder, nested: "/queries/" }]
+    const { siteFolder, questionsFolder, conceptsFolder, queriesFolder } = this.settings
+    return [{ folder: browserAppFolder }, { folder: siteFolder }, { folder: questionsFolder, nested: "/questions/" }, { folder: conceptsFolder, nested: "/concepts/" }, { folder: queriesFolder, nested: "/queries/" }]
   }
 
   get app() {
@@ -66,7 +66,7 @@ class TrueBaseServer {
     const app = express()
     app.use(compression())
     this._app = app
-    const { ignoreFolder, siteFolder, grammarFolder, rowsFolder, queriesFolder } = this.settings
+    const { ignoreFolder, siteFolder, questionsFolder, conceptsFolder, queriesFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
     const requestLog = path.join(ignoreFolder, "access.log")
@@ -153,7 +153,7 @@ class TrueBaseServer {
     })
 
     // Short urls:
-    app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/rows/${req.params.id.toLowerCase()}.html`) : next()))
+    app.get("/:id", (req: any, res: any, next: any) => (this.folder.getFile(req.params.id.toLowerCase()) ? res.status(302).redirect(`/concepts/${req.params.id.toLowerCase()}.html`) : next()))
 
     return this._app
   }
@@ -517,7 +517,7 @@ class TrueBaseServer {
     const { siteFolder } = this.settings
     this.warmAll()
 
-    this.folder.forEach((file: any) => (virtualFiles[siteFolder + `/rows/${file.id}.scroll`] = file.toScroll()))
+    this.folder.forEach((file: any) => (virtualFiles[siteFolder + `/concepts/${file.id}.scroll`] = file.toScroll()))
 
     this._initSearch()
     this.folder.queriesTree.forEach((query: any) => (virtualFiles[`/queries/${query.getLine().replace(".tql", "")}.html`] = this.searchToHtml(query.childrenToString())))
@@ -567,16 +567,16 @@ class TrueBaseServer {
     else notFoundPage = this.compileScrollFile(browserAppFolder + "/404.scroll")
 
     // Rows used to have the "/truebase" prefix until version 17. Keep this redirect in for a bit to not break external links.
-    this.app.get("/truebase/:id", (req: any, res: any, next: any) => res.status(302).redirect(`/rows/${req.params.id}`))
+    this.app.get("/truebase/:id", (req: any, res: any, next: any) => res.status(302).redirect(`/concepts/${req.params.id}`))
 
     // Do not convert the file to a Scroll until requested
-    this.app.get("/rows/:filename", (req: any, res: any, next: any) => {
+    this.app.get("/concepts/:filename", (req: any, res: any, next: any) => {
       const virtualPath = siteFolder + "/" + req.params.filename
       if (virtualFiles[virtualPath]) return res.send(virtualFiles[virtualPath])
 
       const id = req.params.filename.replace(".html", "")
       const file = this.folder.getFile(id)
-      if (file) virtualFiles[siteFolder + `/rows/${file.id}.scroll`] = file.toScroll()
+      if (file) virtualFiles[siteFolder + `/concepts/${file.id}.scroll`] = file.toScroll()
       next()
     })
 
@@ -703,7 +703,7 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
         return {
           label: file.get("title"),
           id: file.id,
-          url: `/rows/${file.id}.html`
+          url: `/concepts/${file.id}.html`
         }
       }),
       undefined,
@@ -755,6 +755,9 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 
   // todo: this still builds files to ignore folder. cleanup.
   warmGrammarFiles() {
+    // Todo: cleanup
+    if (this.extendedTqlParser) return
+
     const { ignoreFolder } = this.settings
     const { folder, virtualFiles, grammarIgnoreFolder, grammarId } = this
     if (!Disk.exists(grammarIgnoreFolder)) Disk.mkdir(grammarIgnoreFolder)
@@ -800,7 +803,7 @@ startColumns 1
 <center>
 <div id="modelVis"></div>
 </center>
-The image above has a pixel for each column and row in the database. The top left pixel represents the column with the most observations. The pixels then flow left to right, then top down, showing the observation count for the column with the next most observations. After a pixel for each column is shown then a pixel is shown for each row.
+The image above has a pixel for each concept and question in the database. The top left pixel represents the questions with the most answers. The pixels then flow left to right, then top down, showing the answer count for the question with the next most answers. After a pixel for each question is shown then a pixel is shown for each concept.
 endColumns
 
 <script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().fetchAndVisualizeDb())</script>
@@ -840,7 +843,7 @@ import footer.scroll`
     const delimiter = `!~DELIM~!`
 
     const csvTemplate = `import header.scroll
-title SITE_NAME Column Documentation
+title SITE_NAME Questions
 
 css
  .scrollTableComponent td {
@@ -855,12 +858,12 @@ css
 Download TRUEBASE_ID.csv
  link TRUEBASE_ID.csv
 
-SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} rows and ${folder.colNamesForCsv.length} columns and is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
+SITE_NAME contains ${folder.colNamesForCsv.length} questions on ${folder.length} concepts and builds one main CSV file. \`TRUEBASE_ID.csv\` is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
       compressedContent.length
-    ).format("0.0b")} <a href="${compressedLink}">compressed</a>). Every row is an entity and every entity is one row. You can also download the typed tree structured data as JSON.
+    ).format(
+      "0.0b"
+    )} <a href="${compressedLink}">compressed</a>). Every row is an concept and every concept is one row. Every question is one column and every column is one question. You can also download the typed tree structured data as JSON.
  link TRUEBASE_ID.json JSON
-
-# Column Documentation
 
 table ${delimiter}
  ${columnsCsvOutput.columnsMetadataTree.toDelimited(delimiter, columnsCsvOutput.columnMetadataColumnNames, false).replace(/\n/g, "\n  ")}

@@ -20,7 +20,7 @@ declare type parserDef = treeNode
 
 interface ColumnInterface {
   Column: string
-  ColumnLink: string
+  NameLink: string
   Type: string
   Source: string
   SourceLink: string
@@ -50,7 +50,7 @@ class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
   get sourceUrl() {
-    return this.parent.rowsViewSourcePath + this.filename
+    return this.parent.conceptsViewSourcePath + this.filename
   }
 
   get helpfulResearchLinks() {
@@ -88,7 +88,7 @@ import ../footer.scroll`
   }
 
   get webPermalink() {
-    return `/rows/${this.permalink}`
+    return `/concepts/${this.permalink}`
   }
 
   get permalink() {
@@ -328,15 +328,15 @@ class TrueBaseFolder extends TreeNode {
   fileExtension = ""
 
   // todo: move these to .truebase settings file
-  rowsViewSourcePath = `/rows/`
-  grammarViewSourcePath = `/grammar/`
+  conceptsViewSourcePath = `/concepts/`
+  questionsViewSourcePath = `/questions/`
 
   settings: TrueBaseSettingsObject
   setSettings(settings: TrueBaseSettingsObject) {
     this.settings = settings
-    this.dir = settings.rowsFolder
+    this.dir = settings.conceptsFolder
     this.queriesFolder = settings.queriesFolder
-    this.grammarDir = settings.grammarFolder
+    this.grammarDir = settings.questionsFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
     this.grammarCode = new grammarParser(rawCode).format().asString
     this.grammarProgram = new HandGrammarProgram(this.grammarCode)
@@ -348,8 +348,8 @@ class TrueBaseFolder extends TreeNode {
   setSettingsFromPath(settingsFilepath: string) {
     const settings = TreeNode.fromDisk(settingsFilepath).toObject()
     const dirname = path.dirname(settingsFilepath)
-    settings.grammarFolder = resolvePath(settings.grammarFolder, dirname)
-    settings.rowsFolder = resolvePath(settings.rowsFolder, dirname)
+    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    settings.conceptsFolder = resolvePath(settings.conceptsFolder, dirname)
     settings.queriesFolder = resolvePath(settings.queriesFolder, dirname)
     return this.setSettings(settings)
   }
@@ -419,11 +419,11 @@ class TrueBaseFolder extends TreeNode {
     const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
     const urlCells = this.cellIndex["urlCell"] ? this.cellIndex["urlCell"].length : 0
     return `dashboard
- ${this.colNamesForCsv.length} Columns
- ${numeral(this.length).format("0,0")} Rows
+ ${numeral(this.length).format("0,0")} Concepts
+ ${this.colNamesForCsv.length} Questions
  ${numeral(complete).format("0,0")} Filled
  ${numeral(missing).format("0,0")} Missing
- ${numeral(linksToOtherFiles).format("0,0")} Row links
+ ${numeral(linksToOtherFiles).format("0,0")} Concept links
  ${numeral(urlCells).format("0,0")} URLs
  ${numeral(this.queriesTree.length).format("0,0")} Queries
  ${numeral(this.bytes).format("0,0")} Bytes
@@ -576,7 +576,7 @@ class TrueBaseFolder extends TreeNode {
 
   get columnsCsvOutput() {
     const columnsMetadataTree = new TreeNode(this.columnDocumentation)
-    const columnMetadataColumnNames = ["Index", "Column", "ColumnLink", "Values", "Coverage", "Type", "Example", "Description", "Source", "SourceLink", "Definition", "DefinitionLink"]
+    const columnMetadataColumnNames = ["Index", "Name", "NameLink", "Question", "Example", "Values", "Coverage", "Type", "Source", "SourceLink", "Definition", "DefinitionLink"]
 
     const columnsCsv = columnsMetadataTree.toDelimited(",", columnMetadataColumnNames)
 
@@ -594,7 +594,7 @@ class TrueBaseFolder extends TreeNode {
   get basicColumnDocumentation(): ColumnInterface[] {
     if (this.quickCache.basicColumnDocumentation) return this.quickCache.basicColumnDocumentation
 
-    const { colNameToParserDefMap, grammarViewSourcePath } = this
+    const { colNameToParserDefMap, questionsViewSourcePath } = this
     const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
     const cols = this.colNamesForCsv.map((Column: string) => {
       const parserDef = colNameToParserDefMap.get(Column)
@@ -604,21 +604,23 @@ class TrueBaseFolder extends TreeNode {
       const Source = parserDef.getFrom("string sourceDomain")
       const Type = parserDef.constantsObject.typeForCsvDocs
       const columnsToSelect = Column.includes("_") ? [Column, Column.split("_")[0]].join("+") : Column
-      const ColumnLink = `search.html?q=select+${columnsToSelect}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
+      const NameLink = `search.html?q=select+${columnsToSelect}%0D%0AnotMissing+${Column}%0D%0AsortBy+${Column}%0D%0Areverse`
       const sourceLocation = this.getFilePathAndLineNumberWhereParserIsDefined(colDefId)
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
       const Definition = path.basename(sourceLocation.filePath)
-      const DefinitionLink = `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
+      const DefinitionLink = `${questionsViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
       const SourceLink = Source ? `https://${Source}` : ""
       return {
         Column,
-        ColumnLink,
+        Name: Column,
+        NameLink,
         Type,
         Source,
         SourceLink,
         Description,
         Definition,
+        Question: Description,
         DefinitionLink,
         Computed,
         Recommended: parserDef && parserDef.getFrom("boolean alwaysRecommended") === "true"
@@ -807,7 +809,7 @@ class TrueBaseFolder extends TreeNode {
     if (this._isLoaded) return this
 
     const allFiles = Disk.getFiles(this.dir)
-    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.rowsFolder))
+    if (!allFiles.length) this.warn(UserFacingWarningMessages.noFiles(this.conceptsFolder))
 
     const files = this._filterFiles(Disk.getFiles(this.dir))
     if (!files.length) this.warn(UserFacingWarningMessages.noFilesWithRightExtension(this.fileExtension))

@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => document.querySelectorAll(".
 </div></div>
 <center>
 <div class="iframeHolder">
-<iframe src="https://pldb.com/"></iframe>
+<iframe src="https://pldb.pub/"></iframe>
 </div>
 <div class="iframeHolder">
 <iframe src="https://cancerdb.com/"></iframe>
@@ -362,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => document.querySelectorAll(".
 }</style>
 <div class="scrollColumns" style="column-width:35ch;column-count:2;max-width:90ch;">
 <div class="scrollSection"><h4 class="scrollQuestion">Where can I try it?</h4>
-<p class="scrollParagraph">The examples above are live-you can play with them right on this page! <a href="https://pldb.com">PLDB.com</a> and <a href="https://cancerdb.com">CancerDB</a>.com are both powered by TrueBase.</p>
+<p class="scrollParagraph">The examples above are live-you can play with them right on this page! <a href="https://pldb.pub">PLDB.pub</a> and <a href="https://cancerdb.com">CancerDB</a>.com are both powered by TrueBase.</p>
 </div>
 <div class="scrollSection"><h4 class="scrollQuestion">Where are the Release Notes?</h4>
 <p class="scrollParagraph"><a href="releaseNotes.html">Here</a></p>
@@ -371,14 +371,14 @@ document.addEventListener("DOMContentLoaded", () => document.querySelectorAll(".
 <p class="scrollParagraph">Yes. We offer a paid complete <a href="https://buy.stripe.com/cN2aIq82JfD7fqU9AJ">white-glove service</a> for moonshot problems. You can also email <a href="mailto:moonshots@truebase.pub">moonshots@truebase.pub</a> for a custom quote.</p>
 </div>
 <div class="scrollSection"><h4 class="scrollQuestion">What is TrueBase?</h4>
-<p class="scrollParagraph">TrueBase is a new kind of database designed from the ground up for trust. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (rows and column schemas) that compile to a single giant table ("the model") that can be used to answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.</p>
+<p class="scrollParagraph">TrueBase is a new kind of database designed for modeling complex systems. TrueBase is like Wikipedia but fully computable—the focus is on comparable data, not narratives. A TrueBase is a collection of files (concepts which adhere to column schemas) that compile to a single table ("the model") that can be used to answer questions in a data backed way. TrueBase is a way to build an "expert system" out of simple parts. A TrueBase model is fully human readable and auditable—there are no black box parameters.</p>
 </div>
 <div class="scrollSection"><h4 class="scrollQuestion">What is the relationship between TrueBase and LLMs?</h4>
 <p class="scrollParagraph">TrueBase will benefit greatly from LLMs. First, they will provide a powerful and easy new way to query a TrueBase using natural language. Second, they will help experts building TrueBases add data, identify and fix mistakes, and even help improve the schemas of a TrueBase.</p>
 </div>
-<p class="scrollParagraph">TrueBases may also help solve the "hallucination problem" in LLMs by providing trustworthy datatables that can be queried and referenced when answering prompts.</p>
+<p class="scrollParagraph">TrueBases may also help solve the "hallucination problem" in LLMs by providing trustworthy data that can be queried and referenced when answering prompts.</p>
 <div class="scrollSection"><h4 class="scrollQuestion">Why TrueBase?</h4>
-<p class="scrollParagraph">We live in an age of lies: of propaganda, advertisements, paywalls, trackers, licenses, proprietary formats, complected languages, patents—an information warzone. TrueBase is the <em>database that makes no compromises on truth</em>. Everything in TrueBase is designed to provide end users with an ever increasing amount of truth. Certain "scientific" fields are easily corrupted by money—we are designing TrueBase to mathematically solve these problems.</p>
+<p class="scrollParagraph">Modeling complex systems is hard. In addition to just dealing with complexity one has to worry about propaganda, advertisements, paywalls, trackers, licenses, proprietary formats and so forth. TrueBase is designed to be a simply way to slowly build complex models while making no compromises on truth.</p>
 </div>
 <div class="scrollSection"><h4 class="scrollQuestion">What are the features?</h4>
 <ul style="text-indent:0px;"><li >Data is stored in plain text</li>
@@ -410,24 +410,24 @@ npm run local</code>
 <div class="scrollSection"><h3 class="scrollParagraph">Triangle of Truth</h3>
 <p class="scrollParagraph">Traditional encyclopedias are weakly linked articles about things. Question sites are weakly typed narrative answers to user questions. TrueBase is different.</p>
 </div>
-<p class="scrollParagraph">TrueBase is focused on computable structured data. We call this the "triangle of truth": Rows, Columns and Questions.</p>
-<div class="scrollSection"><h4 class="scrollParagraph">Rows</h4>
-<p class="scrollParagraph">First we start adding rows to the database. Each row is a simple file about a thing. But it's not enough just to just list and describe the things.</p>
+<p class="scrollParagraph">TrueBase is focused on computable structured data. We call this the "triangle of truth": Concepts, Questions and Models.</p>
+<div class="scrollSection"><h4 class="scrollParagraph">Concepts</h4>
+<p class="scrollParagraph">First we start adding concepts to the database. Each concept is a single file about a thing. But it's not enough just to just list and describe the things.</p>
 </div>
-<div class="scrollSection"><h4 class="scrollParagraph">Columns</h4>
-<p class="scrollParagraph">Structured columns are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of columns.</p>
-</div>
-<p class="scrollParagraph">Our <strong>critical column bet</strong> is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be <em>harmful</em> without a column indicating who paid for a study.</p>
-<p class="scrollParagraph">So in a TrueBase, it's just as easy to add a column as it is to add a row. Sometimes adding the right column can completely flip the answer to the question someone might have, or indicate that the question cannot yet be truthfully answered, more so than dozens of confirmatory columns.</p>
 <div class="scrollSection"><h4 class="scrollParagraph">Questions</h4>
-<p class="scrollParagraph">Questions are the fun part. Once we have a lot of data, you can use that to answer questions you might have in a data driven way. You can download and export the data in any format you wish or just query using the built-in TQL language to create your reports and answer your questions.</p>
+<p class="scrollParagraph">Structured questions are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of questions.</p>
+</div>
+<p class="scrollParagraph">Our <strong>critical question bet</strong> is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be <em>harmful</em> without a question indicating who paid for a study.</p>
+<p class="scrollParagraph">So in a TrueBase, it's just as easy to add a question as it is to add a concept. Sometimes adding a new question can completely flip the model or change the certainty of a model, more so than adding more answers to existing questions.</p>
+<div class="scrollSection"><h4 class="scrollParagraph">Models</h4>
+<p class="scrollParagraph">Models are the fun part. Once we have a lot of data, you can use that to build your own models about how things work.</p>
 </div>
 <div class="scrollSection"><h3 class="scrollParagraph">Interconnectedness</h3>
 <p class="scrollParagraph">Interconnectedness of the data is very important. When you put the effort in to integrate disparate data into one model, the resulting model is worth more than the sum of its parts. Not only does it become more useful because it's easier to compute over, but it also becomes increasingly difficult to lie as the size of a TrueBase increases due to the increasing number of logical constraints that the data would have to violate. A big TrueBase is hard to vary.</p>
 </div>
 <div class="scrollSection"><h4 class="scrollQuestion">How does TrueBase work, in practice?</h4>
 <p class="scrollParagraph">In TrueBase, you store your data in plain text files. This means your data is readily accessible—you can even view and edit it by hand.</p>
-<p class="scrollParagraph">You put your data in <a href="https://treenotation.org">Tree Notation</a> form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible, making it timeless. No matter what format you need your data in the future it will be perfectly preserved in the simplest form possible. You will never regret putting your data in a TrueBase.</p>
+<p class="scrollParagraph">You put your data in <a href="https://treenotation.org">Tree Notation</a> form.  This means your data is all signal—no noise. This ensures you've minimized your data and made it as clean as possible. This also helps make it timeless as no matter what format you need your data in the future it will be preserved in the simplest form possible. You will never regret putting your data in a TrueBase.</p>
 <p class="scrollParagraph">A growing ecosystem of tooling makes it easy to augment your TrueBase with data from Large Language Models, web crawlers, and APIs, and run integrity checks, steadily making your TrueBase truer and truer.</p>
 <p class="scrollParagraph">You write your TrueBase schemas using the <a href="https://jtree.treenotation.org/langs/grammar">Grammar Language</a> (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like autocomplete and syntax highlighting.</p>
 <p class="scrollParagraph">You can query your TrueBase using <a href="https://truebase.pub/tql">TQL</a> (also a Tree Language).</p>

@@ -108,15 +108,15 @@ class TrueBaseCli {
     initFolder[`${trueBaseId}${SETTINGS_EXTENSION}`] = `trueBaseId ${trueBaseId}
 name ${trueBaseId}
 domain localhost
-grammarFolder ./columns
-rowsFolder ./rows
+questionsFolder ./questions
+conceptsFolder ./concepts
 queriesFolder ./queries
 ignoreFolder ./ignore
 siteFolder ./site
 devPort 5678`
     initFolder[`/queries/how-many-planets-are-there.tql`] = `title How many planets are there?`
-    initFolder[`/queries/all.tql`] = `title What are all the rows?`
-    initFolder[`/columns/${trueBaseId}.grammar`] = `${trueBaseId}Parser
+    initFolder[`/queries/all.tql`] = `title What are all the concepts?`
+    initFolder[`/questions/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}
  string fileExtension ${trueBaseId}
@@ -126,7 +126,7 @@ titleParser
  extends abstractStringColumnParser
 diameterParser
  extends abstractIntColumnParser`
-    initFolder[`/rows/earth.${trueBaseId}`] = `title Earth
+    initFolder[`/concepts/earth.${trueBaseId}`] = `title Earth
 diameter 12756`
     initFolder[`/site/settings.scroll`] = `importOnly
 
@@ -142,7 +142,7 @@ git GIT_URL
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email feedback@DOMAIN_NAME
 baseUrl https://DOMAIN_NAME/`
-    initFolder[`/columns/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
+    initFolder[`/questions/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
     Disk.writeObjectToDisk(cwd, initFolder)
     require("child_process").execSync("git init", { cwd })
     return this.log(`\n👍 Initialized new TrueBase in '${cwd}'.`)

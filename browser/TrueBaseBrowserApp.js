@@ -254,7 +254,7 @@ class TrueBaseBrowserApp {
     if (data.error) return (document.getElementById("formHolder").innerHTML = data.error)
 
     const id = this.currentFileId
-    document.getElementById("pageTitle").innerHTML = `Improve <i><a href="/rows/${id}.html">${filename}</a></i>`
+    document.getElementById("pageTitle").innerHTML = `Improve <i><a href="/concepts/${id}.html">${filename}</a></i>`
 
     this.codeMirrorInstance.setValue(localValue ? localValue.childrenToString() : data.content)
     const title = new TreeNode(this.value).get("title") || filename

@@ -755,6 +755,9 @@ ${browserAppFolder}/TrueBaseBrowserApp.js`.split("\n")
 
   // todo: this still builds files to ignore folder. cleanup.
   warmGrammarFiles() {
+    // Todo: cleanup
+    if (this.extendedTqlParser) return
+
     const { ignoreFolder } = this.settings
     const { folder, virtualFiles, grammarIgnoreFolder, grammarId } = this
     if (!Disk.exists(grammarIgnoreFolder)) Disk.mkdir(grammarIgnoreFolder)
@@ -855,7 +858,7 @@ css
 Download TRUEBASE_ID.csv
  link TRUEBASE_ID.csv
 
-SITE_NAME builds one main CSV file. \`TRUEBASE_ID.csv\` contains ${folder.length} concepts and ${folder.colNamesForCsv.length} questions and is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
+SITE_NAME contains ${folder.colNamesForCsv.length} questions on ${folder.length} concepts and builds one main CSV file. \`TRUEBASE_ID.csv\` is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
       compressedContent.length
     ).format(
       "0.0b"

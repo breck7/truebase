@@ -50,7 +50,7 @@ class TrueBaseFile extends TreeNode {
   id = this.getWord(0)
 
   get sourceUrl() {
-    return this.parent.rowsViewSourcePath + this.filename
+    return this.parent.conceptsViewSourcePath + this.filename
   }
 
   get helpfulResearchLinks() {
@@ -328,8 +328,8 @@ class TrueBaseFolder extends TreeNode {
   fileExtension = ""
 
   // todo: move these to .truebase settings file
-  rowsViewSourcePath = `/concepts/`
-  grammarViewSourcePath = `/questions/`
+  conceptsViewSourcePath = `/concepts/`
+  questionsViewSourcePath = `/questions/`
 
   settings: TrueBaseSettingsObject
   setSettings(settings: TrueBaseSettingsObject) {
@@ -594,7 +594,7 @@ class TrueBaseFolder extends TreeNode {
   get basicColumnDocumentation(): ColumnInterface[] {
     if (this.quickCache.basicColumnDocumentation) return this.quickCache.basicColumnDocumentation
 
-    const { colNameToParserDefMap, grammarViewSourcePath } = this
+    const { colNameToParserDefMap, questionsViewSourcePath } = this
     const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
     const cols = this.colNamesForCsv.map((Column: string) => {
       const parserDef = colNameToParserDefMap.get(Column)
@@ -609,7 +609,7 @@ class TrueBaseFolder extends TreeNode {
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
       const Definition = path.basename(sourceLocation.filePath)
-      const DefinitionLink = `${grammarViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
+      const DefinitionLink = `${questionsViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
       const SourceLink = Source ? `https://${Source}` : ""
       return {
         Column,

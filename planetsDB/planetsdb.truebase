@@ -1,8 +1,8 @@
 trueBaseId planetsdb
 name PlanetsDB
 domain localhost:5678
-grammarFolder .
-rowsFolder .
+questionsFolder .
+conceptsFolder .
 queriesFolder .
 ignoreFolder ../ignore
 siteFolder .

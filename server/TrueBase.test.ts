@@ -11,8 +11,8 @@ const planetsFolderPath = path.join(__dirname, "..", "planetsDB")
 const testTree: any = {}
 
 const settings: TrueBaseSettingsObject = {
-  grammarFolder: planetsFolderPath,
-  rowsFolder: planetsFolderPath,
+  questionsFolder: planetsFolderPath,
+  conceptsFolder: planetsFolderPath,
   queriesFolder: planetsFolderPath
 }
 
@@ -89,8 +89,8 @@ testTree.fileSystemEvents = async (equal: any) => {
   if (!Disk.exists(testDbIgnoreFolder)) Disk.mkdir(testDbIgnoreFolder)
 
   const settings: TrueBaseSettingsObject = {
-    grammarFolder: testDbIgnoreFolder,
-    rowsFolder: testDbIgnoreFolder,
+    questionsFolder: testDbIgnoreFolder,
+    conceptsFolder: testDbIgnoreFolder,
     queriesFolder: testDbIgnoreFolder
   }
 

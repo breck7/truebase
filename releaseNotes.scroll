@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 21.0.0 2024-2-25
+- ⚠️ BREAKING: "Questions" renamed to "Measures". So terms like `questionsFolder` is now `measuresFolder`.
+
 # 20.0.0 2023-6-17
 - ⚠️ BREAKING: `rowsFolder` is now `conceptsFolder` and `columnsFolder` is now `questionsFolder`
 - ⚠️ BREAKING: `rowsViewSourcePath` is now `conceptsViewSourcePath` and `columnsViewSourcePath` is now `questionsViewSourcePath`

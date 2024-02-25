@@ -108,7 +108,7 @@ class TrueBaseCli {
     initFolder[`${trueBaseId}${SETTINGS_EXTENSION}`] = `trueBaseId ${trueBaseId}
 name ${trueBaseId}
 domain localhost
-questionsFolder ./questions
+measuresFolder ./measures
 conceptsFolder ./concepts
 queriesFolder ./queries
 ignoreFolder ./ignore
@@ -116,7 +116,7 @@ siteFolder ./site
 devPort 5678`
     initFolder[`/queries/how-many-planets-are-there.tql`] = `title How many planets are there?`
     initFolder[`/queries/all.tql`] = `title What are all the concepts?`
-    initFolder[`/questions/${trueBaseId}.grammar`] = `${trueBaseId}Parser
+    initFolder[`/measures/${trueBaseId}.grammar`] = `${trueBaseId}Parser
  root
  string tableName ${trueBaseId}
  string fileExtension ${trueBaseId}
@@ -142,7 +142,7 @@ git GIT_URL
 viewSourceBaseUrl https://github.com/breck7/truebase/blob/main/planetsDB/
 email feedback@DOMAIN_NAME
 baseUrl https://DOMAIN_NAME/`
-    initFolder[`/questions/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
+    initFolder[`/measures/wwc.grammar`] = Disk.read(path.join(__dirname, "planetsDB", "wwc.grammar"))
     Disk.writeObjectToDisk(cwd, initFolder)
     require("child_process").execSync("git init", { cwd })
     return this.log(`\n👍 Initialized new TrueBase in '${cwd}'.`)

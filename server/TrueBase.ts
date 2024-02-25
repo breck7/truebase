@@ -412,16 +412,19 @@ class TrueBaseFolder extends TreeNode {
     return this.quickCache.bytes
   }
 
+  get measurements() {
+    return lodash.sum(this.columnDocumentation.map(col => col.Values))
+  }
+
   get dashboard() {
-    const { columnDocumentation } = this
-    const complete = lodash.sum(columnDocumentation.map(col => col.Values))
+    const { columnDocumentation, measurements } = this
     const missing = lodash.sum(columnDocumentation.map(col => col.Missing))
     const linksToOtherFiles = lodash.sum(this.map((file: any) => file.linksToOtherFiles.length))
     const urlCells = this.cellIndex["urlCell"] ? this.cellIndex["urlCell"].length : 0
     return `dashboard
+ ${numeral(measurements).format("0,0")} Measurements
  ${numeral(this.length).format("0,0")} Concepts
  ${this.colNamesForCsv.length} Measures
- ${numeral(complete).format("0,0")} Filled
  ${numeral(missing).format("0,0")} Missing
  ${numeral(linksToOtherFiles).format("0,0")} Concept links
  ${numeral(urlCells).format("0,0")} URLs

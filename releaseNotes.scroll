@@ -4,6 +4,9 @@ startColumns 4
 
 Here's a list of the notable changes in TrueBase.
 
+# 21.1.0 2024-2-25
+- 🎉 minor wording tweaks related to measurements change.
+
 # 21.0.0 2024-2-25
 - ⚠️ BREAKING: "Questions" renamed to "Measures". So terms like `questionsFolder` is now `measuresFolder`.
 

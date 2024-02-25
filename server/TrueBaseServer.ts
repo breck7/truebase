@@ -855,14 +855,14 @@ css
    text-overflow: ellipsis;
  }
 
-Download TRUEBASE_ID.csv
- link TRUEBASE_ID.csv
+Download TRUEBASE_ID.csv. 
+ link TRUEBASE_ID.csv Download TRUEBASE_ID.csv
 
-SITE_NAME contains ${folder.colNamesForCsv.length} measures on ${folder.length} concepts and builds one main CSV file. \`TRUEBASE_ID.csv\` is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
-      compressedContent.length
-    ).format(
+SITE_NAME contains ${folder.colNamesForCsv.length} measures on ${folder.length} concepts with ${folder.measurements} total measurements and builds one main CSV file. \`TRUEBASE_ID.csv\` is ${numeral(mainCsvContent.length).format(
       "0.0b"
-    )} <a href="${compressedLink}">compressed</a>). Every row is one concept and every concept is one row. Every measure is one column and every column is one measure. You can also download the typed tree structured data as JSON.
+    )} uncompressed (${numeral(compressedContent.length).format(
+      "0.0b"
+    )} <a href="${compressedLink}">compressed</a>). Every row is one concept and every concept is one row. Every measure is one column and every column is one measure. Every measurement is one non-empty cell and every non-empty cell is one measurement (excluding cells in the header row which contain the measure names). You can also download the typed tree structured data as JSON.
  link TRUEBASE_ID.json JSON
 
 table ${delimiter}

@@ -41,7 +41,7 @@ class TrueBaseServer {
   constructor(settingsFilepath: string, folder?: TrueBaseFolder) {
     const settings = TreeNode.fromDisk(settingsFilepath).toObject()
     const dirname = path.dirname(settingsFilepath)
-    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    settings.measuresFolder = resolvePath(settings.measuresFolder, dirname)
     settings.conceptsFolder = resolvePath(settings.conceptsFolder, dirname)
     settings.queriesFolder = resolvePath(settings.queriesFolder, dirname)
     settings.ignoreFolder = resolvePath(settings.ignoreFolder, dirname)
@@ -56,8 +56,8 @@ class TrueBaseServer {
   }
 
   get staticFolders() {
-    const { siteFolder, questionsFolder, conceptsFolder, queriesFolder } = this.settings
-    return [{ folder: browserAppFolder }, { folder: siteFolder }, { folder: questionsFolder, nested: "/questions/" }, { folder: conceptsFolder, nested: "/concepts/" }, { folder: queriesFolder, nested: "/queries/" }]
+    const { siteFolder, measuresFolder, conceptsFolder, queriesFolder } = this.settings
+    return [{ folder: browserAppFolder }, { folder: siteFolder }, { folder: measuresFolder, nested: "/measures/" }, { folder: conceptsFolder, nested: "/concepts/" }, { folder: queriesFolder, nested: "/queries/" }]
   }
 
   get app() {
@@ -66,7 +66,7 @@ class TrueBaseServer {
     const app = express()
     app.use(compression())
     this._app = app
-    const { ignoreFolder, siteFolder, questionsFolder, conceptsFolder, queriesFolder } = this.settings
+    const { ignoreFolder, siteFolder, measuresFolder, conceptsFolder, queriesFolder } = this.settings
     if (!Disk.exists(ignoreFolder)) Disk.mkdir(ignoreFolder)
 
     const requestLog = path.join(ignoreFolder, "access.log")
@@ -110,7 +110,7 @@ class TrueBaseServer {
       res.send(
         JSON.stringify({
           content: file.childrenToString(),
-          topUnansweredQuestions: file.topUnansweredQuestions,
+          topMissingMeasurements: file.topMissingMeasurements,
           helpfulResearchLinks: file.helpfulResearchLinks
         })
       )
@@ -803,7 +803,7 @@ startColumns 1
 <center>
 <div id="modelVis"></div>
 </center>
-The image above has a pixel for each concept and question in the database. The top left pixel represents the questions with the most answers. The pixels then flow left to right, then top down, showing the answer count for the question with the next most answers. After a pixel for each question is shown then a pixel is shown for each concept.
+The image above has a pixel for each concept and measure in the database. The top left pixel represents the measure with the most measurements. The pixels then flow left to right, then top down, showing the measurement count for the measure with the next most measurements. After the pixels for measures comes a pixel for each concept.
 endColumns
 
 <script>document.addEventListener("DOMContentLoaded", () => TrueBaseBrowserApp.getApp().fetchAndVisualizeDb())</script>
@@ -843,7 +843,7 @@ import footer.scroll`
     const delimiter = `!~DELIM~!`
 
     const csvTemplate = `import header.scroll
-title SITE_NAME Questions
+title SITE_NAME Measures
 
 css
  .scrollTableComponent td {
@@ -858,11 +858,11 @@ css
 Download TRUEBASE_ID.csv
  link TRUEBASE_ID.csv
 
-SITE_NAME contains ${folder.colNamesForCsv.length} questions on ${folder.length} concepts and builds one main CSV file. \`TRUEBASE_ID.csv\` is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
+SITE_NAME contains ${folder.colNamesForCsv.length} measures on ${folder.length} concepts and builds one main CSV file. \`TRUEBASE_ID.csv\` is ${numeral(mainCsvContent.length).format("0.0b")} uncompressed (${numeral(
       compressedContent.length
     ).format(
       "0.0b"
-    )} <a href="${compressedLink}">compressed</a>). Every row is an concept and every concept is one row. Every question is one column and every column is one question. You can also download the typed tree structured data as JSON.
+    )} <a href="${compressedLink}">compressed</a>). Every row is one concept and every concept is one row. Every measure is one column and every column is one measure. You can also download the typed tree structured data as JSON.
  link TRUEBASE_ID.json JSON
 
 table ${delimiter}

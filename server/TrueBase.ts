@@ -214,9 +214,9 @@ import ../footer.scroll`
     return this.parent.where("type", "includes", type)
   }
 
-  get topUnansweredQuestions() {
+  get topMissingMeasurements() {
     const types = this.get("type")
-    if (types) return this.parent.getTopQuestionsForTypes(types).filter((entry: any) => !this.has(entry.column))
+    if (types) return this.parent.getTopMeasuresForTypes(types).filter((entry: any) => !this.has(entry.column))
 
     return this.parent.computeColumnStats(this.parent.getChildren()).filter((entry: any) => !this.has(entry.column))
   }
@@ -329,14 +329,14 @@ class TrueBaseFolder extends TreeNode {
 
   // todo: move these to .truebase settings file
   conceptsViewSourcePath = `/concepts/`
-  questionsViewSourcePath = `/questions/`
+  measuresViewSourcePath = `/measures/`
 
   settings: TrueBaseSettingsObject
   setSettings(settings: TrueBaseSettingsObject) {
     this.settings = settings
     this.dir = settings.conceptsFolder
     this.queriesFolder = settings.queriesFolder
-    this.grammarDir = settings.questionsFolder
+    this.grammarDir = settings.measuresFolder
     const rawCode = this.grammarFilePaths.map(Disk.read).join("\n")
     this.grammarCode = new grammarParser(rawCode).format().asString
     this.grammarProgram = new HandGrammarProgram(this.grammarCode)
@@ -348,7 +348,7 @@ class TrueBaseFolder extends TreeNode {
   setSettingsFromPath(settingsFilepath: string) {
     const settings = TreeNode.fromDisk(settingsFilepath).toObject()
     const dirname = path.dirname(settingsFilepath)
-    settings.questionsFolder = resolvePath(settings.questionsFolder, dirname)
+    settings.measuresFolder = resolvePath(settings.measuresFolder, dirname)
     settings.conceptsFolder = resolvePath(settings.conceptsFolder, dirname)
     settings.queriesFolder = resolvePath(settings.queriesFolder, dirname)
     return this.setSettings(settings)
@@ -388,10 +388,10 @@ class TrueBaseFolder extends TreeNode {
     })
   }
 
-  getTopQuestionsForTypes(types: string) {
-    if (!this.quickCache.questionsForType) this.quickCache.questionsForType = {}
-    if (!this.quickCache.questionsForType[types]) this.quickCache.questionsForType[types] = this.computeColumnStats(this.where("type", "=", types))
-    return this.quickCache.questionsForType[types]
+  getTopMeasuresForTypes(types: string) {
+    if (!this.quickCache.measuresForType) this.quickCache.measuresForType = {}
+    if (!this.quickCache.measuresForType[types]) this.quickCache.measuresForType[types] = this.computeColumnStats(this.where("type", "=", types))
+    return this.quickCache.measuresForType[types]
   }
 
   get filesWithInvalidFilenames() {
@@ -420,7 +420,7 @@ class TrueBaseFolder extends TreeNode {
     const urlCells = this.cellIndex["urlCell"] ? this.cellIndex["urlCell"].length : 0
     return `dashboard
  ${numeral(this.length).format("0,0")} Concepts
- ${this.colNamesForCsv.length} Questions
+ ${this.colNamesForCsv.length} Measures
  ${numeral(complete).format("0,0")} Filled
  ${numeral(missing).format("0,0")} Missing
  ${numeral(linksToOtherFiles).format("0,0")} Concept links
@@ -594,7 +594,7 @@ class TrueBaseFolder extends TreeNode {
   get basicColumnDocumentation(): ColumnInterface[] {
     if (this.quickCache.basicColumnDocumentation) return this.quickCache.basicColumnDocumentation
 
-    const { colNameToParserDefMap, questionsViewSourcePath } = this
+    const { colNameToParserDefMap, measuresViewSourcePath } = this
     const columnOrder = this.settings.columnOrder ? this.settings.columnOrder.split(" ") : ["title"]
     const cols = this.colNamesForCsv.map((Column: string) => {
       const parserDef = colNameToParserDefMap.get(Column)
@@ -609,7 +609,7 @@ class TrueBaseFolder extends TreeNode {
       if (!sourceLocation.filePath) throw new Error(UserFacingErrorMessages.missingColumnSourceFile(sourceLocation.filePath))
 
       const Definition = path.basename(sourceLocation.filePath)
-      const DefinitionLink = `${questionsViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
+      const DefinitionLink = `${measuresViewSourcePath}${Definition}#L${sourceLocation.lineNumber + 1}`
       const SourceLink = Source ? `https://${Source}` : ""
       return {
         Column,

@@ -66,17 +66,17 @@ TrueBase is very minimal. It's built on Tree Notation, a syntax-free notation th
 ### Triangle of Truth
 Traditional encyclopedias are weakly linked articles about things. Question sites are weakly typed narrative answers to user questions. TrueBase is different.
 
-TrueBase is focused on computable structured data. We call this the "triangle of truth": Concepts, Questions and Models.
+TrueBase is focused on computable structured data. We call this the "triangle of truth": Concepts, Measures and Models.
 
 #### Concepts
 First we start adding concepts to the database. Each concept is a single file about a thing. But it's not enough just to just list and describe the things.
 
-#### Questions
-Structured questions are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of questions.
+#### Measures
+Typed measures are what make a TrueBase different from a Wiki. A typical TrueBase will have hundreds, to thousands, to tens of thousands of measures.
 
-Our *critical question bet* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a question indicating who paid for a study.
+Our *critical question bet* is that to really reveal the truth it's just as critical to identify what we don't know and/or what's been purposefully left out. One byte of structured data can be worth more than a billion words of narrative. Especially in expert datasets with no easily repeatable results this is very important. For example, a database of academic studies might be _harmful_ without a measure indicating who paid for a study.
 
-So in a TrueBase, it's just as easy to add a question as it is to add a concept. Sometimes adding a new question can completely flip the model or change the certainty of a model, more so than adding more answers to existing questions.
+So in a TrueBase, it's just as easy to add a measure as it is to add a concept. Sometimes adding a new measure can completely flip the model or change the certainty of a model, more so than adding more answers to existing measures.
 
 #### Models
 Models are the fun part. Once we have a lot of data, you can use that to build your own models about how things work.

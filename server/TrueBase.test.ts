@@ -11,7 +11,7 @@ const planetsFolderPath = path.join(__dirname, "..", "planetsDB")
 const testTree: any = {}
 
 const settings: TrueBaseSettingsObject = {
-  questionsFolder: planetsFolderPath,
+  measuresFolder: planetsFolderPath,
   conceptsFolder: planetsFolderPath,
   queriesFolder: planetsFolderPath
 }
@@ -51,13 +51,13 @@ testTree.colNamesForCsv = (equal: any) => {
   equal(folder.colNamesForCsv.join(" "), "title aka id nicknames description surfaceGravity diameter moons age length yearsToOrbitSun hasLife wikipedia wikipedia_pageViews neighbors", "col names works")
 }
 
-testTree.topUnansweredQuestions = (equal: any) => {
+testTree.topMissingMeasurements = (equal: any) => {
   // Arrange
   const folder = getFolder().loadFolder()
   const mars = folder.getNode("mars")
   const earth = folder.getNode("earth")
   // Act/Assert
-  equal(earth.topUnansweredQuestions.length < mars.topUnansweredQuestions.length, true)
+  equal(earth.topMissingMeasurements.length < mars.topMissingMeasurements.length, true)
 }
 
 testTree.toTypedMap = (equal: any) => {
@@ -89,7 +89,7 @@ testTree.fileSystemEvents = async (equal: any) => {
   if (!Disk.exists(testDbIgnoreFolder)) Disk.mkdir(testDbIgnoreFolder)
 
   const settings: TrueBaseSettingsObject = {
-    questionsFolder: testDbIgnoreFolder,
+    measuresFolder: testDbIgnoreFolder,
     conceptsFolder: testDbIgnoreFolder,
     queriesFolder: testDbIgnoreFolder
   }

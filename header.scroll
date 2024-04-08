@@ -1,7 +1,7 @@
 importOnly
 git https://github.com/breck7/truebase
-email feedback@truebase.pub
-baseUrl https://truebase.pub/
+email breck7@gmail.com
+baseUrl https://truebase.treenotation.org/
 metaTags
 gazetteCss
 gazetteHeader

@@ -20,7 +20,7 @@ Here
  link releaseNotes.html
 
 ? I need a TrueBase for X, can you build one for me?
-Yes. We offer a paid complete white-glove service for moonshot problems. You can also email moonshots@truebase.pub for a custom quote.
+Yes. We offer a paid complete white-glove service for moonshot problems. You can also email truebase@treenotation.org for a custom quote.
  https://buy.stripe.com/cN2aIq82JfD7fqU9AJ white-glove service
 
 ? What is TrueBase?
@@ -55,7 +55,7 @@ code
  npm install .
  npm run local
 
-Most people will want to use the Getting Started Guide. We are currently beta testing the Getting Started Guide. If you'd like to join the waitlist, please email waitlist@truebase.pub.
+Most people will want to use the Getting Started Guide. We are currently beta testing the Getting Started Guide. If you'd like to join the waitlist, please email truebase@treenotation.org.
 
 ? How does it work, in theory?
 TrueBase helps people build the smallest expert models that can truthfully answer the most valuable questions.
@@ -92,7 +92,7 @@ A growing ecosystem of tooling makes it easy to augment your TrueBase with data 
 You write your TrueBase schemas using the Grammar Language (a Tree Language) which enforces correctness, autofixes errors, and gives you tooling like autocomplete and syntax highlighting.
  https://jtree.treenotation.org/langs/grammar Grammar Language
 You can query your TrueBase using TQL (also a Tree Language).
- https://truebase.pub/tql TQL
+ https://truebase.treenotation.org/tql TQL
 You can display your data using Scroll (also a Tree Language).
  https://scroll.pub Scroll
 So there are many pieces to the TrueBase system, but really just one thing to learn: Tree Notation. Your data, your query language, your schemas, your display language are all in these simple plain text Tree Languages.

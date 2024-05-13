@@ -10,7 +10,7 @@ import demos.scroll
 
 wideColumns 1
 
-*NOTICE:* Work on _the product_ TrueBase has stopped. The _ideas_ behind TrueBase continue on in Scroll Datasets. Existing TrueBase sites will be migrated to Scroll Datasets.
+*NOTICE:* Work on _the product_ TrueBase has stopped. The _ideas_ behind TrueBase continue on in Scroll Datasets. Existing TrueBase sites have all been migrated to Scroll Datasets. This repo is for historical reference.
  https://scroll.pub/blog/datasets.html Scroll Datasets
  class scrollQuote
 
@@ -20,7 +20,7 @@ endColumns
 startColumns 2
 
 ? Where can I try it?
-The examples above are live-you can play with them right on this page! PLDB.io and CancerDB.com are both powered by TrueBase.
+The examples above are live-you can play with them right on this page! PLDB.io and CancerDB.com are both powered by TrueBase. (Note: now they are powered entirely by Scroll, the TrueBase ideas have been merged into Scroll.)
  https://pldb.io PLDB.io
  https://cancerdb.com CancerDB
 
